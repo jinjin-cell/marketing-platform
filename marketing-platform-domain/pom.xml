@@ -43,6 +43,11 @@
             <groupId>cn.qijiv</groupId>
             <artifactId>marketing-platform-types</artifactId>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

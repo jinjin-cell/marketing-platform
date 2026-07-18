@@ -22,4 +22,6 @@ public interface IStrategyAwardDao {
      */
     List<StrategyAwardPO> queryStrategyAwardList(Long strategyId);
 
+    List<StrategyAwardPO> queryStrategyAwardListByStrategyId(Long strategyId);
+
 }

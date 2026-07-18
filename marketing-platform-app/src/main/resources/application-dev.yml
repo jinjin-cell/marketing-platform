@@ -30,6 +30,16 @@ spring:
     connection-test-query: SELECT 1
   type: com.zaxxer.hikari.HikariDataSource
 
+redis:
+  address: redis://111.228.17.153:16379
+  username: qijiv
+  password: 18903705503qQ
+  database: 0
+  connection-pool-size: 32
+  connection-minimum-idle-size: 8
+  connect-timeout: 10000
+  timeout: 3000
+
 mybatis:
  mapper-locations: classpath:/mybatis/mapper/*.xml
  config-location:  classpath:/mybatis/config/mybatis-config.xml
