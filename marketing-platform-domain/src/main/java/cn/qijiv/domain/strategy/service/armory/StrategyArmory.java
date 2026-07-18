@@ -30,12 +30,12 @@ public class StrategyArmory implements IStrategyArmory {
     }
 
     @Override
-    public void assembleLotteryStrategy(Long strategyId) {
+    public boolean assembleLotteryStrategy(Long strategyId) {
         // 1. 查询策略奖品配置
         List<StrategyAwardEntity> strategyAwardList = repository.queryStrategyAwardList(strategyId);
         if (strategyAwardList == null || strategyAwardList.isEmpty()) {
             log.warn("策略奖品列表为空，strategyId: {}", strategyId);
-            return;
+            return false;
         }
 
         // 2. 获取最小概率值
@@ -80,6 +80,7 @@ public class StrategyArmory implements IStrategyArmory {
         repository.storeStrategyRateTable(strategyId, rateTableList);
 
         log.info("策略装配完成 - strategyId: {}, 查找表大小: {}", strategyId, rateTableList.size());
+        return true;
     }
 
     @Override

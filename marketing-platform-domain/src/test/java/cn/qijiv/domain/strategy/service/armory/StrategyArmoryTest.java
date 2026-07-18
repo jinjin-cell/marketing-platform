@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class StrategyArmoryTest {
 
@@ -27,7 +29,7 @@ public class StrategyArmoryTest {
                 award(109, "0.0001")
         ));
 
-        new StrategyArmory(repository).assembleLotteryStrategy(100001L);
+        assertTrue(new StrategyArmory(repository).assembleLotteryStrategy(100001L));
 
         assertEquals(1_002_000, repository.rateTable.size());
         assertEquals(800_000, countAwards(repository.rateTable, 101));
@@ -40,9 +42,17 @@ public class StrategyArmoryTest {
                 Arrays.asList(award(101, "100.0000")));
         StrategyArmory armory = new StrategyArmory(repository);
 
-        armory.assembleLotteryStrategy(100001L);
+        assertTrue(armory.assembleLotteryStrategy(100001L));
 
         assertEquals(Integer.valueOf(101), armory.getRandomAwardId(100001L));
+    }
+
+    @Test
+    public void assembleLotteryStrategy_emptyAwards_returnsFalse() {
+        StrategyArmory armory = new StrategyArmory(
+                new RecordingStrategyRepository(new ArrayList<StrategyAwardEntity>()));
+
+        assertFalse(armory.assembleLotteryStrategy(100001L));
     }
 
     private static StrategyAwardEntity award(int awardId, String rate) {

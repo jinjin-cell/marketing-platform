@@ -14,7 +14,7 @@ public interface IStrategyArmory {
      * @param strategyId 策略ID
      * @return 装配结果
      */
-    void assembleLotteryStrategy(Long strategyId);
+    boolean assembleLotteryStrategy(Long strategyId);
 
     /**
      * 获取随机奖品ID
