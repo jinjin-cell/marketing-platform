@@ -3,7 +3,6 @@ package cn.qijiv.domain.strategy.repository;
 import cn.qijiv.domain.strategy.model.StrategyAwardEntity;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 抽奖策略仓库
@@ -25,16 +24,25 @@ public interface IStrategyRepository {
      * 存储策略奖品概率查找表
      *
      * @param strategyId 策略ID
-     * @param rateTable  概率查找表（key: 随机值, value: 奖品ID）
+     * @param rateTable  概率查找表，列表下标为随机值，元素为奖品ID
      */
-    void storeStrategyRateTable(Long strategyId, Map<Integer, Integer> rateTable);
+    void storeStrategyRateTable(Long strategyId, List<Integer> rateTable);
 
     /**
-     * 存储概率范围（百分位/千分位/万分位）
+     * 查询策略概率表的槽位数量，作为随机数上界
      *
      * @param strategyId 策略ID
-     * @param rateRange  概率范围
+     * @return 概率表槽位数量
      */
-    void storeStrategyRateRange(Long strategyId, Integer rateRange);
+    Integer queryStrategyRateTableSize(Long strategyId);
+
+    /**
+     * 按随机值查询策略奖品 ID
+     *
+     * @param strategyId  策略ID
+     * @param randomValue 概率表下标
+     * @return 奖品ID
+     */
+    Integer queryStrategyAwardId(Long strategyId, Integer randomValue);
 
 }

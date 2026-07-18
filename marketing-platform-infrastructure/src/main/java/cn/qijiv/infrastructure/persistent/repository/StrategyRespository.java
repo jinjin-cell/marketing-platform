@@ -6,7 +6,6 @@ import cn.qijiv.infrastructure.persistent.po.StrategyAwardPO;
 import cn.qijiv.domain.strategy.model.StrategyAwardEntity;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
@@ -56,16 +55,42 @@ public class StrategyRespository implements IStrategyRepository {
         return entityList;
     }
 
+    /**
+     * 存储策略奖品概率查找表
+     *
+     * @param strategyId 策略ID
+     * @param rateTable  概率查找表，列表下标为随机值，元素为奖品ID
+     */
     @Override
-    public void storeStrategyRateTable(Long strategyId, Map<Integer, Integer> rateTable) {
+    public void storeStrategyRateTable(Long strategyId, List<Integer> rateTable) {
         String cacheKey = Constants.RedisKey.STRATEGY_RATE_TABLE_KEY + strategyId;
-        redisService.setValue(cacheKey, rateTable);
+        redisService.setList(cacheKey, rateTable);
     }
 
+    /**
+     * 查询策略概率表的槽位数量，作为随机数上界
+     *
+     * @param strategyId 策略ID
+     * @return 概率表槽位数量
+     */
     @Override
-    public void storeStrategyRateRange(Long strategyId, Integer rateRange) {
-        String cacheKey = Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + strategyId;
-        redisService.setValue(cacheKey, rateRange);
+    public Integer queryStrategyRateTableSize(Long strategyId) {
+        String cacheKey = Constants.RedisKey.STRATEGY_RATE_TABLE_KEY + strategyId;
+        int size = redisService.getListSize(cacheKey);
+        return size > 0 ? size : null;
+    }
+
+    /**
+     * 按随机值查询策略奖品 ID
+     *
+     * @param strategyId  策略ID
+     * @param randomValue 概率表下标
+     * @return 奖品ID
+     */
+    @Override
+    public Integer queryStrategyAwardId(Long strategyId, Integer randomValue) {
+        String cacheKey = Constants.RedisKey.STRATEGY_RATE_TABLE_KEY + strategyId;
+        return redisService.getListValue(cacheKey, randomValue);
     }
 
 }

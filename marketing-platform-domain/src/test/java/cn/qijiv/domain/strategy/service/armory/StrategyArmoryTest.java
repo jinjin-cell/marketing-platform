@@ -6,9 +6,8 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 
@@ -30,10 +29,20 @@ public class StrategyArmoryTest {
 
         new StrategyArmory(repository).assembleLotteryStrategy(100001L);
 
-        assertEquals(Integer.valueOf(1_002_000), repository.rateRange);
         assertEquals(1_002_000, repository.rateTable.size());
         assertEquals(800_000, countAwards(repository.rateTable, 101));
         assertEquals(1, countAwards(repository.rateTable, 109));
+    }
+
+    @Test
+    public void getRandomAwardId_rateRangeOne_returnsStoredAward() {
+        RecordingStrategyRepository repository = new RecordingStrategyRepository(
+                Arrays.asList(award(101, "100.0000")));
+        StrategyArmory armory = new StrategyArmory(repository);
+
+        armory.assembleLotteryStrategy(100001L);
+
+        assertEquals(Integer.valueOf(101), armory.getRandomAwardId(100001L));
     }
 
     private static StrategyAwardEntity award(int awardId, String rate) {
@@ -44,9 +53,9 @@ public class StrategyArmoryTest {
                 .build();
     }
 
-    private static int countAwards(Map<Integer, Integer> rateTable, int awardId) {
+    private static int countAwards(List<Integer> rateTable, int awardId) {
         int count = 0;
-        for (Integer value : rateTable.values()) {
+        for (Integer value : rateTable) {
             if (value == awardId) {
                 count++;
             }
@@ -57,8 +66,7 @@ public class StrategyArmoryTest {
     private static class RecordingStrategyRepository implements IStrategyRepository {
 
         private final List<StrategyAwardEntity> strategyAwards;
-        private Map<Integer, Integer> rateTable = new HashMap<>();
-        private Integer rateRange;
+        private List<Integer> rateTable = new ArrayList<>();
 
         private RecordingStrategyRepository(List<StrategyAwardEntity> strategyAwards) {
             this.strategyAwards = strategyAwards;
@@ -70,13 +78,18 @@ public class StrategyArmoryTest {
         }
 
         @Override
-        public void storeStrategyRateTable(Long strategyId, Map<Integer, Integer> rateTable) {
+        public void storeStrategyRateTable(Long strategyId, List<Integer> rateTable) {
             this.rateTable = rateTable;
         }
 
         @Override
-        public void storeStrategyRateRange(Long strategyId, Integer rateRange) {
-            this.rateRange = rateRange;
+        public Integer queryStrategyRateTableSize(Long strategyId) {
+            return rateTable.isEmpty() ? null : rateTable.size();
+        }
+
+        @Override
+        public Integer queryStrategyAwardId(Long strategyId, Integer randomValue) {
+            return rateTable.get(randomValue);
         }
     }
 
