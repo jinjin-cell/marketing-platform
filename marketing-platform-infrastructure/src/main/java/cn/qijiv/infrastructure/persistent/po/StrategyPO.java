@@ -38,4 +38,9 @@ public class StrategyPO {
      */
     private Date updateTime;
 
+    /**
+     * 抽奖规则模型 rule_weight,rule_blacklist
+     */
+    private String ruleModels;
+
 }

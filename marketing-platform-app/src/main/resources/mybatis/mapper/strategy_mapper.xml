@@ -8,10 +8,11 @@
         <result column="strategy_desc" property="strategyDesc"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
+        <result column="rule_models" property="ruleModels"/>
     </resultMap>
 
-    <select id="queryStrategy" parameterType="java.lang.Long" resultMap="StrategyMap">
-        SELECT strategy_id
+    <select id="queryStrategyByStrategyId" parameterType="java.lang.Long" resultMap="StrategyMap">
+        SELECT id, strategy_id, strategy_desc, rule_models, create_time, update_time
         FROM strategy
         WHERE strategy_id = #{strategyId}
     </select>

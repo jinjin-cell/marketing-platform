@@ -46,6 +46,7 @@ CREATE TABLE `strategy` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `strategy_id` bigint NOT NULL COMMENT '抽奖策略ID',
   `strategy_desc` varchar(128) NOT NULL COMMENT '抽奖策略描述',
+  `rule_models` varchar(256) DEFAULT NULL COMMENT '规则模型，rule配置的模型同步到此表，便于使用',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
@@ -53,9 +54,9 @@ CREATE TABLE `strategy` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 INSERT INTO `strategy`
-  (`id`, `strategy_id`, `strategy_desc`, `create_time`, `update_time`)
+  (`id`, `strategy_id`, `strategy_desc`, `rule_models`, `create_time`, `update_time`)
 VALUES
-  (1, 100001, '抽奖策略', '2023-12-09 09:37:19', '2023-12-09 09:37:19');
+  (1, 100001, '抽奖策略', 'rule_weight,rule_blacklist', '2023-12-09 09:37:19', '2023-12-09 09:37:19');
 
 CREATE TABLE `strategy_award` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
@@ -93,7 +94,7 @@ CREATE TABLE `strategy_rule` (
   `award_id` int DEFAULT NULL COMMENT '抽奖奖品ID【规则类型为策略，则不需要奖品ID】',
   `rule_type` tinyint(1) NOT NULL DEFAULT '0' COMMENT '抽象规则类型；1-策略规则、2-奖品规则',
   `rule_model` varchar(16) NOT NULL COMMENT '抽奖规则类型【rule_random - 随机值计算、rule_lock - 抽奖几次后解锁、rule_luck_award - 幸运奖(兜底奖品)】',
-  `rule_value` varchar(64) NOT NULL COMMENT '抽奖规则比值',
+  `rule_value` varchar(256) NOT NULL COMMENT '抽奖规则比值',
   `rule_desc` varchar(128) NOT NULL COMMENT '抽奖规则描述',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -116,7 +117,7 @@ VALUES
   (10, 100001, 104, 2, 'rule_luck_award', '1,40', '兜底奖品40以内随机积分', '2023-12-09 10:30:43', '2023-12-09 12:55:59'),
   (11, 100001, 105, 2, 'rule_luck_award', '1,50', '兜底奖品50以内随机积分', '2023-12-09 10:30:43', '2023-12-09 12:56:00'),
   (12, 100001, 106, 2, 'rule_luck_award', '1,60', '兜底奖品60以内随机积分', '2023-12-09 10:30:43', '2023-12-09 12:56:00'),
-  (13, 100001, NULL, 1, 'rule_weight', '6000,102,103,104,105,106,107,108,109', '消耗6000分，必中奖范围', '2023-12-09 10:30:43', '2023-12-09 12:58:21'),
+  (13, 100001, NULL, 1, 'rule_weight', '4000:102,103,104,105 5000:102,103,104,105,106,107 6000:102,103,104,105,106,107,108,109', '积分权重抽奖范围', '2023-12-09 10:30:43', '2023-12-09 12:58:21'),
   (14, 100001, NULL, 1, 'rule_blacklist', '1', '黑名单抽奖，积分兜底', '2023-12-09 12:59:45', '2023-12-09 13:42:23');
 
 SET FOREIGN_KEY_CHECKS = 1;

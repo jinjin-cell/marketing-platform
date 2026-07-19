@@ -39,6 +39,7 @@ public class RedissonService implements IRedisService {
     @Override
     public <T> void setList(String key, List<T> values) {
         RList<T> list = redissonClient.getList(key);
+        // 重新装配时先移除旧表，避免新表较短时残留旧槽位。
         list.delete();
         list.addAll(values);
     }
@@ -50,6 +51,7 @@ public class RedissonService implements IRedisService {
         }
         RList<T> list = redissonClient.getList(key);
         try {
+            // Redisson 按下标读取，只传输命中的一个元素。
             return list.get(index);
         } catch (IndexOutOfBoundsException e) {
             return null;

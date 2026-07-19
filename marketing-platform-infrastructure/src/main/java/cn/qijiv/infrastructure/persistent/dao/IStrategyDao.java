@@ -18,6 +18,6 @@ public interface IStrategyDao {
      * @param strategyId 策略ID
      * @return 抽奖策略
      */
-    StrategyPO queryStrategy(Long strategyId);
+    StrategyPO queryStrategyByStrategyId(Long strategyId);
 
 }
