@@ -159,5 +159,11 @@ public class StrategyArmoryDispatchTest {
                     .ruleDesc("积分权重抽奖范围")
                     .build();
         }
+
+        @Override
+        public StrategyRuleEntity queryStrategyAwardRule(
+                Long strategyId, Integer awardId, String ruleModel) {
+            return null;
+        }
     }
 }

@@ -33,4 +33,16 @@
         LIMIT 1
     </select>
 
+    <!--suppress SqlResolve -->
+    <select id="queryStrategyAwardRule" resultMap="StrategyRuleMap">
+        SELECT strategy_id, award_id, rule_type, rule_model, rule_value, rule_desc
+        FROM strategy_rule
+        WHERE strategy_id = #{strategyId}
+          AND award_id = #{awardId}
+          AND rule_model = #{ruleModel}
+          AND rule_type = 2
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
 </mapper>

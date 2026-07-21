@@ -73,6 +73,39 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy {
     }
 
     /**
+     * 执行抽奖中逻辑检查
+     *
+     * @param raffleFactorEntity 抽奖因子
+     * @param ruleModels         抽奖规则模型
+     * @return 抽奖中逻辑检查结果
+     */
+    @Override
+    protected RuleActionEntity<RuleActionEntity.RaffleCenterEntity> doCheckRaffleCenterLogic(
+            RaffleFactorEntity raffleFactorEntity, String... ruleModels) {
+        Map<String, ILogicFilter<RuleActionEntity.RaffleCenterEntity>> logicFilters =
+                logicFactory.openCenterLogicFilter();
+
+        if (ruleModels != null) {
+            for (String configuredRuleModel : ruleModels) {
+                String ruleModel = StringUtils.trimToEmpty(configuredRuleModel);
+                if (ruleModel.isEmpty()) {
+                    continue;
+                }
+                RuleActionEntity<RuleActionEntity.RaffleCenterEntity> ruleAction =
+                        executeCenterRule(logicFilters, raffleFactorEntity, ruleModel);
+                if (!RuleLogicCheckTypeVO.ALLOW.getCode().equals(ruleAction.getCode())) {
+                    return ruleAction;
+                }
+            }
+        }
+
+        return RuleActionEntity.<RuleActionEntity.RaffleCenterEntity>builder()
+                .code(RuleLogicCheckTypeVO.ALLOW.getCode())
+                .info(RuleLogicCheckTypeVO.ALLOW.getInfo())
+                .build();
+    }
+
+    /**
      * 执行抽奖前逻辑检查
      *
      * @param logicFilters   抽奖前逻辑检查过滤器
@@ -93,6 +126,7 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy {
         RuleMatterEntity ruleMatterEntity = new RuleMatterEntity();
         ruleMatterEntity.setUserId(raffleFactorEntity.getUserId());
         ruleMatterEntity.setStrategyId(raffleFactorEntity.getStrategyId());
+        ruleMatterEntity.setAwardId(raffleFactorEntity.getAwardId());
         ruleMatterEntity.setRuleModel(ruleModel);
 
         RuleActionEntity<RuleActionEntity.RaffleBeforeEntity> ruleAction =
@@ -103,6 +137,44 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy {
         return ruleAction;
     }
 
+    /**
+     * 执行抽奖中置逻辑检查
+     *
+     * @param logicFilters   抽奖中置逻辑检查过滤器
+     * @param raffleFactorEntity 抽奖因子
+     * @param ruleModel        抽奖规则模型
+     * @return 抽奖中置逻辑检查结果
+     */
+    private RuleActionEntity<RuleActionEntity.RaffleCenterEntity> executeCenterRule(
+            Map<String, ILogicFilter<RuleActionEntity.RaffleCenterEntity>> logicFilters,
+            RaffleFactorEntity raffleFactorEntity,
+            String ruleModel) {
+        ILogicFilter<RuleActionEntity.RaffleCenterEntity> logicFilter = logicFilters.get(ruleModel);
+        if (logicFilter == null) {
+            throw new IllegalStateException("抽奖中置规则过滤器未注册，ruleModel: " + ruleModel);
+        }
+
+        RuleMatterEntity ruleMatterEntity = new RuleMatterEntity();
+        ruleMatterEntity.setUserId(raffleFactorEntity.getUserId());
+        ruleMatterEntity.setStrategyId(raffleFactorEntity.getStrategyId());
+        ruleMatterEntity.setAwardId(raffleFactorEntity.getAwardId());
+        ruleMatterEntity.setRuleModel(ruleModel);
+
+        RuleActionEntity<RuleActionEntity.RaffleCenterEntity> ruleAction =
+                logicFilter.filter(ruleMatterEntity);
+        if (ruleAction == null || ruleAction.getCode() == null) {
+            throw new IllegalStateException("抽奖中置规则过滤器返回结果为空，ruleModel: " + ruleModel);
+        }
+        return ruleAction;
+    }
+
+    /**
+     * 检查抽奖规则模型是否包含目标规则模型
+     *
+     * @param ruleModels         抽奖规则模型
+     * @param targetRuleModel    目标规则模型
+     * @return 是否包含目标规则模型
+     */
     private boolean containsRule(String[] ruleModels, String targetRuleModel) {
         if (ruleModels == null) {
             return false;

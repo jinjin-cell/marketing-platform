@@ -43,4 +43,8 @@ public class RuleActionEntity<T extends RuleActionEntity.RaffleEntity> {
         /** 权重规则命中的完整档位配置 */
         private String ruleWeightValueKey;
     }
+
+    /** 抽奖中置规则返回的数据。 */
+    public static class RaffleCenterEntity implements RaffleEntity {
+    }
 }

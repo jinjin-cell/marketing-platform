@@ -41,4 +41,21 @@ public class StrategyAwardEntity {
      * 奖品中奖概率
      */
     private BigDecimal awardRate;
+
+    /**
+     * 奖品规则模型
+     */
+    private String ruleModels;
+
+    /**
+     * 将奖品配置中的规则模型拆分为独立规则名。
+     *
+     * @return 规则模型数组；未配置时返回空数组
+     */
+    public String[] ruleModels() {
+        if (ruleModels == null || ruleModels.trim().isEmpty()) {
+            return new String[0];
+        }
+        return ruleModels.split(cn.qijiv.types.common.Constants.SPLIT);
+    }
 }

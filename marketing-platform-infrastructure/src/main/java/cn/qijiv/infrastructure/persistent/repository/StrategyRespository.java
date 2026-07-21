@@ -59,6 +59,7 @@ public class StrategyRespository implements IStrategyRepository {
                         .awardCount(strategyAwardPO.getAwardCount())
                         .awardCountSurplus(strategyAwardPO.getAwardCountSurplus())
                         .awardRate(strategyAwardPO.getAwardRate())
+                        .ruleModels(strategyAwardPO.getRuleModels())
                         .build())
                 .collect(Collectors.toList());
 
@@ -135,6 +136,22 @@ public class StrategyRespository implements IStrategyRepository {
             return null;
         }
         // 基础设施PO转换为领域实体，规则字符串的解析由领域实体负责。
+        return StrategyRuleEntity.builder()
+                .strategyId(Long.valueOf(strategyRulePO.getStrategyId()))
+                .awardId(strategyRulePO.getAwardId())
+                .ruleType(strategyRulePO.getRuleType())
+                .ruleModel(strategyRulePO.getRuleModel())
+                .ruleValue(strategyRulePO.getRuleValue())
+                .ruleDesc(strategyRulePO.getRuleDesc())
+                .build();
+    }
+
+    @Override
+    public StrategyRuleEntity queryStrategyAwardRule(Long strategyId, Integer awardId, String ruleModel) {
+        StrategyRulePO strategyRulePO = strategyRuleDao.queryStrategyAwardRule(strategyId, awardId, ruleModel);
+        if (strategyRulePO == null) {
+            return null;
+        }
         return StrategyRuleEntity.builder()
                 .strategyId(Long.valueOf(strategyRulePO.getStrategyId()))
                 .awardId(strategyRulePO.getAwardId())

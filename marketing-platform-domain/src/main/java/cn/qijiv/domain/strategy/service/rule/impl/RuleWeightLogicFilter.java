@@ -69,7 +69,7 @@ public class RuleWeightLogicFilter implements ILogicFilter<RuleActionEntity.Raff
     }
 
     /**
-     * 当前章节尚未接入用户积分账户，暂使用文档中的示例积分。
+     * 当前尚未接入用户积分账户，暂使用文档中的示例积分。
      * 后续接入账户仓储时只需替换此查询点。
      */
     protected Long queryUserScore(String userId) {

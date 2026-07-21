@@ -17,7 +17,6 @@ import cn.qijiv.domain.strategy.service.rule.impl.RuleWeightLogicFilter;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -112,6 +111,14 @@ public class DefaultRaffleStrategyTest {
                         .code("9999")
                         .build();
             }
+
+            @Override
+            protected RuleActionEntity<RuleActionEntity.RaffleCenterEntity> doCheckRaffleCenterLogic(
+                    RaffleFactorEntity raffleFactorEntity, String... ruleModels) {
+                return RuleActionEntity.<RuleActionEntity.RaffleCenterEntity>builder()
+                        .code(RuleLogicCheckTypeVO.ALLOW.getCode())
+                        .build();
+            }
         };
 
         try {
@@ -172,10 +179,23 @@ public class DefaultRaffleStrategyTest {
 
         @Override
         public List<StrategyAwardEntity> queryStrategyAwardList(Long strategyId) {
-            return Collections.singletonList(StrategyAwardEntity.builder()
+            return Arrays.asList(
+                    strategyAward(strategyId, 101),
+                    strategyAward(strategyId, 102),
+                    strategyAward(strategyId, 103),
+                    strategyAward(strategyId, 104),
+                    strategyAward(strategyId, 105),
+                    strategyAward(strategyId, 106),
+                    strategyAward(strategyId, 107),
+                    strategyAward(strategyId, 108),
+                    strategyAward(strategyId, 109));
+        }
+
+        private StrategyAwardEntity strategyAward(Long strategyId, Integer awardId) {
+            return StrategyAwardEntity.builder()
                     .strategyId(strategyId)
-                    .awardId(101)
-                    .build());
+                    .awardId(awardId)
+                    .build();
         }
 
         @Override
@@ -219,6 +239,12 @@ public class DefaultRaffleStrategyTest {
             }
             return null;
         }
+
+        @Override
+        public StrategyRuleEntity queryStrategyAwardRule(
+                Long strategyId, Integer awardId, String ruleModel) {
+            return null;
+        }
     }
 
     private static class RecordingStrategyDispatch implements IStrategyDispatch {
@@ -231,7 +257,6 @@ public class DefaultRaffleStrategyTest {
             defaultRaffleCount++;
             return 102;
         }
-
         @Override
         public Integer getRandomAwardId(Long strategyId, String ruleWeightValue) {
             lastRuleWeightValue = ruleWeightValue;

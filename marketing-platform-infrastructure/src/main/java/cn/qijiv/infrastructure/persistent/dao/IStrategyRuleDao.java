@@ -33,4 +33,16 @@ public interface IStrategyRuleDao {
     StrategyRulePO queryStrategyRule(@Param("strategyId") Long strategyId,
                                      @Param("ruleModel") String ruleModel);
 
+    /**
+     * 按策略ID、奖品ID和规则模型查询单条奖品规则。
+     *
+     * @param strategyId 抽奖策略ID
+     * @param awardId    抽奖奖品ID
+     * @param ruleModel  规则模型，例如 rule_lock
+     * @return 奖品规则；不存在时返回null
+     */
+    StrategyRulePO queryStrategyAwardRule(@Param("strategyId") Long strategyId,
+                                          @Param("awardId") Integer awardId,
+                                          @Param("ruleModel") String ruleModel);
+
 }
