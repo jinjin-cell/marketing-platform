@@ -39,7 +39,7 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy {
             RaffleFactorEntity raffleFactorEntity, String... ruleModels) {
         // 打开逻辑过滤器
         Map<String, ILogicFilter<RuleActionEntity.RaffleBeforeEntity>> logicFilters =
-                logicFactory.openLogicFilter();
+                logicFactory.openBeforeLogicFilter();
 
         // 黑名单拥有最高优先级，即使配置顺序靠后也必须先执行。
         String blacklistModel = DefaultLogicFactory.LogicModel.RULE_BLACKLIST.getCode();

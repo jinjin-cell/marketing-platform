@@ -12,6 +12,7 @@ import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
@@ -29,6 +30,9 @@ import cn.qijiv.types.common.Constants;
 @Repository
 public class StrategyRespository implements IStrategyRepository {
 
+    private static final String STRATEGY_AWARD_CACHE_VERSION = "v2_";
+    private static final long STRATEGY_AWARD_CACHE_TTL_MINUTES = 10L;
+
     @Resource
     private IStrategyAwardDao strategyAwardDao;
 
@@ -44,7 +48,9 @@ public class StrategyRespository implements IStrategyRepository {
     @Override
     public List<StrategyAwardEntity> queryStrategyAwardList(Long strategyId) {
         // 1. 先从 Redis 缓存中查询
-        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_KEY + strategyId;
+        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_KEY
+                + STRATEGY_AWARD_CACHE_VERSION
+                + strategyId;
         List<StrategyAwardEntity> cachedList = redisService.getValue(cacheKey);
         if (cachedList != null && !cachedList.isEmpty()) {
             return cachedList;
@@ -63,8 +69,12 @@ public class StrategyRespository implements IStrategyRepository {
                         .build())
                 .collect(Collectors.toList());
 
-        // 3. 将数据库结果写入 Redis 缓存
-        redisService.setValue(cacheKey, entityList);
+        // 3. 奖品规则可能动态调整，缓存定期过期以避免长期使用旧 ruleModels。
+        redisService.setValue(
+                cacheKey,
+                entityList,
+                STRATEGY_AWARD_CACHE_TTL_MINUTES,
+                TimeUnit.MINUTES);
 
         return entityList;
     }

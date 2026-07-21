@@ -62,10 +62,6 @@ public class DefaultLogicFactory {
         }
     }
 
-    public Map<String, ILogicFilter<RuleActionEntity.RaffleBeforeEntity>> openLogicFilter() {
-        return beforeLogicFilterMap;
-    }
-
     public Map<String, ILogicFilter<RuleActionEntity.RaffleBeforeEntity>> openBeforeLogicFilter() {
         return beforeLogicFilterMap;
     }
@@ -74,11 +70,13 @@ public class DefaultLogicFactory {
         return centerLogicFilterMap;
     }
 
+    /** 后置规则流程接入后使用。 */
+    @SuppressWarnings("unused")
     public Map<String, ILogicFilter<RuleActionEntity.RaffleEntity>> openAfterLogicFilter() {
         return afterLogicFilterMap;
     }
 
-    
+
     @Getter
     @AllArgsConstructor
     public enum LogicModel {

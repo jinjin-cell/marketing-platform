@@ -75,7 +75,7 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
 
         // 检查中奖中规则是否拦截
         StrategyAwardEntity strategyAward = queryStrategyAward(strategyId, awardId);
-        if (strategyAward != null && containsRule(strategyAward.ruleModels(),
+        if (containsRule(strategyAward.ruleModels(),
                 DefaultLogicFactory.LogicModel.RULE_LOCK.getCode())) {
             RuleActionEntity<RuleActionEntity.RaffleCenterEntity> ruleActionCenter =
                     doCheckRaffleCenterLogic(RaffleFactorEntity.builder()
