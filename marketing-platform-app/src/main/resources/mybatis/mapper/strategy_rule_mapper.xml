@@ -25,6 +25,9 @@
         FROM strategy_rule
         WHERE strategy_id = #{strategyId}
           AND rule_model = #{ruleModel}
+          AND rule_type = 1
+          AND award_id IS NULL
+        ORDER BY id DESC
         LIMIT 1
     </select>
 

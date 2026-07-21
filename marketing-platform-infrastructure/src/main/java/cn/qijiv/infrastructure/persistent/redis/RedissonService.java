@@ -6,6 +6,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,10 +39,24 @@ public class RedissonService implements IRedisService {
 
     @Override
     public <T> void setList(String key, List<T> values) {
-        RList<T> list = redissonClient.getList(key);
-        // 重新装配时先移除旧表，避免新表较短时残留旧槽位。
-        list.delete();
-        list.addAll(values);
+        if (values == null || values.isEmpty()) {
+            redissonClient.getList(key).delete();
+            return;
+        }
+
+        String temporaryKey = key + ":tmp:" + UUID.randomUUID();
+        RList<T> temporaryList = redissonClient.getList(temporaryKey);
+        boolean renamed = false;
+        try {
+            temporaryList.addAll(values);
+            // Redis RENAME 会原子替换旧key，读取方不会看到删除后尚未写完的中间状态。
+            temporaryList.rename(key);
+            renamed = true;
+        } finally {
+            if (!renamed) {
+                redissonClient.getList(temporaryKey).delete();
+            }
+        }
     }
 
     @Override

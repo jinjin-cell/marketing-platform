@@ -1,8 +1,9 @@
 package cn.qijiv.domain.strategy.service.armory;
 
-import cn.qijiv.domain.strategy.model.StrategyAwardEntity;
-import cn.qijiv.domain.strategy.model.StrategyEntity;
-import cn.qijiv.domain.strategy.model.StrategyRuleEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
+
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
@@ -26,7 +27,8 @@ import java.util.stream.Collectors;
  *     <li>权重概率表：key 为 strategyId_权重配置，例如 100001_4000:102,103,104,105</li>
  * </ul>
  *
- * <p>调度阶段只根据概率表长度生成随机下标，再从 Redis List 中读取单个奖品ID。</p>
+ * <p>调度阶段会确保概率表已经装配，再根据表长度生成随机下标，
+ * 从 Redis List 中读取单个奖品ID。</p>
  */
 @Service
 @Slf4j
@@ -135,7 +137,7 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
     @Override
     public Integer getRandomAwardId(Long strategyId) {
         // 普通抽奖直接使用 strategyId 对应的完整概率表。
-        return getRandomAwardId(String.valueOf(strategyId));
+        return getRandomAwardIdByKey(strategyId, String.valueOf(strategyId));
     }
 
     @Override
@@ -144,17 +146,21 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
             throw new IllegalArgumentException("权重规则值不能为空");
         }
         // 权重抽奖必须与装配阶段使用完全相同的组合key。
-        return getRandomAwardId(buildStrategyKey(strategyId, ruleWeightValue));
+        return getRandomAwardIdByKey(strategyId, buildStrategyKey(strategyId, ruleWeightValue));
     }
 
     /**
      * 从指定概率表中抽取一个奖品。
      */
-    private Integer getRandomAwardId(String strategyKey) {
+    private Integer getRandomAwardIdByKey(Long strategyId, String strategyKey) {
         // Redis LLEN 获取槽位总数，不需要把完整概率表加载回应用。
         Integer rateRange = repository.queryStrategyRateTableSize(strategyKey);
         if (rateRange == null || rateRange <= 0) {
-            throw new IllegalStateException("策略概率表未初始化，strategyKey: " + strategyKey);
+            ensureRateTableInitialized(strategyId, strategyKey);
+            rateRange = repository.queryStrategyRateTableSize(strategyKey);
+        }
+        if (rateRange == null || rateRange <= 0) {
+            throw new IllegalStateException("策略概率表装配后仍不可用，strategyKey: " + strategyKey);
         }
 
         // nextInt 上界不包含 rateRange，生成值正好覆盖 List 的 0..size-1 下标。
@@ -168,6 +174,20 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
         log.debug("随机抽奖 - strategyKey: {}, randomValue: {}, awardId: {}",
                 strategyKey, randomValue, awardId);
         return awardId;
+    }
+
+    /**
+     * 概率表缺失时按策略重新装配。本地同步用于避免单实例内并发重复装配，
+     * Redis 写入端通过临时键原子替换保证多实例同时装配时不会暴露半张表。
+     */
+    private synchronized void ensureRateTableInitialized(Long strategyId, String strategyKey) {
+        Integer currentSize = repository.queryStrategyRateTableSize(strategyKey);
+        if (currentSize != null && currentSize > 0) {
+            return;
+        }
+        if (!assembleLotteryStrategy(strategyId)) {
+            throw new IllegalStateException("策略概率表初始化失败，strategyId: " + strategyId);
+        }
     }
 
     private String buildStrategyKey(Long strategyId, String ruleWeightValue) {

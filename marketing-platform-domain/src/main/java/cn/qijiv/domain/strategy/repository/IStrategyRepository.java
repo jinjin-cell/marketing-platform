@@ -1,8 +1,8 @@
 package cn.qijiv.domain.strategy.repository;
 
-import cn.qijiv.domain.strategy.model.StrategyAwardEntity;
-import cn.qijiv.domain.strategy.model.StrategyEntity;
-import cn.qijiv.domain.strategy.model.StrategyRuleEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
 
 import java.util.List;
 

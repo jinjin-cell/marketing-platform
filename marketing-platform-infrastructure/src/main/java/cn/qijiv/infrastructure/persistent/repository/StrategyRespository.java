@@ -7,9 +7,9 @@ import cn.qijiv.infrastructure.persistent.dao.IStrategyRuleDao;
 import cn.qijiv.infrastructure.persistent.po.StrategyAwardPO;
 import cn.qijiv.infrastructure.persistent.po.StrategyPO;
 import cn.qijiv.infrastructure.persistent.po.StrategyRulePO;
-import cn.qijiv.domain.strategy.model.StrategyAwardEntity;
-import cn.qijiv.domain.strategy.model.StrategyEntity;
-import cn.qijiv.domain.strategy.model.StrategyRuleEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -107,16 +107,15 @@ public class StrategyRespository implements IStrategyRepository {
         return redisService.getListValue(cacheKey, randomValue);
     }
 
+    /**
+     * 查询策略实体，包含规则模型
+     *
+     * @param strategyId 策略ID
+     * @return 策略实体
+     */
     @Override
     public StrategyEntity queryStrategyEntityByStrategyId(Long strategyId) {
-        // 1. 策略实体包含 rule_models，优先从缓存读取以减少数据库访问。
-        String cacheKey = Constants.RedisKey.STRATEGY_KEY + strategyId;
-        StrategyEntity cachedEntity = redisService.getValue(cacheKey);
-        if (cachedEntity != null) {
-            return cachedEntity;
-        }
-
-        // 2. 缓存未命中，从数据库查询
+        // rule_models 决定本次抽奖实际执行的规则，直接读取数据库以避免永久缓存旧配置。
         StrategyPO strategyPO = strategyDao.queryStrategyByStrategyId(strategyId);
         if (strategyPO == null) {
             return null;
@@ -126,9 +125,6 @@ public class StrategyRespository implements IStrategyRepository {
                 .strategyDesc(strategyPO.getStrategyDesc())
                 .ruleModels(strategyPO.getRuleModels())
                 .build();
-
-        // 3. 将数据库结果写入 Redis 缓存
-        redisService.setValue(cacheKey, entity);
         return entity;
     }
 

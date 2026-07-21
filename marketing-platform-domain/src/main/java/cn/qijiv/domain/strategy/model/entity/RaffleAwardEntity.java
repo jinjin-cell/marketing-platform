@@ -1,11 +1,9 @@
-package cn.qijiv.domain.strategy.model;
+package cn.qijiv.domain.strategy.model.entity;
 
-import java.math.BigDecimal;
-
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 /**
  * 抽奖策略奖品实体
@@ -17,28 +15,26 @@ import lombok.Builder;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StrategyAwardEntity {
+public class RaffleAwardEntity {
+
     /**
      * 抽奖策略ID
      */
     private Long strategyId;
-
     /**
      * 抽奖奖品ID - 内部流转使用
      */
     private Integer awardId;
     /**
-     * 奖品库存总量
+     * 奖品key - 外部展示使用
      */
-    private Integer awardCount;
-
+    private String awardKey;
     /**
-     * 奖品库存剩余
+     * 奖品配置 - 内部流转使用
      */
-    private Integer awardCountSurplus;
-
+    private String awardConfig;
     /**
-     * 奖品中奖概率
+     * 奖品描述 - 外部展示使用
      */
-    private BigDecimal awardRate;
+    private String awardDesc;
 }

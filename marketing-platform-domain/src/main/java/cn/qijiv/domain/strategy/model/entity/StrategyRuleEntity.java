@@ -1,4 +1,4 @@
-package cn.qijiv.domain.strategy.model;
+package cn.qijiv.domain.strategy.model.entity;
 
 import cn.qijiv.types.common.Constants;
 import lombok.AllArgsConstructor;

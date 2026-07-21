@@ -1,8 +1,7 @@
 package cn.qijiv.domain.strategy.service.armory;
-
-import cn.qijiv.domain.strategy.model.StrategyAwardEntity;
-import cn.qijiv.domain.strategy.model.StrategyEntity;
-import cn.qijiv.domain.strategy.model.StrategyRuleEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
+import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import org.junit.Test;
 
@@ -55,6 +54,30 @@ public class StrategyArmoryDispatchTest {
         assertTrue(Arrays.asList(102, 103, 104, 105).contains(awardId));
     }
 
+    @Test
+    public void getRandomAwardId_missingBaseTable_assemblesOnDemand() {
+        RecordingStrategyRepository repository = new RecordingStrategyRepository(awards());
+        StrategyArmoryDispatch armoryDispatch = new StrategyArmoryDispatch(repository);
+
+        Integer awardId = armoryDispatch.getRandomAwardId(100001L);
+
+        assertTrue(repository.rateTables.containsKey("100001"));
+        assertTrue(Arrays.asList(101, 102, 103, 104, 105, 106, 107, 108, 109).contains(awardId));
+    }
+
+    @Test
+    public void getRandomAwardId_newWeightConfiguration_reassemblesMissingTable() {
+        RecordingStrategyRepository repository = new RecordingStrategyRepository(awards());
+        StrategyArmoryDispatch armoryDispatch = new StrategyArmoryDispatch(repository);
+        armoryDispatch.assembleLotteryStrategy(100001L);
+        repository.ruleWeightValue = "7000:108,109";
+
+        Integer awardId = armoryDispatch.getRandomAwardId(100001L, "7000:108,109");
+
+        assertTableContainsOnly(repository, "100001_7000:108,109", 108, 109);
+        assertTrue(Arrays.asList(108, 109).contains(awardId));
+    }
+
     private static void assertTableContainsOnly(RecordingStrategyRepository repository,
                                                 String key,
                                                 Integer... expectedAwardIds) {
@@ -89,6 +112,7 @@ public class StrategyArmoryDispatchTest {
 
         private final List<StrategyAwardEntity> strategyAwards;
         private final Map<String, List<Integer>> rateTables = new HashMap<>();
+        private String ruleWeightValue = RULE_WEIGHT_VALUE;
 
         private RecordingStrategyRepository(List<StrategyAwardEntity> strategyAwards) {
             this.strategyAwards = strategyAwards;
@@ -131,7 +155,7 @@ public class StrategyArmoryDispatchTest {
                     .strategyId(strategyId)
                     .ruleType(1)
                     .ruleModel(ruleModel)
-                    .ruleValue(RULE_WEIGHT_VALUE)
+                    .ruleValue(ruleWeightValue)
                     .ruleDesc("积分权重抽奖范围")
                     .build();
         }

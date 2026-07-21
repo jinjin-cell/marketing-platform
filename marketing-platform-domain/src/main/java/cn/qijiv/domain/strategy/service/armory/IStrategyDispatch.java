@@ -1,7 +1,7 @@
 package cn.qijiv.domain.strategy.service.armory;
 
 /**
- * 策略抽奖调度接口，只负责使用已装配的概率表，不暴露装配操作。
+ * 策略抽奖调度接口，对调用方只暴露抽奖操作；概率表缺失时由实现负责恢复装配。
  */
 public interface IStrategyDispatch {
 
