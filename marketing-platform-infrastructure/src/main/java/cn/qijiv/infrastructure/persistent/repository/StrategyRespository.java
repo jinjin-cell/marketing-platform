@@ -24,7 +24,7 @@ import cn.qijiv.types.common.Constants;
  * 抽奖策略奖品持久化仓库
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 @Repository
 public class StrategyRespository implements IStrategyRepository {
@@ -120,12 +120,11 @@ public class StrategyRespository implements IStrategyRepository {
         if (strategyPO == null) {
             return null;
         }
-        StrategyEntity entity = StrategyEntity.builder()
+        return StrategyEntity.builder()
                 .strategyId(strategyPO.getStrategyId())
                 .strategyDesc(strategyPO.getStrategyDesc())
                 .ruleModels(strategyPO.getRuleModels())
                 .build();
-        return entity;
     }
 
     @Override

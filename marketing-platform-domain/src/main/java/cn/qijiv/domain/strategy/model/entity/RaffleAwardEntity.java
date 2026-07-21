@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
  * 抽奖策略奖品实体
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 @Data
 @Builder

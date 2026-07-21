@@ -7,7 +7,7 @@ import cn.qijiv.domain.strategy.model.entity.RaffleAwardEntity;
  * 抽奖策略接口
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 public interface IRaffleStrategy {
 

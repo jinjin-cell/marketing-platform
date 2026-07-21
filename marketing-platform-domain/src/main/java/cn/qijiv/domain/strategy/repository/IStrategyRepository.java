@@ -10,7 +10,7 @@ import java.util.List;
  * 抽奖策略仓库
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 public interface IStrategyRepository {
 

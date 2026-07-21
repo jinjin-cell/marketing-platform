@@ -7,7 +7,7 @@ import cn.qijiv.domain.strategy.model.entity.RuleMatterEntity;
  * 抽奖策略规则接口
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 
 public interface ILogicFilter<T extends RuleActionEntity.RaffleEntity> {

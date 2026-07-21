@@ -15,7 +15,7 @@ import java.util.List;
  * 奖品 DAO 单元测试
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 @Slf4j
 @RunWith(SpringRunner.class)

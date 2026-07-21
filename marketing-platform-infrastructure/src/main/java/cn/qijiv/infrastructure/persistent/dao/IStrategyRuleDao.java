@@ -10,7 +10,7 @@ import java.util.List;
  * 抽奖策略规则 DAO
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 @Mapper
 public interface IStrategyRuleDao {

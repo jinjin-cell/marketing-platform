@@ -6,7 +6,7 @@ import lombok.Data;
  * 抽奖规则物料实体类
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 @Data
 public class RuleMatterEntity {

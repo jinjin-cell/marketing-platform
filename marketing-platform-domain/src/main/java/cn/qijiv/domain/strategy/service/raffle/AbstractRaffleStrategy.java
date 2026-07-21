@@ -17,7 +17,7 @@ import org.apache.commons.lang3.StringUtils;
  * 抽奖策略抽象类
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
 

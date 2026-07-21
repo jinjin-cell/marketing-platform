@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
  * 抽奖策略 DAO
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 @Mapper
 public interface IStrategyDao {

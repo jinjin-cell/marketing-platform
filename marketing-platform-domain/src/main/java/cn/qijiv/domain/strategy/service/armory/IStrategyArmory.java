@@ -4,7 +4,7 @@ package cn.qijiv.domain.strategy.service.armory;
  * 策略兵工厂接口 —— 负责策略数据装配
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 public interface IStrategyArmory {
 

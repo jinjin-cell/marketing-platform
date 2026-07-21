@@ -8,7 +8,7 @@ import java.util.Date;
  * 抽奖策略规则持久化对象
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 @Data
 public class StrategyRulePO {

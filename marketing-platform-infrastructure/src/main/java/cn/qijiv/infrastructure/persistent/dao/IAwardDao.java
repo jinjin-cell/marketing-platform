@@ -9,7 +9,7 @@ import java.util.List;
  * 奖品 DAO
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 @Mapper
 public interface IAwardDao {

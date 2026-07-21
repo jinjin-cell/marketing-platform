@@ -8,7 +8,7 @@ import java.util.Date;
  * 奖品持久化对象
  *
  * @author jinlujia
- * @date 2026/07/18
+ * @since 2026-07-18
  */
 @Data
 public class AwardPO {
