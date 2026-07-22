@@ -1,4 +1,5 @@
 package cn.qijiv.domain.strategy.service.armory;
+
 import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
@@ -19,9 +20,9 @@ import static org.junit.Assert.assertTrue;
 public class StrategyArmoryDispatchTest {
 
     private static final String RULE_WEIGHT_VALUE =
-            "4000:102,103,104,105 " +
-            "5000:102,103,104,105,106,107 " +
-            "6000:102,103,104,105,106,107,108,109";
+            "4000:102,103,104,105 "
+                    + "5000:102,103,104,105,106,107 "
+                    + "6000:102,103,104,105,106,107,108,109";
 
     @Test
     public void assembleLotteryStrategy_buildsBaseAndWeightRateTables() {
@@ -78,9 +79,10 @@ public class StrategyArmoryDispatchTest {
         assertTrue(Arrays.asList(108, 109).contains(awardId));
     }
 
-    private static void assertTableContainsOnly(RecordingStrategyRepository repository,
-                                                String key,
-                                                Integer... expectedAwardIds) {
+    private static void assertTableContainsOnly(
+            RecordingStrategyRepository repository,
+            String key,
+            Integer... expectedAwardIds) {
         List<Integer> rateTable = repository.rateTables.get(key);
         assertTrue(rateTable != null && !rateTable.isEmpty());
         assertEquals(new HashSet<>(Arrays.asList(expectedAwardIds)), new HashSet<>(rateTable));
@@ -96,8 +98,7 @@ public class StrategyArmoryDispatchTest {
                 award(106, "0.0500"),
                 award(107, "0.0400"),
                 award(108, "0.0099"),
-                award(109, "0.0001")
-        );
+                award(109, "0.0001"));
     }
 
     private static StrategyAwardEntity award(int awardId, String awardRate) {

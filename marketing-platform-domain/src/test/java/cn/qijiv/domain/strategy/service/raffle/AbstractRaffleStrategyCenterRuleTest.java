@@ -9,7 +9,9 @@ import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
 import cn.qijiv.domain.strategy.model.valobj.RuleLogicCheckTypeVO;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import cn.qijiv.domain.strategy.service.armory.IStrategyDispatch;
-import cn.qijiv.domain.strategy.service.rule.factory.DefaultLogicFactory;
+import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
+import cn.qijiv.domain.strategy.service.rule.chain.impl.DefaultLogicChain;
+import cn.qijiv.domain.strategy.service.rule.filter.factory.DefaultLogicFactory;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -74,15 +76,15 @@ public class AbstractRaffleStrategyCenterRuleTest {
 
     private AbstractRaffleStrategy strategyWithCenterResult(
             RuleActionEntity<RuleActionEntity.RaffleCenterEntity> centerResult) {
-        return new AbstractRaffleStrategy(new CenterRuleRepository(), new FixedStrategyDispatch()) {
+        CenterRuleRepository repository = new CenterRuleRepository();
+        IStrategyDispatch dispatch = new FixedStrategyDispatch();
+        DefaultChainFactory chainFactory = new DefaultChainFactory(null, repository) {
             @Override
-            protected RuleActionEntity<RuleActionEntity.RaffleBeforeEntity> doCheckRaffleBeforeLogic(
-                    RaffleFactorEntity raffleFactorEntity, String... ruleModels) {
-                return RuleActionEntity.<RuleActionEntity.RaffleBeforeEntity>builder()
-                        .code(RuleLogicCheckTypeVO.ALLOW.getCode())
-                        .build();
+            public cn.qijiv.domain.strategy.service.rule.chain.ILogicChain openLogicChain(Long strategyId) {
+                return new DefaultLogicChain(dispatch);
             }
-
+        };
+        return new AbstractRaffleStrategy(repository, chainFactory) {
             @Override
             protected RuleActionEntity<RuleActionEntity.RaffleCenterEntity> doCheckRaffleCenterLogic(
                     RaffleFactorEntity raffleFactorEntity, String... ruleModels) {

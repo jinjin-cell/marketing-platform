@@ -1,4 +1,4 @@
-package cn.qijiv.domain.strategy.service.rule.factory;
+package cn.qijiv.domain.strategy.service.rule.filter.factory;
 
 import cn.qijiv.domain.strategy.model.entity.RuleActionEntity;
 import cn.qijiv.domain.strategy.service.annotation.LogicStrategy;
@@ -17,13 +17,11 @@ import java.util.Map;
 @Service
 public class DefaultLogicFactory {
 
-    private final Map<String, ILogicFilter<RuleActionEntity.RaffleBeforeEntity>> beforeLogicFilterMap;
     private final Map<String, ILogicFilter<RuleActionEntity.RaffleCenterEntity>> centerLogicFilterMap;
     private final Map<String, ILogicFilter<RuleActionEntity.RaffleEntity>> afterLogicFilterMap;
 
     @SuppressWarnings("unchecked")
     public DefaultLogicFactory(List<? extends ILogicFilter<?>> logicFilters) {
-        Map<String, ILogicFilter<RuleActionEntity.RaffleBeforeEntity>> beforeFilters = new LinkedHashMap<>();
         Map<String, ILogicFilter<RuleActionEntity.RaffleCenterEntity>> centerFilters = new LinkedHashMap<>();
         Map<String, ILogicFilter<RuleActionEntity.RaffleEntity>> afterFilters = new LinkedHashMap<>();
         for (ILogicFilter<?> logicFilter : logicFilters) {
@@ -34,21 +32,19 @@ public class DefaultLogicFactory {
             }
             String ruleModel = strategy.logicMode().getCode();
             String ruleType = strategy.logicMode().getType();
-            if (LogicType.BEFORE.getCode().equals(ruleType)) {
-                registerFilter(beforeFilters, ruleModel,
-                        (ILogicFilter<RuleActionEntity.RaffleBeforeEntity>) logicFilter);
-            } else if (LogicType.CENTER.getCode().equals(ruleType)) {
+            if (LogicType.CENTER.getCode().equals(ruleType)) {
                 registerFilter(centerFilters, ruleModel,
                         (ILogicFilter<RuleActionEntity.RaffleCenterEntity>) logicFilter);
             } else if (LogicType.AFTER.getCode().equals(ruleType)) {
                 registerFilter(afterFilters, ruleModel,
                         (ILogicFilter<RuleActionEntity.RaffleEntity>) logicFilter);
+            } else if (LogicType.BEFORE.getCode().equals(ruleType)) {
+                throw new IllegalStateException("抽奖前置规则必须使用责任链，ruleModel: " + ruleModel);
             } else {
                 throw new IllegalStateException("不支持的抽奖规则阶段，ruleModel: "
                         + ruleModel + ", type: " + ruleType);
             }
         }
-        this.beforeLogicFilterMap = Collections.unmodifiableMap(beforeFilters);
         this.centerLogicFilterMap = Collections.unmodifiableMap(centerFilters);
         this.afterLogicFilterMap = Collections.unmodifiableMap(afterFilters);
     }
@@ -60,10 +56,6 @@ public class DefaultLogicFactory {
         if (filters.put(ruleModel, logicFilter) != null) {
             throw new IllegalStateException("重复的抽奖规则过滤器，ruleModel: " + ruleModel);
         }
-    }
-
-    public Map<String, ILogicFilter<RuleActionEntity.RaffleBeforeEntity>> openBeforeLogicFilter() {
-        return beforeLogicFilterMap;
     }
 
     public Map<String, ILogicFilter<RuleActionEntity.RaffleCenterEntity>> openCenterLogicFilter() {

@@ -1,11 +1,11 @@
-package cn.qijiv.domain.strategy.service.rule.impl;
+package cn.qijiv.domain.strategy.service.rule.filter.impl;
 
 import cn.qijiv.domain.strategy.model.entity.RuleMatterEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
-import cn.qijiv.domain.strategy.service.rule.factory.DefaultLogicFactory;
+import cn.qijiv.domain.strategy.service.rule.filter.factory.DefaultLogicFactory;
 import org.junit.Test;
 
 import java.util.List;

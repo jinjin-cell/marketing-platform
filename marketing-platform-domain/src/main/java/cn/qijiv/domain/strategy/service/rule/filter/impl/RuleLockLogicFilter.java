@@ -1,4 +1,4 @@
-package cn.qijiv.domain.strategy.service.rule.impl;
+package cn.qijiv.domain.strategy.service.rule.filter.impl;
 
 import cn.qijiv.domain.strategy.model.entity.RuleActionEntity;
 import cn.qijiv.domain.strategy.model.entity.RuleMatterEntity;
@@ -7,7 +7,7 @@ import cn.qijiv.domain.strategy.model.valobj.RuleLogicCheckTypeVO;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import cn.qijiv.domain.strategy.service.annotation.LogicStrategy;
 import cn.qijiv.domain.strategy.service.rule.ILogicFilter;
-import cn.qijiv.domain.strategy.service.rule.factory.DefaultLogicFactory;
+import cn.qijiv.domain.strategy.service.rule.filter.factory.DefaultLogicFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
