@@ -3,6 +3,8 @@ package cn.qijiv.domain.strategy.repository;
 import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
+import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
+import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 
 import java.util.List;
 
@@ -73,5 +75,29 @@ public interface IStrategyRepository {
      * @return 奖品规则实体
      */
     StrategyRuleEntity queryStrategyAwardRule(Long strategyId, Integer awardId, String ruleModel);
+
+    /**
+     * 查询奖品绑定的规则树模型。
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     * @return 奖品规则树配置；奖品不存在时返回null
+     */
+    StrategyAwardRuleModelVO queryStrategyAwardRuleModelVO(Long strategyId, Integer awardId);
+
+    /**
+     * 从规则树、节点、连线三张表装配一棵完整规则树。
+     *
+     * @param treeId 规则树业务ID
+     * @return 完整规则树；树根不存在时返回null
+     */
+    RuleTreeVO queryRuleTreeVOByTreeId(String treeId);
+
+    /**
+     * 原子扣减奖品库存。
+     *
+     * @return true-扣减成功，false-库存不足或奖品不存在
+     */
+    boolean subtractionAwardStock(Long strategyId, Integer awardId);
 
 }

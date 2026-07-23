@@ -166,5 +166,21 @@ public class StrategyArmoryDispatchTest {
                 Long strategyId, Integer awardId, String ruleModel) {
             return null;
         }
+
+        @Override
+        public cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO
+        queryStrategyAwardRuleModelVO(Long strategyId, Integer awardId) {
+            return null;
+        }
+
+        @Override
+        public cn.qijiv.domain.strategy.model.valobj.RuleTreeVO queryRuleTreeVOByTreeId(String treeId) {
+            return null;
+        }
+
+        @Override
+        public boolean subtractionAwardStock(Long strategyId, Integer awardId) {
+            return true;
+        }
     }
 }

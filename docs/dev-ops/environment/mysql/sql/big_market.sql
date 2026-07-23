@@ -13,6 +13,9 @@ CREATE DATABASE IF NOT EXISTS `big_market`
   COLLATE utf8mb4_0900_ai_ci;
 USE `big_market`;
 
+DROP TABLE IF EXISTS `rule_tree_node_line`;
+DROP TABLE IF EXISTS `rule_tree_node`;
+DROP TABLE IF EXISTS `rule_tree`;
 DROP TABLE IF EXISTS `strategy_rule`;
 DROP TABLE IF EXISTS `strategy_award`;
 DROP TABLE IF EXISTS `strategy`;
@@ -78,15 +81,15 @@ CREATE TABLE `strategy_award` (
 INSERT INTO `strategy_award`
   (`id`, `strategy_id`, `award_id`, `award_title`, `award_subtitle`, `award_count`, `award_count_surplus`, `award_rate`, `rule_models`, `sort`, `create_time`, `update_time`)
 VALUES
-  (1, 100001, 101, '随机积分', NULL, 80000, 80000, 80.0000, 'rule_random,rule_luck_award', 1, '2023-12-09 09:38:31', '2023-12-09 10:58:06'),
-  (2, 100001, 102, '5次使用', NULL, 10000, 10000, 10.0000, 'rule_luck_award', 2, '2023-12-09 09:39:18', '2023-12-09 10:34:23'),
-  (3, 100001, 103, '10次使用', NULL, 5000, 5000, 5.0000, 'rule_luck_award', 3, '2023-12-09 09:42:36', '2023-12-09 10:34:24'),
-  (4, 100001, 104, '20次使用', NULL, 4000, 4000, 4.0000, 'rule_luck_award', 4, '2023-12-09 09:43:15', '2023-12-09 10:34:25'),
-  (5, 100001, 105, '增加gpt-4对话模型', NULL, 600, 600, 0.6000, 'rule_luck_award', 5, '2023-12-09 09:43:47', '2023-12-09 10:34:26'),
-  (6, 100001, 106, '增加dall-e-2画图模型', NULL, 200, 200, 0.2000, 'rule_luck_award', 6, '2023-12-09 09:44:20', '2023-12-09 10:34:26'),
-  (7, 100001, 107, '增加dall-e-3画图模型', '抽奖1次后解锁', 200, 200, 0.2000, 'rule_lock,rule_luck_award', 7, '2023-12-09 09:45:38', '2023-12-09 10:30:59'),
-  (8, 100001, 108, '增加100次使用', '抽奖2次后解锁', 199, 199, 0.1999, 'rule_lock,rule_luck_award', 8, '2023-12-09 09:46:02', '2023-12-09 12:20:52'),
-  (9, 100001, 109, '解锁全部模型', '抽奖6次后解锁', 1, 1, 0.0001, 'rule_lock,rule_luck_award', 9, '2023-12-09 09:46:39', '2023-12-09 12:20:50');
+  (1, 100001, 101, '随机积分', NULL, 80000, 80000, 80.0000, NULL, 1, '2023-12-09 09:38:31', '2023-12-09 10:58:06'),
+  (2, 100001, 102, '5次使用', NULL, 10000, 10000, 10.0000, NULL, 2, '2023-12-09 09:39:18', '2023-12-09 10:34:23'),
+  (3, 100001, 103, '10次使用', NULL, 5000, 5000, 5.0000, NULL, 3, '2023-12-09 09:42:36', '2023-12-09 10:34:24'),
+  (4, 100001, 104, '20次使用', NULL, 4000, 4000, 4.0000, NULL, 4, '2023-12-09 09:43:15', '2023-12-09 10:34:25'),
+  (5, 100001, 105, '增加gpt-4对话模型', NULL, 600, 600, 0.6000, NULL, 5, '2023-12-09 09:43:47', '2023-12-09 10:34:26'),
+  (6, 100001, 106, '增加dall-e-2画图模型', NULL, 200, 200, 0.2000, NULL, 6, '2023-12-09 09:44:20', '2023-12-09 10:34:26'),
+  (7, 100001, 107, '增加dall-e-3画图模型', '抽奖1次后解锁', 200, 200, 0.2000, 'tree_lock', 7, '2023-12-09 09:45:38', '2023-12-09 10:30:59'),
+  (8, 100001, 108, '增加100次使用', '抽奖2次后解锁', 199, 199, 0.1999, 'tree_lock', 8, '2023-12-09 09:46:02', '2023-12-09 12:20:52'),
+  (9, 100001, 109, '解锁全部模型', '抽奖6次后解锁', 1, 1, 0.0001, 'tree_lock', 9, '2023-12-09 09:46:39', '2023-12-09 12:20:50');
 
 CREATE TABLE `strategy_rule` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
@@ -119,5 +122,64 @@ VALUES
   (12, 100001, 106, 2, 'rule_luck_award', '1,60', '兜底奖品60以内随机积分', '2023-12-09 10:30:43', '2023-12-09 12:56:00'),
   (13, 100001, NULL, 1, 'rule_weight', '4000:102,103,104,105 5000:102,103,104,105,106,107 6000:102,103,104,105,106,107,108,109', '积分权重抽奖范围', '2023-12-09 10:30:43', '2023-12-09 12:58:21'),
   (14, 100001, NULL, 1, 'rule_blacklist', '101:user001,user002', '黑名单抽奖，积分兜底', '2023-12-09 12:59:45', '2023-12-09 13:42:23');
+
+-- 规则树根表：保存树的基本信息和入口节点。
+CREATE TABLE `rule_tree` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `tree_id` varchar(32) NOT NULL COMMENT '规则树业务ID',
+  `tree_name` varchar(64) NOT NULL COMMENT '规则树名称',
+  `tree_desc` varchar(128) DEFAULT NULL COMMENT '规则树描述',
+  `tree_node_rule_key` varchar(32) NOT NULL COMMENT '根节点规则Key',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_tree_id` (`tree_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 规则树节点表：每一行对应一个可以执行的业务节点。
+CREATE TABLE `rule_tree_node` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `tree_id` varchar(32) NOT NULL COMMENT '规则树业务ID',
+  `rule_key` varchar(32) NOT NULL COMMENT '规则节点Key',
+  `rule_desc` varchar(128) DEFAULT NULL COMMENT '规则节点描述',
+  `rule_value` varchar(256) DEFAULT NULL COMMENT '规则节点配置值',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_tree_rule_key` (`tree_id`, `rule_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 规则树连线表：根据节点返回的 ALLOW/TAKE_OVER 决定下一节点。
+CREATE TABLE `rule_tree_node_line` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `tree_id` varchar(32) NOT NULL COMMENT '规则树业务ID',
+  `rule_node_from` varchar(32) NOT NULL COMMENT '起始节点Key',
+  `rule_node_to` varchar(32) NOT NULL COMMENT '目标节点Key',
+  `rule_limit_type` varchar(16) NOT NULL COMMENT '比较类型，例如 EQUAL',
+  `rule_limit_value` varchar(16) NOT NULL COMMENT '节点结果，例如 ALLOW',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_tree_from` (`tree_id`, `rule_node_from`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO `rule_tree`
+  (`id`, `tree_id`, `tree_name`, `tree_desc`, `tree_node_rule_key`)
+VALUES
+  (1, 'tree_lock', '抽奖规则树', '次数解锁、库存校验和积分兜底', 'rule_lock');
+
+INSERT INTO `rule_tree_node`
+  (`id`, `tree_id`, `rule_key`, `rule_desc`, `rule_value`)
+VALUES
+  (1, 'tree_lock', 'rule_lock', '限定用户完成1次抽奖后解锁', '1'),
+  (2, 'tree_lock', 'rule_luck_award', '未解锁或无库存时返回随机积分', '1,100'),
+  (3, 'tree_lock', 'rule_stock', '检查当前奖品剩余库存', NULL);
+
+INSERT INTO `rule_tree_node_line`
+  (`id`, `tree_id`, `rule_node_from`, `rule_node_to`, `rule_limit_type`, `rule_limit_value`)
+VALUES
+  (1, 'tree_lock', 'rule_lock', 'rule_stock', 'EQUAL', 'ALLOW'),
+  (2, 'tree_lock', 'rule_lock', 'rule_luck_award', 'EQUAL', 'TAKE_OVER'),
+  (3, 'tree_lock', 'rule_stock', 'rule_luck_award', 'EQUAL', 'TAKE_OVER');
 
 SET FOREIGN_KEY_CHECKS = 1;

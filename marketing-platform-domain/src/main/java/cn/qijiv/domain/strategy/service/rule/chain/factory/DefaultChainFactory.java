@@ -3,11 +3,14 @@ package cn.qijiv.domain.strategy.service.rule.chain.factory;
 import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import cn.qijiv.domain.strategy.service.rule.chain.ILogicChain;
-import cn.qijiv.domain.strategy.service.rule.filter.factory.DefaultLogicFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.stereotype.Service;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -18,7 +21,11 @@ import java.util.Set;
 @Service
 public class DefaultChainFactory {
 
-    private static final String DEFAULT_CHAIN = "default";
+    public static final String DEFAULT_CHAIN = "default";
+    /** 黑名单责任链节点的 Spring Bean 名称，同时也是数据库规则模型名称。 */
+    public static final String RULE_BLACKLIST = "rule_blacklist";
+    /** 权重责任链节点的 Spring Bean 名称，同时也是数据库规则模型名称。 */
+    public static final String RULE_WEIGHT = "rule_weight";
 
     private final ListableBeanFactory beanFactory;
     private final IStrategyRepository repository;
@@ -75,11 +82,10 @@ public class DefaultChainFactory {
             }
         }
 
-        String blacklist = DefaultLogicFactory.LogicModel.RULE_BLACKLIST.getCode();
         List<String> ordered = new ArrayList<>();
-        if (uniqueRuleModels.remove(blacklist)) {
+        if (uniqueRuleModels.remove(RULE_BLACKLIST)) {
             // 黑名单命中后会直接指定奖品，因此必须优先于权重规则执行。
-            ordered.add(blacklist);
+            ordered.add(RULE_BLACKLIST);
         }
         ordered.addAll(uniqueRuleModels);
         return ordered;
@@ -91,5 +97,24 @@ public class DefaultChainFactory {
         } catch (NoSuchBeanDefinitionException ex) {
             throw new IllegalStateException("抽奖责任链节点未注册，ruleModel: " + beanName, ex);
         }
+    }
+
+    /**
+     * 责任链抽奖结果。
+     *
+     * <p>除了奖品ID，还必须记录最终由哪个节点返回结果。模板方法会使用
+     * {@code logicModel} 判断：黑名单、权重等规则已经接管时直接返回；只有
+     * {@code default} 普通概率抽奖才继续进入规则树做次数和库存校验。</p>
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class StrategyAwardVO {
+
+        /** 责任链最终选出的奖品ID。 */
+        private Integer awardId;
+        /** 最终返回奖品的责任链节点名称。 */
+        private String logicModel;
     }
 }

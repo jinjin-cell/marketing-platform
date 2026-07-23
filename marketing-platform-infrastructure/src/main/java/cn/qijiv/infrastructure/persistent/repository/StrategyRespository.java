@@ -4,14 +4,31 @@ import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import cn.qijiv.infrastructure.persistent.dao.IStrategyAwardDao;
 import cn.qijiv.infrastructure.persistent.dao.IStrategyDao;
 import cn.qijiv.infrastructure.persistent.dao.IStrategyRuleDao;
+import cn.qijiv.infrastructure.persistent.dao.IRuleTreeDao;
+import cn.qijiv.infrastructure.persistent.dao.IRuleTreeNodeDao;
+import cn.qijiv.infrastructure.persistent.dao.IRuleTreeNodeLineDao;
+import cn.qijiv.infrastructure.persistent.po.RuleTreeNodeLinePO;
+import cn.qijiv.infrastructure.persistent.po.RuleTreeNodePO;
+import cn.qijiv.infrastructure.persistent.po.RuleTreePO;
 import cn.qijiv.infrastructure.persistent.po.StrategyAwardPO;
 import cn.qijiv.infrastructure.persistent.po.StrategyPO;
 import cn.qijiv.infrastructure.persistent.po.StrategyRulePO;
 import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
+import cn.qijiv.domain.strategy.model.valobj.RuleLimitTypeVO;
+import cn.qijiv.domain.strategy.model.valobj.RuleLogicCheckTypeVO;
+import cn.qijiv.domain.strategy.model.valobj.RuleTreeNodeLineVO;
+import cn.qijiv.domain.strategy.model.valobj.RuleTreeNodeVO;
+import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
+import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -32,6 +49,9 @@ public class StrategyRespository implements IStrategyRepository {
 
     private static final String STRATEGY_AWARD_CACHE_VERSION = "v2_";
     private static final long STRATEGY_AWARD_CACHE_TTL_MINUTES = 10L;
+    private static final long STRATEGY_RATE_TABLE_CACHE_TTL_MINUTES = 30L;
+    private static final String RULE_TREE_CACHE_VERSION = "v1_";
+    private static final long RULE_TREE_CACHE_TTL_MINUTES = 30L;
 
     @Resource
     private IStrategyAwardDao strategyAwardDao;
@@ -41,6 +61,15 @@ public class StrategyRespository implements IStrategyRepository {
 
     @Resource
     private IStrategyRuleDao strategyRuleDao;
+
+    @Resource
+    private IRuleTreeDao ruleTreeDao;
+
+    @Resource
+    private IRuleTreeNodeDao ruleTreeNodeDao;
+
+    @Resource
+    private IRuleTreeNodeLineDao ruleTreeNodeLineDao;
 
     @Resource
     private IRedisService redisService;
@@ -89,7 +118,11 @@ public class StrategyRespository implements IStrategyRepository {
     public void storeStrategyRateTable(String strategyId, List<Integer> rateTable) {
         // 普通策略和权重策略共用前缀，通过业务key区分不同概率表。
         String cacheKey = Constants.RedisKey.STRATEGY_RATE_TABLE_KEY + strategyId;
-        redisService.setList(cacheKey, rateTable);
+        redisService.setList(
+                cacheKey,
+                rateTable,
+                STRATEGY_RATE_TABLE_CACHE_TTL_MINUTES,
+                TimeUnit.MINUTES);
     }
 
     /**
@@ -170,5 +203,141 @@ public class StrategyRespository implements IStrategyRepository {
                 .ruleValue(strategyRulePO.getRuleValue())
                 .ruleDesc(strategyRulePO.getRuleDesc())
                 .build();
+    }
+
+    @Override
+    public StrategyAwardRuleModelVO queryStrategyAwardRuleModelVO(
+            Long strategyId, Integer awardId) {
+        StrategyAwardPO strategyAwardPO =
+                strategyAwardDao.queryStrategyAwardRuleModel(strategyId, awardId);
+        if (strategyAwardPO == null) {
+            return null;
+        }
+        return StrategyAwardRuleModelVO.builder()
+                .ruleModels(strategyAwardPO.getRuleModels())
+                .build();
+    }
+
+    @Override
+    public RuleTreeVO queryRuleTreeVOByTreeId(String treeId) {
+        if (treeId == null || treeId.trim().isEmpty()) {
+            throw new IllegalArgumentException("规则树ID不能为空");
+        }
+
+        String normalizedTreeId = treeId.trim();
+        String cacheKey = Constants.RedisKey.RULE_TREE_KEY
+                + RULE_TREE_CACHE_VERSION
+                + normalizedTreeId;
+
+        // 1. 先查询 Redis，命中后不再访问规则树三张表。
+        RuleTreeVO cachedRuleTree = redisService.getValue(cacheKey);
+        if (cachedRuleTree != null) {
+            return cachedRuleTree;
+        }
+
+        // 2. 缓存未命中，从数据库装配完整规则树。
+        RuleTreeVO ruleTreeVO = queryRuleTreeFromDatabase(normalizedTreeId);
+        if (ruleTreeVO == null) {
+            return null;
+        }
+
+        // 3. 将完整规则树写入 Redis，并设置固定过期时间，避免配置长期不刷新。
+        redisService.setValue(
+                cacheKey,
+                ruleTreeVO,
+                RULE_TREE_CACHE_TTL_MINUTES,
+                TimeUnit.MINUTES);
+        return ruleTreeVO;
+    }
+
+    /** 从规则树、节点和连线三张表装配领域对象。 */
+    private RuleTreeVO queryRuleTreeFromDatabase(String treeId) {
+        // 1. 查询树根。树根不存在时返回 null，由领域服务给出包含奖品信息的异常。
+        RuleTreePO ruleTreePO = ruleTreeDao.queryRuleTreeByTreeId(treeId);
+        if (ruleTreePO == null) {
+            return null;
+        }
+
+        // 2. 一次性查询该树的全部节点和连线，避免执行过程中频繁访问数据库。
+        List<RuleTreeNodePO> nodePOList = ruleTreeNodeDao.queryRuleTreeNodeListByTreeId(treeId);
+        List<RuleTreeNodeLinePO> linePOList =
+                ruleTreeNodeLineDao.queryRuleTreeNodeLineListByTreeId(treeId);
+        if (nodePOList == null || nodePOList.isEmpty()) {
+            throw new IllegalStateException("规则树没有配置节点，treeId: " + treeId);
+        }
+
+        // 3. tree node line 转换成Map结构
+        Map<String, List<RuleTreeNodeLineVO>> lineMap = new LinkedHashMap<>();
+        if (linePOList != null) {
+            for (RuleTreeNodeLinePO linePO : linePOList) {
+                RuleTreeNodeLineVO lineVO = convertLine(linePO);
+                lineMap.computeIfAbsent(lineVO.getRuleNodeFrom(), key -> new ArrayList<>())
+                        .add(lineVO);
+            }
+        }
+
+        // 4. tree node 转换成Map结构
+        Map<String, RuleTreeNodeVO> nodeMap = new LinkedHashMap<>();
+        for (RuleTreeNodePO nodePO : nodePOList) {
+            RuleTreeNodeVO old = nodeMap.put(nodePO.getRuleKey(), RuleTreeNodeVO.builder()
+                    .treeId(nodePO.getTreeId())
+                    .ruleKey(nodePO.getRuleKey())
+                    .ruleDesc(nodePO.getRuleDesc())
+                    .ruleValue(nodePO.getRuleValue())
+                    .treeNodeLineVOList(lineMap.getOrDefault(
+                            nodePO.getRuleKey(), Collections.emptyList()))
+                    .build());
+            if (old != null) {
+                throw new IllegalStateException(
+                        "规则树存在重复节点，treeId: " + treeId + ", ruleKey: " + nodePO.getRuleKey());
+            }
+        }
+        if (!nodeMap.containsKey(ruleTreePO.getTreeNodeRuleKey())) {
+            throw new IllegalStateException(
+                    "规则树根节点不存在，treeId: " + treeId
+                            + ", root: " + ruleTreePO.getTreeNodeRuleKey());
+        }
+
+        // 5. 构建 Rule Tree
+        return RuleTreeVO.builder()
+                .treeId(ruleTreePO.getTreeId())
+                .treeName(ruleTreePO.getTreeName())
+                .treeDesc(ruleTreePO.getTreeDesc())
+                .treeRootRuleNode(ruleTreePO.getTreeNodeRuleKey())
+                .treeNodeMap(nodeMap)
+                .build();
+    }
+
+    /** 把数据库字符串枚举转换为领域枚举，并在配置错误时给出明确提示。 */
+    private RuleTreeNodeLineVO convertLine(RuleTreeNodeLinePO linePO) {
+        try {
+            return RuleTreeNodeLineVO.builder()
+                    .treeId(linePO.getTreeId())
+                    .ruleNodeFrom(linePO.getRuleNodeFrom())
+                    .ruleNodeTo(linePO.getRuleNodeTo())
+                    .ruleLimitType(RuleLimitTypeVO.valueOf(
+                            linePO.getRuleLimitType().trim().toUpperCase(Locale.ROOT)))
+                    .ruleLimitValue(RuleLogicCheckTypeVO.valueOf(
+                            linePO.getRuleLimitValue().trim().toUpperCase(Locale.ROOT)))
+                    .build();
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException(
+                    "规则树连线配置非法，treeId: " + linePO.getTreeId()
+                            + ", from: " + linePO.getRuleNodeFrom(), ex);
+        }
+    }
+
+    @Override
+    public boolean subtractionAwardStock(Long strategyId, Integer awardId) {
+        int affectedRows = strategyAwardDao.subtractionAwardStock(strategyId, awardId);
+        if (affectedRows == 1) {
+            // 奖品列表缓存中包含剩余库存，扣减成功后必须失效，避免后续读到旧值。
+            String cacheKey = Constants.RedisKey.STRATEGY_AWARD_KEY
+                    + STRATEGY_AWARD_CACHE_VERSION
+                    + strategyId;
+            redisService.delete(cacheKey);
+            return true;
+        }
+        return false;
     }
 }

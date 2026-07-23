@@ -24,4 +24,14 @@ public interface IStrategyAwardDao {
 
     List<StrategyAwardPO> queryStrategyAwardListByStrategyId(Long strategyId);
 
+    /** 按策略和奖品查询规则树模型字段。 */
+    StrategyAwardPO queryStrategyAwardRuleModel(
+            @org.apache.ibatis.annotations.Param("strategyId") Long strategyId,
+            @org.apache.ibatis.annotations.Param("awardId") Integer awardId);
+
+    /** 库存大于0时原子扣减1，返回受影响行数。 */
+    int subtractionAwardStock(
+            @org.apache.ibatis.annotations.Param("strategyId") Long strategyId,
+            @org.apache.ibatis.annotations.Param("awardId") Integer awardId);
+
 }

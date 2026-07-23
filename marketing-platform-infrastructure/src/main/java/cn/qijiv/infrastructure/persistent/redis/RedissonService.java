@@ -6,6 +6,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +40,19 @@ public class RedissonService implements IRedisService {
 
     @Override
     public <T> void setList(String key, List<T> values) {
+        replaceList(key, values, null, null);
+    }
+
+    @Override
+    public <T> void setList(String key, List<T> values, long timeout, TimeUnit unit) {
+        if (timeout <= 0) {
+            throw new IllegalArgumentException("Redis List 过期时间必须大于0");
+        }
+        replaceList(key, values, timeout, Objects.requireNonNull(unit, "时间单位不能为空"));
+    }
+
+    private <T> void replaceList(
+            String key, List<T> values, Long timeout, TimeUnit unit) {
         if (values == null || values.isEmpty()) {
             redissonClient.getList(key).delete();
             return;
@@ -49,6 +63,9 @@ public class RedissonService implements IRedisService {
         boolean renamed = false;
         try {
             temporaryList.addAll(values);
+            if (timeout != null && !temporaryList.expire(timeout, unit)) {
+                throw new IllegalStateException("Redis List 设置过期时间失败，key: " + key);
+            }
             // Redis RENAME 会原子替换旧key，读取方不会看到删除后尚未写完的中间状态。
             temporaryList.rename(key);
             renamed = true;

@@ -1,94 +1,72 @@
 package cn.qijiv.domain.strategy.service.raffle;
 
-import cn.qijiv.domain.strategy.model.entity.RaffleFactorEntity;
-import cn.qijiv.domain.strategy.model.entity.RuleActionEntity;
-import cn.qijiv.domain.strategy.model.entity.RuleMatterEntity;
-import cn.qijiv.domain.strategy.model.valobj.RuleLogicCheckTypeVO;
+import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
+import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
-import cn.qijiv.domain.strategy.service.rule.ILogicFilter;
+import cn.qijiv.domain.strategy.service.rule.chain.ILogicChain;
 import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
-import cn.qijiv.domain.strategy.service.rule.filter.factory.DefaultLogicFactory;
+import cn.qijiv.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;
+import cn.qijiv.domain.strategy.service.rule.tree.factory.engine.IDecisionTreeEngine;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-
-/** 默认抽奖策略。 */
+/** 默认抽奖策略，负责实现模板方法中两个可变的业务步骤。 */
 @Service
 public class DefaultRaffleStrategy extends AbstractRaffleStrategy {
 
-    private final DefaultLogicFactory logicFactory;
-
     public DefaultRaffleStrategy(
             IStrategyRepository repository,
-            DefaultChainFactory chainFactory,
-            DefaultLogicFactory logicFactory) {
-        super(repository, chainFactory);
-        this.logicFactory = logicFactory;
+            DefaultChainFactory defaultChainFactory,
+            DefaultTreeFactory defaultTreeFactory) {
+        super(repository, defaultChainFactory, defaultTreeFactory);
+    }
+
+    /** 打开当前策略对应的责任链并执行抽奖。 */
+    @Override
+    protected DefaultChainFactory.StrategyAwardVO raffleLogicChain(
+            String userId, Long strategyId) {
+        ILogicChain logicChain = defaultChainFactory.openLogicChain(strategyId);
+        return logicChain.logic(userId, strategyId);
     }
 
     /**
-     * 执行抽奖中逻辑检查
+     * 查询奖品绑定的规则树并执行。
      *
-     * @param raffleFactorEntity 抽奖因子
-     * @param ruleModels         抽奖规则模型
-     * @return 抽奖中逻辑检查结果
+     * <p>奖品没有绑定规则树时，原奖品直接通过；绑定后则从数据库装配完整规则树，
+     * 再交给决策树引擎逐节点执行。</p>
      */
     @Override
-    protected RuleActionEntity<RuleActionEntity.RaffleCenterEntity> doCheckRaffleCenterLogic(
-            RaffleFactorEntity raffleFactorEntity, String... ruleModels) {
-        Map<String, ILogicFilter<RuleActionEntity.RaffleCenterEntity>> logicFilters =
-                logicFactory.openCenterLogicFilter();
-
-        if (ruleModels != null) {
-            for (String configuredRuleModel : ruleModels) {
-                String ruleModel = StringUtils.trimToEmpty(configuredRuleModel);
-                if (ruleModel.isEmpty()) {
-                    continue;
-                }
-                RuleActionEntity<RuleActionEntity.RaffleCenterEntity> ruleAction =
-                        executeCenterRule(logicFilters, raffleFactorEntity, ruleModel);
-                if (!RuleLogicCheckTypeVO.ALLOW.getCode().equals(ruleAction.getCode())) {
-                    return ruleAction;
-                }
-            }
+    protected DefaultTreeFactory.StrategyAwardVO raffleLogicTree(
+            String userId, Long strategyId, Integer awardId) {
+        StrategyAwardRuleModelVO strategyAwardRuleModelVO =
+                repository.queryStrategyAwardRuleModelVO(strategyId, awardId);
+        if (strategyAwardRuleModelVO == null) {
+            throw new IllegalStateException(
+                    "抽中奖品不存在，strategyId: " + strategyId + ", awardId: " + awardId);
+        }
+        if (StringUtils.isBlank(strategyAwardRuleModelVO.getRuleModels())) {
+            // 没有后置规则的奖品不需要创建规则树，保留责任链抽中的原奖品。
+            return originalAward(awardId);
         }
 
-        return RuleActionEntity.<RuleActionEntity.RaffleCenterEntity>builder()
-                .code(RuleLogicCheckTypeVO.ALLOW.getCode())
-                .info(RuleLogicCheckTypeVO.ALLOW.getInfo())
+        String treeId = strategyAwardRuleModelVO.getRuleModels().trim();
+        RuleTreeVO ruleTree = repository.queryRuleTreeVOByTreeId(treeId);
+        if (ruleTree == null) {
+            throw new IllegalStateException(
+                    "奖品绑定的规则树不存在，strategyId: " + strategyId
+                            + ", awardId: " + awardId + ", treeId: " + treeId);
+        }
+
+        IDecisionTreeEngine treeEngine = defaultTreeFactory.openLogicTree(ruleTree);
+        DefaultTreeFactory.StrategyAwardVO result =
+                treeEngine.process(userId, strategyId, awardId);
+        // 所有规则均放行时引擎不会接管结果，继续发放责任链抽中的原奖品。
+        return result == null ? originalAward(awardId) : result;
+    }
+
+    private DefaultTreeFactory.StrategyAwardVO originalAward(Integer awardId) {
+        return DefaultTreeFactory.StrategyAwardVO.builder()
+                .awardId(awardId)
                 .build();
     }
-
-    /**
-     * 执行抽奖中置逻辑检查
-     *
-     * @param logicFilters   抽奖中置逻辑检查过滤器
-     * @param raffleFactorEntity 抽奖因子
-     * @param ruleModel        抽奖规则模型
-     * @return 抽奖中置逻辑检查结果
-     */
-    private RuleActionEntity<RuleActionEntity.RaffleCenterEntity> executeCenterRule(
-            Map<String, ILogicFilter<RuleActionEntity.RaffleCenterEntity>> logicFilters,
-            RaffleFactorEntity raffleFactorEntity,
-            String ruleModel) {
-        ILogicFilter<RuleActionEntity.RaffleCenterEntity> logicFilter = logicFilters.get(ruleModel);
-        if (logicFilter == null) {
-            throw new IllegalStateException("抽奖中置规则过滤器未注册，ruleModel: " + ruleModel);
-        }
-
-        RuleMatterEntity ruleMatterEntity = new RuleMatterEntity();
-        ruleMatterEntity.setUserId(raffleFactorEntity.getUserId());
-        ruleMatterEntity.setStrategyId(raffleFactorEntity.getStrategyId());
-        ruleMatterEntity.setAwardId(raffleFactorEntity.getAwardId());
-        ruleMatterEntity.setRuleModel(ruleModel);
-
-        RuleActionEntity<RuleActionEntity.RaffleCenterEntity> ruleAction =
-                logicFilter.filter(ruleMatterEntity);
-        if (ruleAction == null || ruleAction.getCode() == null) {
-            throw new IllegalStateException("抽奖中置规则过滤器返回结果为空，ruleModel: " + ruleModel);
-        }
-        return ruleAction;
-    }
-
 }

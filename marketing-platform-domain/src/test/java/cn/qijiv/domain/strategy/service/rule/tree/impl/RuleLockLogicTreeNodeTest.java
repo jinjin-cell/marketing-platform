@@ -1,11 +1,11 @@
-package cn.qijiv.domain.strategy.service.rule.filter.impl;
+package cn.qijiv.domain.strategy.service.rule.tree.impl;
 
-import cn.qijiv.domain.strategy.model.entity.RuleMatterEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
+import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
+import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
-import cn.qijiv.domain.strategy.service.rule.filter.factory.DefaultLogicFactory;
 import org.junit.Test;
 
 import java.util.List;
@@ -13,38 +13,32 @@ import java.util.List;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class RuleLockLogicFilterTest {
+/** 验证次数锁规则迁移到规则树节点后仍会拒绝非法配置。 */
+public class RuleLockLogicTreeNodeTest {
 
     @Test
-    public void filter_zeroUnlockCount_throws() {
+    public void logic_zeroUnlockCount_throws() {
         assertInvalidUnlockCount("0");
     }
 
     @Test
-    public void filter_negativeUnlockCount_throws() {
+    public void logic_negativeUnlockCount_throws() {
         assertInvalidUnlockCount("-1");
     }
 
     private void assertInvalidUnlockCount(String ruleValue) {
-        RuleLockLogicFilter filter = new RuleLockLogicFilter(new LockRuleRepository(ruleValue));
+        RuleLockLogicTreeNode node = new RuleLockLogicTreeNode(
+                new LockRuleRepository(ruleValue));
 
         try {
-            filter.filter(ruleMatter());
+            node.logic("test-user", 100001L, 107, null);
             fail("非正数解锁次数不应被接受");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("必须大于0"));
         }
     }
 
-    private RuleMatterEntity ruleMatter() {
-        RuleMatterEntity ruleMatter = new RuleMatterEntity();
-        ruleMatter.setUserId("test-user");
-        ruleMatter.setStrategyId(100001L);
-        ruleMatter.setAwardId(107);
-        ruleMatter.setRuleModel(DefaultLogicFactory.LogicModel.RULE_LOCK.getCode());
-        return ruleMatter;
-    }
-
+    /** 只返回当前测试所需的奖品次数锁配置。 */
     private static class LockRuleRepository implements IStrategyRepository {
 
         private final String ruleValue;
@@ -91,6 +85,22 @@ public class RuleLockLogicFilterTest {
                     .ruleModel(ruleModel)
                     .ruleValue(ruleValue)
                     .build();
+        }
+
+        @Override
+        public StrategyAwardRuleModelVO queryStrategyAwardRuleModelVO(
+                Long strategyId, Integer awardId) {
+            return null;
+        }
+
+        @Override
+        public RuleTreeVO queryRuleTreeVOByTreeId(String treeId) {
+            return null;
+        }
+
+        @Override
+        public boolean subtractionAwardStock(Long strategyId, Integer awardId) {
+            return true;
         }
     }
 }

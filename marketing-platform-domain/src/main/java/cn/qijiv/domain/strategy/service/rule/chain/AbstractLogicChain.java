@@ -1,5 +1,7 @@
 package cn.qijiv.domain.strategy.service.rule.chain;
 
+import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
+
 import java.util.Objects;
 
 /**
@@ -23,7 +25,7 @@ public abstract class AbstractLogicChain implements ILogicChain {
         return next;
     }
 
-    protected Integer nextLogic(String userId, Long strategyId) {
+    protected DefaultChainFactory.StrategyAwardVO nextLogic(String userId, Long strategyId) {
         if (next == null) {
             throw new IllegalStateException("责任链缺少默认兜底节点，ruleModel: " + ruleModel());
         }

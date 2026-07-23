@@ -4,7 +4,7 @@ import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import cn.qijiv.domain.strategy.service.armory.IStrategyDispatch;
 import cn.qijiv.domain.strategy.service.rule.chain.AbstractLogicChain;
-import cn.qijiv.domain.strategy.service.rule.filter.factory.DefaultLogicFactory;
+import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 import cn.qijiv.types.common.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -31,7 +31,7 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
      * <p>如果用户没有达到任何门槛，则放行到默认节点；命中档位后直接返回权重抽奖结果。</p>
      */
     @Override
-    public Integer logic(String userId, Long strategyId) {
+    public DefaultChainFactory.StrategyAwardVO logic(String userId, Long strategyId) {
         StrategyRuleEntity rule = repository.queryStrategyRule(strategyId, ruleModel());
         if (rule == null) {
             throw new IllegalArgumentException("权重规则配置不存在");
@@ -66,7 +66,10 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
         Integer awardId = strategyDispatch.getRandomAwardId(strategyId, matchedRuleWeightValue);
         log.info("抽奖责任链-权重接管 userId:{} strategyId:{} score:{} awardId:{}",
                 userId, strategyId, userScore, awardId);
-        return awardId;
+        return DefaultChainFactory.StrategyAwardVO.builder()
+                .awardId(awardId)
+                .logicModel(ruleModel())
+                .build();
     }
 
     /** 用户积分账户接入后替换此查询点。 */
@@ -77,6 +80,6 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
 
     @Override
     protected String ruleModel() {
-        return DefaultLogicFactory.LogicModel.RULE_WEIGHT.getCode();
+        return DefaultChainFactory.RULE_WEIGHT;
     }
 }

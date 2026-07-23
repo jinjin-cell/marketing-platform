@@ -17,6 +17,9 @@ public interface IRedisService {
     /** 使用 Redis List 保存可按下标访问的有序数据。 */
     <T> void setList(String key, List<T> values);
 
+    /** 使用带过期时间的 Redis List 保存数据。 */
+    <T> void setList(String key, List<T> values, long timeout, TimeUnit unit);
+
     /** 获取 Redis List 指定下标的单个元素。 */
     <T> T getListValue(String key, int index);
 

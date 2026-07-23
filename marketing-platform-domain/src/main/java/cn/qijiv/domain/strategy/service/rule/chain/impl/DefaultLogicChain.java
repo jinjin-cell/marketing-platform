@@ -2,6 +2,7 @@ package cn.qijiv.domain.strategy.service.rule.chain.impl;
 
 import cn.qijiv.domain.strategy.service.armory.IStrategyDispatch;
 import cn.qijiv.domain.strategy.service.rule.chain.AbstractLogicChain;
+import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -20,11 +21,14 @@ public class DefaultLogicChain extends AbstractLogicChain {
     }
 
     @Override
-    public Integer logic(String userId, Long strategyId) {
+    public DefaultChainFactory.StrategyAwardVO logic(String userId, Long strategyId) {
         // 前置规则都未接管时，由默认节点执行策略普通概率抽奖。
         Integer awardId = strategyDispatch.getRandomAwardId(strategyId);
         log.info("抽奖责任链-默认抽奖 userId:{} strategyId:{} awardId:{}", userId, strategyId, awardId);
-        return awardId;
+        return DefaultChainFactory.StrategyAwardVO.builder()
+                .awardId(awardId)
+                .logicModel(DefaultChainFactory.DEFAULT_CHAIN)
+                .build();
     }
 
     @Override

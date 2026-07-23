@@ -4,7 +4,7 @@ import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import cn.qijiv.domain.strategy.service.rule.chain.AbstractLogicChain;
-import cn.qijiv.domain.strategy.service.rule.filter.factory.DefaultLogicFactory;
+import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 import cn.qijiv.types.common.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +27,7 @@ public class BackListLogicChain extends AbstractLogicChain {
     }
 
     @Override
-    public Integer logic(String userId, Long strategyId) {
+    public DefaultChainFactory.StrategyAwardVO logic(String userId, Long strategyId) {
         // 黑名单是策略级前置规则，配置格式为：固定奖品ID:用户ID,用户ID,...
         StrategyRuleEntity rule = repository.queryStrategyRule(strategyId, ruleModel());
         if (rule == null || StringUtils.isBlank(rule.getRuleValue())) {
@@ -55,7 +55,10 @@ public class BackListLogicChain extends AbstractLogicChain {
                 validateAward(strategyId, awardId);
                 log.info("抽奖责任链-黑名单接管 userId:{} strategyId:{} awardId:{}",
                         userId, strategyId, awardId);
-                return awardId;
+                return DefaultChainFactory.StrategyAwardVO.builder()
+                        .awardId(awardId)
+                        .logicModel(ruleModel())
+                        .build();
             }
         }
 
@@ -74,6 +77,6 @@ public class BackListLogicChain extends AbstractLogicChain {
 
     @Override
     protected String ruleModel() {
-        return DefaultLogicFactory.LogicModel.RULE_BLACKLIST.getCode();
+        return DefaultChainFactory.RULE_BLACKLIST;
     }
 }

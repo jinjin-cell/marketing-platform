@@ -30,4 +30,22 @@
         WHERE strategy_id = #{strategyId}
     </select>
 
+    <!-- 规则树执行前只需要读取 rule_models，避免查询整份奖品列表。 -->
+    <select id="queryStrategyAwardRuleModel" resultMap="StrategyAwardMap">
+        SELECT strategy_id, award_id, rule_models
+        FROM strategy_award
+        WHERE strategy_id = #{strategyId}
+          AND award_id = #{awardId}
+        LIMIT 1
+    </select>
+
+    <!-- 条件放在同一条 UPDATE 中，避免“先查询再扣减”产生并发超卖。 -->
+    <update id="subtractionAwardStock">
+        UPDATE strategy_award
+        SET award_count_surplus = award_count_surplus - 1
+        WHERE strategy_id = #{strategyId}
+          AND award_id = #{awardId}
+          AND award_count_surplus &gt; 0
+    </update>
+
 </mapper>

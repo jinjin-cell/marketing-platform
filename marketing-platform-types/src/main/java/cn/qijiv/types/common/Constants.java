@@ -17,6 +17,9 @@ public class Constants {
 
     public static String STRATEGY_RATE_RANGE_KEY = "big_market_strategy_rate_range_key_";
 
+    /** 规则树缓存，后接缓存版本和treeId。 */
+    public static String RULE_TREE_KEY = "big_market_rule_tree_key_";
+
 }
 
 }

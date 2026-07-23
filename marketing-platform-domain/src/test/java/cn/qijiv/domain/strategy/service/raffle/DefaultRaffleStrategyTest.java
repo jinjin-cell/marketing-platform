@@ -5,6 +5,8 @@ import cn.qijiv.domain.strategy.model.entity.RaffleFactorEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
+import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
+import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import cn.qijiv.domain.strategy.service.armory.IStrategyDispatch;
 import cn.qijiv.domain.strategy.service.rule.chain.ILogicChain;
@@ -12,7 +14,7 @@ import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 import cn.qijiv.domain.strategy.service.rule.chain.impl.BackListLogicChain;
 import cn.qijiv.domain.strategy.service.rule.chain.impl.DefaultLogicChain;
 import cn.qijiv.domain.strategy.service.rule.chain.impl.RuleWeightLogicChain;
-import cn.qijiv.domain.strategy.service.rule.filter.factory.DefaultLogicFactory;
+import cn.qijiv.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -85,7 +87,7 @@ public class DefaultRaffleStrategyTest {
         };
         weightChain.appendNext(new DefaultLogicChain(dispatch));
 
-        Integer awardId = weightChain.logic("normal-user", STRATEGY_ID);
+        Integer awardId = weightChain.logic("normal-user", STRATEGY_ID).getAwardId();
 
         assertEquals(Integer.valueOf(105), awardId);
         assertEquals("5000:102,103,104,105,106,107", dispatch.lastRuleWeightValue);
@@ -126,7 +128,7 @@ public class DefaultRaffleStrategyTest {
         return new DefaultRaffleStrategy(
                 repository,
                 chainFactory,
-                new DefaultLogicFactory(Collections.emptyList()));
+                new DefaultTreeFactory(Collections.emptyMap()));
     }
 
     private ListableBeanFactory chainBeanFactory(
@@ -247,6 +249,23 @@ public class DefaultRaffleStrategyTest {
         public StrategyRuleEntity queryStrategyAwardRule(
                 Long strategyId, Integer awardId, String ruleModel) {
             return null;
+        }
+
+        @Override
+        public StrategyAwardRuleModelVO queryStrategyAwardRuleModelVO(
+                Long strategyId, Integer awardId) {
+            // 测试奖品存在，但没有绑定后置规则树。
+            return StrategyAwardRuleModelVO.builder().build();
+        }
+
+        @Override
+        public RuleTreeVO queryRuleTreeVOByTreeId(String treeId) {
+            return null;
+        }
+
+        @Override
+        public boolean subtractionAwardStock(Long strategyId, Integer awardId) {
+            return true;
         }
     }
 
