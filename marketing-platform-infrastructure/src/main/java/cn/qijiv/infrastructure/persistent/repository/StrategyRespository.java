@@ -22,6 +22,7 @@ import cn.qijiv.domain.strategy.model.valobj.RuleTreeNodeLineVO;
 import cn.qijiv.domain.strategy.model.valobj.RuleTreeNodeVO;
 import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
 import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
+import cn.qijiv.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,10 +33,14 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.redisson.api.RBlockingQueue;
+import org.redisson.api.RDelayedQueue;
 import org.springframework.stereotype.Repository;
 import javax.annotation.Resource;
 import cn.qijiv.infrastructure.persistent.redis.IRedisService;
 import cn.qijiv.types.common.Constants;
+import lombok.extern.slf4j.Slf4j;
+
 
 
 /**
@@ -44,6 +49,7 @@ import cn.qijiv.types.common.Constants;
  * @author jinlujia
  * @since 2026-07-18
  */
+@Slf4j
 @Repository
 public class StrategyRespository implements IStrategyRepository {
 
@@ -327,17 +333,71 @@ public class StrategyRespository implements IStrategyRepository {
         }
     }
 
+    /**
+     * 减少抽奖奖品库存
+     * @param cacheKey 缓存key
+     * @return 是否成功
+     */
     @Override
-    public boolean subtractionAwardStock(Long strategyId, Integer awardId) {
-        int affectedRows = strategyAwardDao.subtractionAwardStock(strategyId, awardId);
-        if (affectedRows == 1) {
-            // 奖品列表缓存中包含剩余库存，扣减成功后必须失效，避免后续读到旧值。
-            String cacheKey = Constants.RedisKey.STRATEGY_AWARD_KEY
-                    + STRATEGY_AWARD_CACHE_VERSION
-                    + strategyId;
-            redisService.delete(cacheKey);
-            return true;
+    public Boolean subtractionAwardStock(String cacheKey) {
+        long surplus = redisService.decr(cacheKey);
+        if (surplus < 0) {
+            redisService.setAtomicLong(cacheKey, 0);
+            return false;
         }
-        return false;
+        String lockKey = cacheKey + Constants.UNDERLINE + surplus;
+        Boolean lock = redisService.setNx(lockKey);
+        if (!Boolean.TRUE.equals(lock)) {
+            log.info("策略奖品库存防重锁获取失败 lockKey:{}", lockKey);
+        }
+        return lock;
+    }
+
+    /**
+     * 缓存抽奖奖品库存
+     *
+     * @param cacheKey 缓存key
+     * @param awardCount 奖品库存
+     */
+    @Override
+    public void cacheStrategyAwardCount(String cacheKey, Integer awardCount) {
+        if (awardCount == null || awardCount < 0) {
+            throw new IllegalArgumentException("奖品剩余库存不能为 null 或负数");
+        }
+        redisService.setAtomicLongIfAbsent(cacheKey, awardCount);
+    }
+
+    @Override
+    public void awardStockConsumeSendQueue(StrategyAwardStockKeyVO strategyAwardStockKeyVO) {
+        if (strategyAwardStockKeyVO == null
+                || strategyAwardStockKeyVO.getStrategyId() == null
+                || strategyAwardStockKeyVO.getAwardId() == null) {
+            throw new IllegalArgumentException("库存扣减消息参数不能为空");
+        }
+        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_COUNT_QUERY_KEY;
+
+        RBlockingQueue<StrategyAwardStockKeyVO> blockingQueue = redisService.getBlockingQueue(cacheKey);
+        RDelayedQueue<StrategyAwardStockKeyVO> delayedQueue = redisService.getDelayedQueue(blockingQueue);
+        delayedQueue.offer(strategyAwardStockKeyVO, 3, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public StrategyAwardStockKeyVO takeQueueValue() throws InterruptedException {
+        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_COUNT_QUERY_KEY;
+        RBlockingQueue<StrategyAwardStockKeyVO> blockingQueue = redisService.getBlockingQueue(cacheKey);
+        return blockingQueue.poll();
+    }
+
+    @Override
+    public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
+        int affectedRows = strategyAwardDao.subtractionAwardStock(strategyId, awardId);
+        if (affectedRows != 1) {
+            log.warn("数据库奖品库存扣减未生效 strategyId:{} awardId:{}", strategyId, awardId);
+            return;
+        }
+        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_KEY
+                + STRATEGY_AWARD_CACHE_VERSION
+                + strategyId;
+        redisService.delete(cacheKey);
     }
 }

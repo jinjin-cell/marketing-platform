@@ -5,6 +5,7 @@ import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
 import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
 import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
+import cn.qijiv.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 
 import java.util.List;
 
@@ -93,11 +94,34 @@ public interface IStrategyRepository {
      */
     RuleTreeVO queryRuleTreeVOByTreeId(String treeId);
 
+
+    /**
+     * 缓存抽奖奖品库存
+     *
+     * @param cacheKey 缓存key
+     * @param awardCount 奖品库存
+     */
+    void cacheStrategyAwardCount(String cacheKey, Integer awardCount);
+
     /**
      * 原子扣减奖品库存。
      *
      * @return true-扣减成功，false-库存不足或奖品不存在
+     * @param cacheKey 缓存key
      */
-    boolean subtractionAwardStock(Long strategyId, Integer awardId);
+    Boolean subtractionAwardStock(String cacheKey);
+
+    /**
+     * 发送抽奖奖品库存扣减消息到队列
+     *
+     * @param strategyAwardStockKeyVO 抽奖奖品库存扣减消息
+     */
+    void awardStockConsumeSendQueue(StrategyAwardStockKeyVO strategyAwardStockKeyVO);
+
+    /** 获取一条已经到期的库存扣减消息。 */
+    StrategyAwardStockKeyVO takeQueueValue() throws InterruptedException;
+
+    /** 将一次成功的 Redis 库存扣减同步到数据库。 */
+    void updateStrategyAwardStock(Long strategyId, Integer awardId);
 
 }

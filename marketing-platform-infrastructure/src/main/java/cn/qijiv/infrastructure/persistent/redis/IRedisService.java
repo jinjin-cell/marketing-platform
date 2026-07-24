@@ -1,5 +1,8 @@
 package cn.qijiv.infrastructure.persistent.redis;
 
+import org.redisson.api.RBlockingQueue;
+import org.redisson.api.RDelayedQueue;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -29,5 +32,19 @@ public interface IRedisService {
     boolean isExists(String key);
 
     boolean delete(String key);
+
+    long decr(String key);
+
+    Long getAtomicLong(String cacheKey);
+
+    void setAtomicLong(String cacheKey, Integer awardCount);
+
+    boolean setAtomicLongIfAbsent(String cacheKey, Integer awardCount);
+
+    Boolean setNx(String lockKey);
+
+    <T> RBlockingQueue<T> getBlockingQueue(String cacheKey);
+
+    <T> RDelayedQueue<T> getDelayedQueue(RBlockingQueue<T> blockingQueue);
 
 }

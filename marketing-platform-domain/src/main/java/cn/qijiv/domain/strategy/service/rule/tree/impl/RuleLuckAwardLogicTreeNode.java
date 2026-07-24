@@ -1,51 +1,37 @@
 package cn.qijiv.domain.strategy.service.rule.tree.impl;
 
-import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
 import cn.qijiv.domain.strategy.model.valobj.RuleLogicCheckTypeVO;
-import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import cn.qijiv.domain.strategy.service.rule.tree.ILogicTreeNode;
 import cn.qijiv.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;
-import org.apache.commons.lang3.StringUtils;
+import cn.qijiv.types.common.Constants;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+
 /** 规则树中的兜底奖励节点。 */
+@Slf4j
 @Component("rule_luck_award")
 public class RuleLuckAwardLogicTreeNode implements ILogicTreeNode {
 
-    private static final Integer LUCK_AWARD_ID = 101;
-    /** 兜底奖励规则在数据库中的规则模型名称。 */
-    private static final String RULE_LUCK_AWARD = "rule_luck_award";
-
-    private final IStrategyRepository repository;
-
-    public RuleLuckAwardLogicTreeNode(IStrategyRepository repository) {
-        this.repository = repository;
+    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue) {
+    log.info("规则过滤-兜底奖品 userId:{} strategyId:{} awardId:{} ruleValue:{}", userId, strategyId, awardId, ruleValue);
+    String[] split = ruleValue.split(Constants.COLON);
+    if (split.length == 0) {
+        log.error("规则过滤-兜底奖品，兜底奖品未配置告警 userId:{} strategyId:{} awardId:{}", userId, strategyId, awardId);
+        throw new RuntimeException("兜底奖品未配置 " + ruleValue);
+    }
+    // 兜底奖励配置
+    Integer luckAwardId = Integer.valueOf(split[0]);
+    String awardRuleValue = split.length > 1 ? split[1] : "";
+    // 返回兜底奖品
+    log.info("规则过滤-兜底奖品 userId:{} strategyId:{} awardId:{} awardRuleValue:{}", userId, strategyId, luckAwardId, awardRuleValue);
+    return DefaultTreeFactory.TreeActionEntity.builder()
+            .ruleLogicCheckType(RuleLogicCheckTypeVO.TAKE_OVER)
+            .strategyAwardVO(DefaultTreeFactory.StrategyAwardVO.builder()
+                    .awardId(luckAwardId)
+                    .awardRuleValue(awardRuleValue)
+                    .build())
+            .build();
     }
 
-    @Override
-    public DefaultTreeFactory.TreeActionEntity logic(
-            String userId, Long strategyId, Integer awardId, String ruleValue) {
-        String awardRuleValue = ruleValue;
-        if (StringUtils.isBlank(awardRuleValue)) {
-            // 树节点未直接配置规则值时，回退到奖品维度的数据库规则配置。
-            StrategyRuleEntity rule = repository.queryStrategyAwardRule(
-                    strategyId,
-                    awardId,
-                    RULE_LUCK_AWARD);
-            if (rule == null || StringUtils.isBlank(rule.getRuleValue())) {
-                throw new IllegalStateException(
-                        "兜底奖励规则配置不存在，strategyId: " + strategyId + ", awardId: " + awardId);
-            }
-            awardRuleValue = rule.getRuleValue().trim();
-        }
-
-        // 兜底节点直接接管本次抽奖，并返回固定的积分奖品及其随机范围。
-        return DefaultTreeFactory.TreeActionEntity.builder()
-                .ruleLogicCheckType(RuleLogicCheckTypeVO.TAKE_OVER)
-                .strategyAwardVO(DefaultTreeFactory.StrategyAwardVO.builder()
-                        .awardId(LUCK_AWARD_ID)
-                        .awardRuleValue(awardRuleValue)
-                        .build())
-                .build();
-    }
 }

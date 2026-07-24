@@ -5,6 +5,7 @@ import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
 
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
+import cn.qijiv.types.common.Constants;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,13 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
             return false;
         }
 
+        // 缓存奖品库存【用于decr扣减库存使用】
+        for (StrategyAwardEntity strategyAward : strategyAwardList) {
+            Integer awardId = strategyAward.getAwardId();
+            Integer awardCountSurplus = strategyAward.getAwardCountSurplus();
+            cacheStrategyAwardCount(strategyId, awardId, awardCountSurplus);
+        }
+
         // 3. 无论是否配置权重规则，都先装配完整奖品范围的基础概率表。
         assembleRateTable(String.valueOf(strategyId), strategyAwardList);
 
@@ -84,6 +92,11 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
         }
 
         return true;
+    }
+
+    private void cacheStrategyAwardCount(Long strategyId, Integer awardId, Integer awardCount) {
+        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_COUNT_KEY + strategyId + Constants.UNDERLINE + awardId;
+        repository.cacheStrategyAwardCount(cacheKey, awardCount);
     }
 
     /**
@@ -193,5 +206,11 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
     private String buildStrategyKey(Long strategyId, String ruleWeightValue) {
         // 示例：100001_4000:102,103,104,105。
         return String.valueOf(strategyId).concat("_").concat(ruleWeightValue.trim());
+    }
+
+    @Override
+    public Boolean subtractionAwardStock(Long strategyId, Integer awardId) {
+         String cacheKey = Constants.RedisKey.STRATEGY_AWARD_COUNT_KEY + strategyId + Constants.UNDERLINE + awardId;
+         return repository.subtractionAwardStock(cacheKey);
     }
 }

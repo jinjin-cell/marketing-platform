@@ -5,6 +5,7 @@ public class Constants {
     public final static String SPLIT = ",";
     public final static String COLON = ":";
     public final static String SPACE = " ";
+    public final static String UNDERLINE = "_";
 
     public static class RedisKey {
 
@@ -19,6 +20,12 @@ public class Constants {
 
     /** 规则树缓存，后接缓存版本和treeId。 */
     public static String RULE_TREE_KEY = "big_market_rule_tree_key_";
+
+    public static String RULE_TREE_VO_KEY = "big_market_rule_tree_vo_key_";
+
+    public static String STRATEGY_AWARD_COUNT_KEY = "big_market_strategy_award_count_key_";
+
+    public static String STRATEGY_AWARD_COUNT_QUERY_KEY = "strategy_award_count_query_key";
 
 }
 

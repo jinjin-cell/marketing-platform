@@ -3,6 +3,7 @@ package cn.qijiv.domain.strategy.service.raffle;
 import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
 import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
+import cn.qijiv.domain.strategy.service.AbstractRaffleStrategy;
 import cn.qijiv.domain.strategy.service.rule.chain.ILogicChain;
 import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 import cn.qijiv.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;

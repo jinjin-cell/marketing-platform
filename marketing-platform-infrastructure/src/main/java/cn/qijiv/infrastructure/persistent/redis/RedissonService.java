@@ -1,8 +1,11 @@
 package cn.qijiv.infrastructure.persistent.redis;
 
 import org.redisson.api.RBucket;
+import org.redisson.api.RBlockingQueue;
+import org.redisson.api.RDelayedQueue;
 import org.redisson.api.RList;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.LongCodec;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -103,6 +106,42 @@ public class RedissonService implements IRedisService {
     @Override
     public boolean delete(String key) {
         return redissonClient.getBucket(key).delete();
+    }
+
+    @Override
+    public long decr(String key) {
+        return redissonClient.getAtomicLong(key).decrementAndGet();
+    }
+
+    @Override
+    public Long getAtomicLong(String cacheKey) {
+        return redissonClient.getAtomicLong(cacheKey).get();
+    }
+
+    @Override
+    public void setAtomicLong(String cacheKey, Integer awardCount) {
+        redissonClient.getAtomicLong(cacheKey).set(awardCount);
+    }
+
+    @Override
+    public boolean setAtomicLongIfAbsent(String cacheKey, Integer awardCount) {
+        RBucket<Long> bucket = redissonClient.getBucket(cacheKey, LongCodec.INSTANCE);
+        return bucket.setIfAbsent(awardCount.longValue());
+    }
+
+    @Override
+    public Boolean setNx(String key) {
+        return redissonClient.getBucket(key).setIfAbsent("1");
+    }
+
+    @Override
+    public <T> RBlockingQueue<T> getBlockingQueue(String cacheKey) {
+        return redissonClient.getBlockingQueue(cacheKey);
+    }
+
+    @Override
+    public <T> RDelayedQueue<T> getDelayedQueue(RBlockingQueue<T> blockingQueue) {
+        return redissonClient.getDelayedQueue(blockingQueue);
     }
 
 }

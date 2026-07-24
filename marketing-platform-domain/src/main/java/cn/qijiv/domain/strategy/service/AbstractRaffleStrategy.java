@@ -1,9 +1,9 @@
-package cn.qijiv.domain.strategy.service.raffle;
+package cn.qijiv.domain.strategy.service;
 
 import cn.qijiv.domain.strategy.model.entity.RaffleAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.RaffleFactorEntity;
+import cn.qijiv.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
-import cn.qijiv.domain.strategy.service.IRaffleStrategy;
 import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 import cn.qijiv.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;
 import cn.qijiv.types.enums.ResponseCode;
@@ -19,7 +19,7 @@ import org.apache.commons.lang3.StringUtils;
  * 从而避免以后新增抽奖策略时漏掉参数校验、规则过滤或者结果转换。</p>
  */
 @Slf4j
-public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
+public abstract class AbstractRaffleStrategy implements IRaffleStrategy, IRaffleStock {
 
     /** 领域仓储，负责向领域层提供策略和规则树数据。 */
     protected final IStrategyRepository repository;
@@ -98,4 +98,14 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
     /** 执行抽奖后置规则树，由具体抽奖策略负责查询树配置并启动引擎。 */
     protected abstract DefaultTreeFactory.StrategyAwardVO raffleLogicTree(
             String userId, Long strategyId, Integer awardId);
+
+    @Override
+    public StrategyAwardStockKeyVO takeQueueValue() throws InterruptedException {
+        return repository.takeQueueValue();
+    }
+
+    @Override
+    public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
+        repository.updateStrategyAwardStock(strategyId, awardId);
+    }
 }
