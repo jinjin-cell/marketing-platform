@@ -180,6 +180,6 @@ INSERT INTO `rule_tree_node_line`
 VALUES
   (1, 'tree_lock', 'rule_lock', 'rule_stock', 'EQUAL', 'ALLOW'),
   (2, 'tree_lock', 'rule_lock', 'rule_luck_award', 'EQUAL', 'TAKE_OVER'),
-  (3, 'tree_lock', 'rule_stock', 'rule_luck_award', 'EQUAL', 'TAKE_OVER');
+  (3, 'tree_lock', 'rule_stock', 'rule_luck_award', 'EQUAL', 'ALLOW');
 
 SET FOREIGN_KEY_CHECKS = 1;

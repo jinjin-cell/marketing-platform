@@ -17,14 +17,13 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class DecisionTreeEngineTest {
 
     @Test
-    public void process_lockAndStockAllow_finishesWithoutTakeOver() {
+    public void process_lockAndStockAllow_routesToLuckAward() {
         List<String> visited = new ArrayList<>();
         Map<String, ILogicTreeNode> nodes = new LinkedHashMap<>();
         nodes.put("rule_lock", node("lock", RuleLogicCheckTypeVO.ALLOW, visited));
@@ -34,8 +33,10 @@ public class DecisionTreeEngineTest {
         DefaultTreeFactory.StrategyAwardVO result = engine(nodes, standardTree())
                 .process("user-1", 100001L, 107);
 
-        assertNull(result);
-        assertEquals(Arrays.asList("lock", "stock"), visited);
+        // ALLOW from stock now routes to luck_award → user gets fallback award
+        assertEquals(Integer.valueOf(101), result.getAwardId());
+        assertEquals("1,100", result.getAwardRuleValue());
+        assertEquals(Arrays.asList("lock", "stock", "luck"), visited);
     }
 
     @Test
@@ -55,18 +56,29 @@ public class DecisionTreeEngineTest {
     }
 
     @Test
-    public void process_stockTakesOver_routesToLuckAward() {
+    public void process_stockTakesOver_returnsAwardDirectly() {
         List<String> visited = new ArrayList<>();
         Map<String, ILogicTreeNode> nodes = new LinkedHashMap<>();
         nodes.put("rule_lock", node("lock", RuleLogicCheckTypeVO.ALLOW, visited));
-        nodes.put("rule_stock", node("stock", RuleLogicCheckTypeVO.TAKE_OVER, visited));
+        // stock 扣减成功时返回 TAKE_OVER + 实际奖品，不应再被兜底覆盖
+        nodes.put("rule_stock", (userId, strategyId, awardId, ruleValue) -> {
+            visited.add("stock");
+            return action(
+                    RuleLogicCheckTypeVO.TAKE_OVER,
+                    DefaultTreeFactory.StrategyAwardVO.builder()
+                            .awardId(107)
+                            .awardRuleValue("real_rule")
+                            .build());
+        });
         nodes.put("rule_luck_award", luckNode(visited));
 
         DefaultTreeFactory.StrategyAwardVO result = engine(nodes, standardTree())
                 .process("user-1", 100001L, 107);
 
-        assertEquals(Integer.valueOf(101), result.getAwardId());
-        assertEquals(Arrays.asList("lock", "stock", "luck"), visited);
+        // TAKE_OVER from stock has no outgoing line → returns stock's own award
+        assertEquals(Integer.valueOf(107), result.getAwardId());
+        assertEquals("real_rule", result.getAwardRuleValue());
+        assertEquals(Arrays.asList("lock", "stock"), visited);
     }
 
     @Test
@@ -171,7 +183,7 @@ public class DecisionTreeEngineTest {
                 .treeId("tree_lock")
                 .ruleKey("rule_stock")
                 .treeNodeLineVOList(Collections.singletonList(
-                        line("stock", "luck", RuleLogicCheckTypeVO.TAKE_OVER)))
+                        line("stock", "luck", RuleLogicCheckTypeVO.ALLOW)))
                 .build();
         RuleTreeNodeVO luck = RuleTreeNodeVO.builder()
                 .treeId("tree_lock")
