@@ -4,6 +4,7 @@ import cn.qijiv.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 import cn.qijiv.infrastructure.persistent.dao.IStrategyAwardDao;
 import cn.qijiv.infrastructure.persistent.redis.IRedisService;
 import cn.qijiv.infrastructure.persistent.repository.StrategyRespository;
+import cn.qijiv.types.common.Constants;
 import org.junit.Before;
 import org.junit.Test;
 import org.redisson.api.RBlockingQueue;
@@ -99,6 +100,6 @@ public class StrategyRepositoryStockTest {
 
         repository.updateStrategyAwardStock(100001L, 107);
 
-        verify(redisService).delete("big_market_strategy_award_key_v2_100001");
+        verify(redisService).delete(Constants.RedisKey.STRATEGY_AWARD_LIST_KEY + "100001");
     }
 }

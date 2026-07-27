@@ -25,6 +25,9 @@ public interface IStrategyRepository {
      */
     List<StrategyAwardEntity> queryStrategyAwardList(Long strategyId);
 
+    /** 查询策略中的指定奖品，不存在时返回null。 */
+    StrategyAwardEntity queryStrategyAwardEntity(Long strategyId, Integer awardId);
+
     /**
      * 存储策略奖品概率查找表
      *

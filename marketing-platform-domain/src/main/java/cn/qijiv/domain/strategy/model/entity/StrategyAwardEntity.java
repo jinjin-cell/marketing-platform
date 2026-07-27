@@ -27,6 +27,17 @@ public class StrategyAwardEntity {
      * 抽奖奖品ID - 内部流转使用
      */
     private Integer awardId;
+
+     /**
+     * 抽奖奖品标题
+     */
+    private String awardTitle;
+
+    /**
+     * 抽奖奖品副标题
+     */
+    private String awardSubTitle;
+
     /**
      * 奖品库存总量
      */
@@ -43,19 +54,9 @@ public class StrategyAwardEntity {
     private BigDecimal awardRate;
 
     /**
-     * 奖品规则模型
+     * 排序
      */
-    private String ruleModels;
+    private Integer sort;
 
-    /**
-     * 将奖品配置中的规则模型拆分为独立规则名。
-     *
-     * @return 规则模型数组；未配置时返回空数组
-     */
-    public String[] ruleModels() {
-        if (ruleModels == null || ruleModels.trim().isEmpty()) {
-            return new String[0];
-        }
-        return ruleModels.split(cn.qijiv.types.common.Constants.SPLIT);
-    }
+
 }

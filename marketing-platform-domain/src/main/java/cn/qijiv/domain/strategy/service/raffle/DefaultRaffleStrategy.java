@@ -1,19 +1,26 @@
 package cn.qijiv.domain.strategy.service.raffle;
 
+import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
 import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
+import cn.qijiv.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import cn.qijiv.domain.strategy.service.AbstractRaffleStrategy;
+import cn.qijiv.domain.strategy.service.IRaffleAward;
+import cn.qijiv.domain.strategy.service.IRaffleStock;
 import cn.qijiv.domain.strategy.service.rule.chain.ILogicChain;
 import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 import cn.qijiv.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;
 import cn.qijiv.domain.strategy.service.rule.tree.factory.engine.IDecisionTreeEngine;
+
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 /** 默认抽奖策略，负责实现模板方法中两个可变的业务步骤。 */
 @Service
-public class DefaultRaffleStrategy extends AbstractRaffleStrategy {
+public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRaffleAward, IRaffleStock {
 
     public DefaultRaffleStrategy(
             IStrategyRepository repository,
@@ -70,4 +77,20 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy {
                 .awardId(awardId)
                 .build();
     }
+
+     @Override
+    public StrategyAwardStockKeyVO takeQueueValue() throws InterruptedException {
+        return repository.takeQueueValue();
+    }
+
+    @Override
+    public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
+        repository.updateStrategyAwardStock(strategyId, awardId);
+    }
+
+    @Override
+    public List<StrategyAwardEntity> queryRaffleStrategyAwardList(Long strategyId) {
+        return repository.queryStrategyAwardList(strategyId);
+    }
+
 }

@@ -53,10 +53,8 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 public class StrategyRespository implements IStrategyRepository {
 
-    private static final String STRATEGY_AWARD_CACHE_VERSION = "v2_";
     private static final long STRATEGY_AWARD_CACHE_TTL_MINUTES = 10L;
     private static final long STRATEGY_RATE_TABLE_CACHE_TTL_MINUTES = 30L;
-    private static final String RULE_TREE_CACHE_VERSION = "v1_";
     private static final long RULE_TREE_CACHE_TTL_MINUTES = 30L;
 
     @Resource
@@ -83,24 +81,28 @@ public class StrategyRespository implements IStrategyRepository {
     @Override
     public List<StrategyAwardEntity> queryStrategyAwardList(Long strategyId) {
         // 1. 先从 Redis 缓存中查询
-        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_KEY
-                + STRATEGY_AWARD_CACHE_VERSION
-                + strategyId;
+        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_LIST_KEY + strategyId;
         List<StrategyAwardEntity> cachedList = redisService.getValue(cacheKey);
         if (cachedList != null && !cachedList.isEmpty()) {
             return cachedList;
         }
 
         // 2. 缓存未命中，从数据库查询
-        List<StrategyAwardPO> strategyAwardPOList = strategyAwardDao.queryStrategyAwardListByStrategyId(strategyId);
+        List<StrategyAwardPO> strategyAwardPOList =
+                strategyAwardDao.queryStrategyAwardListByStrategyId(strategyId);
+        if (strategyAwardPOList == null || strategyAwardPOList.isEmpty()) {
+            return Collections.emptyList();
+        }
         List<StrategyAwardEntity> entityList = strategyAwardPOList.stream()
                 .map(strategyAwardPO -> StrategyAwardEntity.builder()
                         .strategyId(strategyAwardPO.getStrategyId())
                         .awardId(strategyAwardPO.getAwardId())
+                        .awardTitle(strategyAwardPO.getAwardTitle())
+                        .awardSubTitle(strategyAwardPO.getAwardSubtitle())
                         .awardCount(strategyAwardPO.getAwardCount())
                         .awardCountSurplus(strategyAwardPO.getAwardCountSurplus())
                         .awardRate(strategyAwardPO.getAwardRate())
-                        .ruleModels(strategyAwardPO.getRuleModels())
+                        .sort(strategyAwardPO.getSort())
                         .build())
                 .collect(Collectors.toList());
 
@@ -112,6 +114,20 @@ public class StrategyRespository implements IStrategyRepository {
                 TimeUnit.MINUTES);
 
         return entityList;
+    }
+
+    @Override
+    public StrategyAwardEntity queryStrategyAwardEntity(Long strategyId, Integer awardId) {
+        if (strategyId == null || awardId == null) {
+            return null;
+        }
+        List<StrategyAwardEntity> strategyAwardList = queryStrategyAwardList(strategyId);
+        for (StrategyAwardEntity strategyAward : strategyAwardList) {
+            if (strategyAward != null && awardId.equals(strategyAward.getAwardId())) {
+                return strategyAward;
+            }
+        }
+        return null;
     }
 
     /**
@@ -231,9 +247,7 @@ public class StrategyRespository implements IStrategyRepository {
         }
 
         String normalizedTreeId = treeId.trim();
-        String cacheKey = Constants.RedisKey.RULE_TREE_KEY
-                + RULE_TREE_CACHE_VERSION
-                + normalizedTreeId;
+        String cacheKey = Constants.RedisKey.RULE_TREE_KEY + normalizedTreeId;
 
         // 1. 先查询 Redis，命中后不再访问规则树三张表。
         RuleTreeVO cachedRuleTree = redisService.getValue(cacheKey);
@@ -395,9 +409,8 @@ public class StrategyRespository implements IStrategyRepository {
             log.warn("数据库奖品库存扣减未生效 strategyId:{} awardId:{}", strategyId, awardId);
             return;
         }
-        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_KEY
-                + STRATEGY_AWARD_CACHE_VERSION
-                + strategyId;
+        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_LIST_KEY + strategyId;
         redisService.delete(cacheKey);
     }
+
 }

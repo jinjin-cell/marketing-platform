@@ -8,6 +8,7 @@ import cn.qijiv.infrastructure.persistent.po.RuleTreeNodePO;
 import cn.qijiv.infrastructure.persistent.po.RuleTreePO;
 import cn.qijiv.infrastructure.persistent.redis.IRedisService;
 import cn.qijiv.infrastructure.persistent.repository.StrategyRespository;
+import cn.qijiv.types.common.Constants;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -24,7 +25,7 @@ import static org.mockito.Mockito.when;
 public class StrategyRepositoryRuleTreeCacheTest {
 
     private static final String TREE_ID = "tree_lock";
-    private static final String CACHE_KEY = "big_market_rule_tree_key_v1_" + TREE_ID;
+    private static final String CACHE_KEY = Constants.RedisKey.RULE_TREE_KEY + TREE_ID;
 
     private StrategyRespository repository;
     private IRedisService redisService;

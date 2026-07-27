@@ -2,7 +2,7 @@ package cn.qijiv.domain.strategy.service;
 
 import cn.qijiv.domain.strategy.model.entity.RaffleAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.RaffleFactorEntity;
-import cn.qijiv.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
+import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
 import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 import cn.qijiv.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;
@@ -19,7 +19,7 @@ import org.apache.commons.lang3.StringUtils;
  * 从而避免以后新增抽奖策略时漏掉参数校验、规则过滤或者结果转换。</p>
  */
 @Slf4j
-public abstract class AbstractRaffleStrategy implements IRaffleStrategy, IRaffleStock {
+public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
 
     /** 领域仓储，负责向领域层提供策略和规则树数据。 */
     protected final IStrategyRepository repository;
@@ -68,26 +68,34 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy, IRaffle
             throw new IllegalStateException("抽奖责任链未返回有效结果，strategyId: " + strategyId);
         }
         if (!DefaultChainFactory.DEFAULT_CHAIN.equals(chainStrategyAwardVO.getLogicModel())) {
-            return RaffleAwardEntity.builder()
-                .strategyId(strategyId)
-                .awardId(chainStrategyAwardVO.getAwardId())
-                .build();
+            return buildRaffleAwardEntity(strategyId, chainStrategyAwardVO.getAwardId(), null);
         }
 
         // 第三步：只有普通概率抽奖结果才进入规则树，依次完成次数、库存和兜底判断。
-        DefaultTreeFactory.StrategyAwardVO treeAward = raffleLogicTree(
+        DefaultTreeFactory.StrategyAwardVO treeStrategyAwardVO = raffleLogicTree(
                 userId, strategyId, chainStrategyAwardVO.getAwardId());
-        if (treeAward == null || treeAward.getAwardId() == null) {
+        if (treeStrategyAwardVO == null || treeStrategyAwardVO.getAwardId() == null) {
             throw new IllegalStateException("抽奖规则树未返回有效结果，strategyId: " + strategyId);
         }
         log.info("抽奖策略计算-规则树 userId:{} strategyId:{} awardId:{} awardRuleValue:{}",
-                userId, strategyId, treeAward.getAwardId(), treeAward.getAwardRuleValue());
+                userId, strategyId, treeStrategyAwardVO.getAwardId(), treeStrategyAwardVO.getAwardRuleValue());
 
         // 第四步：把规则树内部数据转换成抽奖服务对外返回的领域实体。
+        return buildRaffleAwardEntity(strategyId, treeStrategyAwardVO.getAwardId(), treeStrategyAwardVO.getAwardRuleValue());
+    }
+
+    protected final RaffleAwardEntity buildRaffleAwardEntity(
+            Long strategyId, Integer awardId, String awardConfig) {
+        StrategyAwardEntity strategyAward = repository.queryStrategyAwardEntity(strategyId, awardId);
+        if (strategyAward == null) {
+            throw new IllegalStateException(
+                    "抽奖结果未匹配到策略奖品，strategyId: " + strategyId
+                            + ", awardId: " + awardId);
+        }
         return RaffleAwardEntity.builder()
-                .strategyId(strategyId)
-                .awardId(treeAward.getAwardId())
-                .awardConfig(treeAward.getAwardRuleValue())
+                .awardId(awardId)
+                .awardConfig(awardConfig)
+                .sort(strategyAward.getSort())
                 .build();
     }
 
@@ -98,14 +106,4 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy, IRaffle
     /** 执行抽奖后置规则树，由具体抽奖策略负责查询树配置并启动引擎。 */
     protected abstract DefaultTreeFactory.StrategyAwardVO raffleLogicTree(
             String userId, Long strategyId, Integer awardId);
-
-    @Override
-    public StrategyAwardStockKeyVO takeQueueValue() throws InterruptedException {
-        return repository.takeQueueValue();
-    }
-
-    @Override
-    public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
-        repository.updateStrategyAwardStock(strategyId, awardId);
-    }
 }

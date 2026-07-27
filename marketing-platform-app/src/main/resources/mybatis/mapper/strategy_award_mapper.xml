@@ -25,7 +25,8 @@
     </select>
 
     <select id="queryStrategyAwardListByStrategyId" parameterType="java.lang.Long" resultMap="StrategyAwardMap">
-        SELECT strategy_id, award_id, award_count, award_count_surplus, award_rate, rule_models
+        SELECT strategy_id, award_id, award_title, award_subtitle, award_count,
+               award_count_surplus, award_rate, rule_models, sort
         FROM strategy_award
         WHERE strategy_id = #{strategyId}
     </select>
