@@ -53,9 +53,9 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 public class StrategyRespository implements IStrategyRepository {
 
-    private static final long STRATEGY_AWARD_CACHE_TTL_MINUTES = 10L;
-    private static final long STRATEGY_RATE_TABLE_CACHE_TTL_MINUTES = 30L;
-    private static final long RULE_TREE_CACHE_TTL_MINUTES = 30L;
+    private static final long STRATEGY_AWARD_CACHE_TTL_MINUTES = 10L;  // 抽奖策略奖品缓存过期时间
+    private static final long STRATEGY_RATE_TABLE_CACHE_TTL_MINUTES = 30L;  // 抽奖策略奖品率表缓存过期时间
+    private static final long RULE_TREE_CACHE_TTL_MINUTES = 30L;   // 规则树缓存过期时间
 
     @Resource
     private IStrategyAwardDao strategyAwardDao;
