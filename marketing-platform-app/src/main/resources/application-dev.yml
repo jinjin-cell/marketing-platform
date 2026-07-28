@@ -24,23 +24,62 @@ thread:
         block-queue-size: 5000
         policy: CallerRunsPolicy
 
-# 数据库配置；启动时配置数据库资源信息
+# Sharding-JDBC 多数据源配置；ds0 为配置库，ds1、ds2 为用户行为分库
 spring:
-  datasource:
-    username: root
-    password: 123456
-    url: jdbc:mysql://111.228.17.153:13306/big_market?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  hikari:
-    pool-name: Retail_HikariCP
-    minimum-idle: 15 #最小空闲连接数量
-    idle-timeout: 180000 #空闲连接存活最大时间，默认600000（10分钟）
-    maximum-pool-size: 25 #连接池最大连接数，默认是10
-    auto-commit: true  #此属性控制从池返回的连接的默认自动提交行为,默认值：true
-    max-lifetime: 1800000 #此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认1800000即30分钟
-    connection-timeout: 30000 #数据库连接超时时间,默认30秒，即30000
-    connection-test-query: SELECT 1
-  type: com.zaxxer.hikari.HikariDataSource
+  shardingsphere:
+    datasource:
+      names: ds0,ds1,ds2
+      ds0:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://111.228.17.153:13306/big_market?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        username: root
+        password: 123456
+        pool-name: Retail_HikariCP_DS0
+        minimum-idle: 5
+        maximum-pool-size: 10
+      ds1:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://111.228.17.153:13306/big_market_01?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        username: root
+        password: 123456
+        pool-name: Retail_HikariCP_DS1
+        minimum-idle: 5
+        maximum-pool-size: 10
+      ds2:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://111.228.17.153:13306/big_market_02?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        username: root
+        password: 123456
+        pool-name: Retail_HikariCP_DS2
+        minimum-idle: 5
+        maximum-pool-size: 10
+    sharding:
+      default-data-source-name: ds0
+      tables:
+        raffle_activity_order:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_order
+          database-strategy:
+            inline:
+              sharding-column: user_id
+              algorithm-expression: ds$->{Math.abs(user_id.hashCode()) % 2 + 1}
+        raffle_activity_account:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_account
+          database-strategy:
+            inline:
+              sharding-column: user_id
+              algorithm-expression: ds$->{Math.abs(user_id.hashCode()) % 2 + 1}
+        raffle_activity_account_flow:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_account_flow
+          database-strategy:
+            inline:
+              sharding-column: user_id
+              algorithm-expression: ds$->{Math.abs(user_id.hashCode()) % 2 + 1}
+    props:
+      sql:
+        show: true
 
 redis:
   address: redis://111.228.17.153:16379
