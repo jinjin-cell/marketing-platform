@@ -5,11 +5,15 @@
     <resultMap id="RaffleActivityOrderMap" type="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
+        <result column="sku" property="sku"/>
         <result column="activity_id" property="activityId"/>
         <result column="activity_name" property="activityName"/>
         <result column="strategy_id" property="strategyId"/>
         <result column="order_id" property="orderId"/>
         <result column="order_time" property="orderTime"/>
+        <result column="total_count" property="totalCount"/>
+        <result column="day_count" property="dayCount"/>
+        <result column="month_count" property="monthCount"/>
         <result column="state" property="state"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
@@ -17,14 +21,16 @@
 
     <insert id="insert" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO">
         INSERT INTO raffle_activity_order
-            (user_id, activity_id, activity_name, strategy_id, order_id, order_time, state)
+            (user_id, sku, activity_id, activity_name, strategy_id, order_id, order_time,
+             total_count, day_count, month_count, state)
         VALUES
-            (#{userId}, #{activityId}, #{activityName}, #{strategyId}, #{orderId}, #{orderTime}, #{state})
+            (#{userId}, #{sku}, #{activityId}, #{activityName}, #{strategyId}, #{orderId}, #{orderTime},
+             #{totalCount}, #{dayCount}, #{monthCount}, #{state})
     </insert>
 
     <select id="queryRaffleActivityOrderByUserId" resultMap="RaffleActivityOrderMap">
-        SELECT id, user_id, activity_id, activity_name, strategy_id, order_id, order_time,
-               state, create_time, update_time
+        SELECT id, user_id, sku, activity_id, activity_name, strategy_id, order_id, order_time,
+               total_count, day_count, month_count, state, create_time, update_time
         FROM raffle_activity_order
         WHERE user_id = #{userId}
         ORDER BY id DESC

@@ -1,32 +1,28 @@
-package cn.qijiv.infrastructure.persistent.po;
+package cn.qijiv.domain.activity.model.entity;
 
 import lombok.Data;
-
+import lombok.Builder;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import java.util.Date;
+import cn.qijiv.domain.activity.model.valobj.OrderStateVO;
 
 /**
- * 抽奖活动订单持久化对象
- *
- * @author jinlujia
- * @since 2026-07-27
+ * 活动订单实体
+ * 
+ * @author qijiv
+ * @since 2026/7/18
  */
 @Data
-public class RaffleActivityOrderPO {
-
-    /**
-     * 自增ID
-     */
-    private Long id;
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class ActivityOrderEntity {
 
     /**
      * 用户ID
      */
     private String userId;
-
-    /**
-     * 商品sku
-     */
-    private Long sku;
 
     /**
      * 活动ID
@@ -69,18 +65,9 @@ public class RaffleActivityOrderPO {
     private Integer monthCount;
 
     /**
-     * 订单状态（complete）
+     * 订单状态
      */
-    private String state;
-
-    /**
-     * 创建时间
-     */
-    private Date createTime;
-
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
+    private OrderStateVO state;
 
 }
+
