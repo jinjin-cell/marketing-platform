@@ -19,6 +19,8 @@ public interface IActivityRepository {
 
     ActivityCountEntity queryRaffleActivityCountByActivityCountId(Long activityCountId);
 
+    String queryOrderIdByOutBusinessNo(String userId, String outBusinessNo);
+
     void doSaveOrder(CreateOrderAggregate createOrderAggregate);
 
 

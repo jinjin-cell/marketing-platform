@@ -33,25 +33,31 @@ public abstract class AbstractRaffleActivity extends RaffleActivitySupport imple
             throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
         }
 
-        // 2. 查询基础信息
-        // 2.1 通过sku查询活动信息
+        // 2. 幂等校验。Bloom 判定不存在时跳过数据库，判定可能存在时再查询数据库确认。
+        String existingOrderId = activityRepository.queryOrderIdByOutBusinessNo(userId, outBusinessNo);
+        if (null != existingOrderId) {
+            return existingOrderId;
+        }
+
+        // 3. 查询基础信息
+        // 3.1 通过sku查询活动信息
         ActivitySkuEntity activitySkuEntity = queryActivitySku(sku);
-        // 2.2 查询活动信息
+        // 3.2 查询活动信息
         ActivityEntity activityEntity = queryRaffleActivityByActivityId(activitySkuEntity.getActivityId());
-        // 2.3 查询次数信息（用户在活动上可参与的次数）
+        // 3.3 查询次数信息（用户在活动上可参与的次数）
         ActivityCountEntity activityCountEntity = queryRaffleActivityCountByActivityCountId(activitySkuEntity.getActivityCountId());
 
-        // 3. 活动动作规则校验 todo 后续处理规则过滤流程，暂时也不处理责任链结果
+        // 4. 活动动作规则校验 todo 后续处理规则过滤流程，暂时也不处理责任链结果
         IActionChain actionChain = defaultActivityChainFactory.openActionChain();
         boolean success = actionChain.action(activitySkuEntity, activityEntity, activityCountEntity);
 
-        // 4. 构建订单聚合对象
+        // 5. 构建订单聚合对象
         CreateOrderAggregate createOrderAggregate = buildOrderAggregate(skuRechargeEntity, activitySkuEntity, activityEntity, activityCountEntity);
 
-        // 5. 保存订单
+        // 6. 保存订单
         doSaveOrder(createOrderAggregate);
 
-        // 6. 返回单号
+        // 7. 返回单号
         return createOrderAggregate.getActivityOrderEntity().getOrderId();
     }
 

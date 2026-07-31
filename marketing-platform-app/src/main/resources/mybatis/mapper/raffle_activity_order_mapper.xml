@@ -37,4 +37,18 @@
         ORDER BY id DESC
     </select>
 
+    <select id="queryByOutBusinessNo" resultMap="RaffleActivityOrderMap">
+        SELECT user_id, order_id, out_business_no
+        FROM raffle_activity_order
+        WHERE user_id = #{userId}
+          AND out_business_no = #{outBusinessNo}
+        LIMIT 1
+    </select>
+
+    <!-- 启动时由 ShardingSphere 广播到全部订单分表，用于构建无假阴性的 Bloom 超集。 -->
+    <select id="queryAllBusinessKeys" resultMap="RaffleActivityOrderMap">
+        SELECT user_id, out_business_no
+        FROM raffle_activity_order
+    </select>
+
 </mapper>

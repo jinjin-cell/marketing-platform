@@ -19,6 +19,7 @@ import cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO;
 import cn.qijiv.infrastructure.persistent.po.RaffleActivityPO;
 import cn.qijiv.infrastructure.persistent.po.RaffleActivitySkuPO;
 import cn.qijiv.infrastructure.persistent.redis.IRedisService;
+import cn.qijiv.infrastructure.persistent.redis.OrderBusinessNoBloomFilter;
 import cn.qijiv.infrastructure.persistent.repository.ActivityRepository;
 import cn.qijiv.types.common.Constants;
 import cn.qijiv.types.enums.ResponseCode;
@@ -68,6 +69,8 @@ public class ActivityRepositoryUnitTest {
     private TransactionStatus transactionStatus;
     @Mock
     private IDBRouterStrategy dbRouter;
+    @Mock
+    private OrderBusinessNoBloomFilter orderBloomFilter;
 
     @InjectMocks
     private ActivityRepository activityRepository;
@@ -192,6 +195,7 @@ public class ActivityRepositoryUnitTest {
         ArgumentCaptor<RaffleActivityOrderPO> orderCaptor = ArgumentCaptor.forClass(RaffleActivityOrderPO.class);
         ArgumentCaptor<RaffleActivityAccountPO> accountCaptor = ArgumentCaptor.forClass(RaffleActivityAccountPO.class);
         verify(dbRouter).doRouter("user001");
+        verify(orderBloomFilter).add("user001", "business001");
         verify(raffleActivityOrderDao).insert(orderCaptor.capture());
         verify(raffleActivityAccountDao).updateAccountQuota(accountCaptor.capture());
         verify(raffleActivityAccountDao, never()).insert(any(RaffleActivityAccountPO.class));
@@ -212,6 +216,31 @@ public class ActivityRepositoryUnitTest {
         activityRepository.doSaveOrder(aggregate);
 
         verify(raffleActivityAccountDao).insert(any(RaffleActivityAccountPO.class));
+        verify(dbRouter).clear();
+    }
+
+    @Test
+    public void queryOrder_bloomSaysAbsent_skipsDatabase() {
+        when(orderBloomFilter.mightContain("user001", "business001")).thenReturn(false);
+
+        String orderId = activityRepository.queryOrderIdByOutBusinessNo("user001", "business001");
+
+        assertEquals(null, orderId);
+        verify(raffleActivityOrderDao, never()).queryByOutBusinessNo("user001", "business001");
+        verify(dbRouter, never()).doRouter("user001");
+    }
+
+    @Test
+    public void queryOrder_bloomSaysPossible_confirmsWithDatabase() {
+        RaffleActivityOrderPO order = new RaffleActivityOrderPO();
+        order.setOrderId("123456789012");
+        when(orderBloomFilter.mightContain("user001", "business001")).thenReturn(true);
+        when(raffleActivityOrderDao.queryByOutBusinessNo("user001", "business001")).thenReturn(order);
+
+        String orderId = activityRepository.queryOrderIdByOutBusinessNo("user001", "business001");
+
+        assertEquals("123456789012", orderId);
+        verify(dbRouter).doRouter("user001");
         verify(dbRouter).clear();
     }
 

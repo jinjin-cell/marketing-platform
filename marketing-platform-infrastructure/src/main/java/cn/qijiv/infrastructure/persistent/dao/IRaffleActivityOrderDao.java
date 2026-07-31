@@ -19,4 +19,9 @@ public interface IRaffleActivityOrderDao {
 
     List<RaffleActivityOrderPO> queryRaffleActivityOrderByUserId(@Param("userId") String userId);
 
+    RaffleActivityOrderPO queryByOutBusinessNo(@Param("userId") String userId,
+                                                @Param("outBusinessNo") String outBusinessNo);
+
+    List<RaffleActivityOrderPO> queryAllBusinessKeys();
+
 }

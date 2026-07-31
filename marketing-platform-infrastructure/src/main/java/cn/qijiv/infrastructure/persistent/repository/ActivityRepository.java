@@ -19,6 +19,7 @@ import cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO;
 import cn.qijiv.infrastructure.persistent.po.RaffleActivityPO;
 import cn.qijiv.infrastructure.persistent.po.RaffleActivitySkuPO;
 import cn.qijiv.infrastructure.persistent.redis.IRedisService;
+import cn.qijiv.infrastructure.persistent.redis.OrderBusinessNoBloomFilter;
 import cn.qijiv.types.common.Constants;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
@@ -49,6 +50,8 @@ public class ActivityRepository implements IActivityRepository {
     private TransactionTemplate transactionTemplate;
     @Resource
     private IDBRouterStrategy dbRouter;
+    @Resource
+    private OrderBusinessNoBloomFilter orderBloomFilter;
 
     @Override
     public ActivitySkuEntity queryActivitySku(Long sku) {
@@ -102,6 +105,21 @@ public class ActivityRepository implements IActivityRepository {
     }
 
     @Override
+    public String queryOrderIdByOutBusinessNo(String userId, String outBusinessNo) {
+        if (!orderBloomFilter.mightContain(userId, outBusinessNo)) {
+            return null;
+        }
+
+        try {
+            dbRouter.doRouter(userId);
+            RaffleActivityOrderPO order = raffleActivityOrderDao.queryByOutBusinessNo(userId, outBusinessNo);
+            return null == order ? null : order.getOrderId();
+        } finally {
+            dbRouter.clear();
+        }
+    }
+
+    @Override
     public void doSaveOrder(CreateOrderAggregate createOrderAggregate) {
         try {
             // 订单对象
@@ -130,6 +148,10 @@ public class ActivityRepository implements IActivityRepository {
             raffleActivityAccount.setDayCountSurplus(createOrderAggregate.getDayCount());
             raffleActivityAccount.setMonthCount(createOrderAggregate.getMonthCount());
             raffleActivityAccount.setMonthCountSurplus(createOrderAggregate.getMonthCount());
+
+            // 事务前先写 Bloom，保证数据库中一旦存在订单，Bloom 中一定可能存在。
+            // 后续数据库失败最多残留假阳性，查询时仍会回源数据库确认。
+            orderBloomFilter.add(activityOrderEntity.getUserId(), activityOrderEntity.getOutBusinessNo());
 
             // 以用户ID作为切分键，通过 doRouter 设定路由【这样就保证了下面的操作，都是同一个链接下，也就保证了事务的特性】
             dbRouter.doRouter(createOrderAggregate.getUserId());

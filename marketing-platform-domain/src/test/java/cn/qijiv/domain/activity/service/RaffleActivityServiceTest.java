@@ -40,6 +40,7 @@ public class RaffleActivityServiceTest {
         private Long queriedActivityId;
         private Long queriedActivityCountId;
         private CreateOrderAggregate savedAggregate;
+        private String existingOrderId;
 
         public void setSkuEntity(ActivitySkuEntity skuEntity) {
             this.skuEntity = skuEntity;
@@ -55,6 +56,10 @@ public class RaffleActivityServiceTest {
 
         public CreateOrderAggregate getSavedAggregate() {
             return savedAggregate;
+        }
+
+        public void setExistingOrderId(String existingOrderId) {
+            this.existingOrderId = existingOrderId;
         }
 
         @Override
@@ -73,6 +78,11 @@ public class RaffleActivityServiceTest {
         public ActivityCountEntity queryRaffleActivityCountByActivityCountId(Long activityCountId) {
             queriedActivityCountId = activityCountId;
             return countEntity;
+        }
+
+        @Override
+        public String queryOrderIdByOutBusinessNo(String userId, String outBusinessNo) {
+            return existingOrderId;
         }
 
         @Override
@@ -170,6 +180,21 @@ public class RaffleActivityServiceTest {
             assertEquals(ResponseCode.ILLEGAL_PARAMETER.getCode(), e.getCode());
             assertEquals(ResponseCode.ILLEGAL_PARAMETER.getInfo(), e.getInfo());
         }
+    }
+
+    @Test
+    public void test_createSkuRechargeOrder_existingBusinessNo_returnsOriginalOrder() {
+        stubRepo.setExistingOrderId("123456789012");
+        SkuRechargeEntity skuRechargeEntity = new SkuRechargeEntity();
+        skuRechargeEntity.setUserId("user001");
+        skuRechargeEntity.setSku(10001L);
+        skuRechargeEntity.setOutBusinessNo("biz_existing");
+
+        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
+
+        assertEquals("123456789012", orderId);
+        assertNull(stubRepo.queriedSku);
+        assertNull(stubRepo.getSavedAggregate());
     }
 
     @Test

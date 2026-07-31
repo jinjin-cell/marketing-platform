@@ -15,6 +15,9 @@ public class Constants {
 
     public static String ACTIVITY_COUNT_KEY = "big_market_activity_count_key_";
 
+    /** 活动订单业务号布隆过滤器；版本变化时使用新 key 重新装载。 */
+    public static String ACTIVITY_ORDER_BUSINESS_NO_BLOOM_FILTER = "big_market_activity_order_business_no_bloom_filter_v1";
+
     public static String STRATEGY_AWARD_LIST_KEY = "big_market_strategy_award_list_key_";
 
     public static String STRATEGY_RATE_TABLE_KEY = "big_market_strategy_rate_table_key_";

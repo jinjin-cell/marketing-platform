@@ -13,6 +13,12 @@ app:
     # 跨域，开发阶段可以设置为 * 不限制
     cross-origin: "*"
 
+activity:
+  order:
+    bloom-filter:
+      expected-insertions: 1000000
+      false-probability: 0.001
+
 # 线程池配置
 thread:
   pool:
