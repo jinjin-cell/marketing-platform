@@ -67,7 +67,7 @@ public class RedissonService implements IRedisService {
         boolean renamed = false;
         try {
             temporaryList.addAll(values);
-            if (timeout != null && !temporaryList.expire(timeout, unit)) {
+            if (timeout != null && !temporaryList.expire(Duration.ofMillis(unit.toMillis(timeout)))) {
                 throw new IllegalStateException("Redis List 设置过期时间失败，key: " + key);
             }
             // Redis RENAME 会原子替换旧key，读取方不会看到删除后尚未写完的中间状态。
