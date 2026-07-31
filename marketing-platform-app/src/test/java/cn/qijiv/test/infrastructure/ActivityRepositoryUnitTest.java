@@ -1,28 +1,47 @@
 package cn.qijiv.test.infrastructure;
 
+import cn.qijiv.domain.activity.model.aggregate.CreateOrderAggregate;
 import cn.qijiv.domain.activity.model.entity.ActivityCountEntity;
 import cn.qijiv.domain.activity.model.entity.ActivityEntity;
+import cn.qijiv.domain.activity.model.entity.ActivityOrderEntity;
 import cn.qijiv.domain.activity.model.entity.ActivitySkuEntity;
 import cn.qijiv.domain.activity.model.valobj.ActivityStateVO;
+import cn.qijiv.domain.activity.model.valobj.OrderStateVO;
+import cn.qijiv.infrastructure.persistent.dao.IRaffleActivityAccountDao;
 import cn.qijiv.infrastructure.persistent.dao.IRaffleActivityCountDao;
 import cn.qijiv.infrastructure.persistent.dao.IRaffleActivityDao;
+import cn.qijiv.infrastructure.persistent.dao.IRaffleActivityOrderDao;
 import cn.qijiv.infrastructure.persistent.dao.IRaffleActivitySkuDao;
+import cn.qijiv.infrastructure.persistent.db.IDBRouterStrategy;
+import cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO;
 import cn.qijiv.infrastructure.persistent.po.RaffleActivityCountPO;
+import cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO;
 import cn.qijiv.infrastructure.persistent.po.RaffleActivityPO;
 import cn.qijiv.infrastructure.persistent.po.RaffleActivitySkuPO;
 import cn.qijiv.infrastructure.persistent.redis.IRedisService;
 import cn.qijiv.infrastructure.persistent.repository.ActivityRepository;
 import cn.qijiv.types.common.Constants;
+import cn.qijiv.types.enums.ResponseCode;
+import cn.qijiv.types.exception.AppException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.junit.Assert.assertSame;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -39,9 +58,27 @@ public class ActivityRepositoryUnitTest {
     private IRaffleActivitySkuDao raffleActivitySkuDao;
     @Mock
     private IRaffleActivityCountDao raffleActivityCountDao;
+    @Mock
+    private IRaffleActivityOrderDao raffleActivityOrderDao;
+    @Mock
+    private IRaffleActivityAccountDao raffleActivityAccountDao;
+    @Mock
+    private TransactionTemplate transactionTemplate;
+    @Mock
+    private TransactionStatus transactionStatus;
+    @Mock
+    private IDBRouterStrategy dbRouter;
 
     @InjectMocks
     private ActivityRepository activityRepository;
+
+    @Before
+    public void executeTransactionCallbacks() {
+        when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
+            TransactionCallback<?> callback = invocation.getArgument(0);
+            return callback.doInTransaction(transactionStatus);
+        });
+    }
 
     @Test
     public void queryActivitySku_existingSku_mapsAllFields() {
@@ -143,5 +180,81 @@ public class ActivityRepositoryUnitTest {
         assertEquals(Integer.valueOf(5), result.getMonthCount());
         verify(raffleActivityCountDao).queryRaffleActivityCountByActivityCountId(30001L);
         verify(redisService).setValue(cacheKey, result);
+    }
+
+    @Test
+    public void doSaveOrder_existingAccount_insertsOrderAndAddsQuota() {
+        CreateOrderAggregate aggregate = createOrderAggregate();
+        when(raffleActivityAccountDao.updateAccountQuota(any(RaffleActivityAccountPO.class))).thenReturn(1);
+
+        activityRepository.doSaveOrder(aggregate);
+
+        ArgumentCaptor<RaffleActivityOrderPO> orderCaptor = ArgumentCaptor.forClass(RaffleActivityOrderPO.class);
+        ArgumentCaptor<RaffleActivityAccountPO> accountCaptor = ArgumentCaptor.forClass(RaffleActivityAccountPO.class);
+        verify(dbRouter).doRouter("user001");
+        verify(raffleActivityOrderDao).insert(orderCaptor.capture());
+        verify(raffleActivityAccountDao).updateAccountQuota(accountCaptor.capture());
+        verify(raffleActivityAccountDao, never()).insert(any(RaffleActivityAccountPO.class));
+        verify(dbRouter).clear();
+
+        assertEquals("order0000001", orderCaptor.getValue().getOrderId());
+        assertEquals("business001", orderCaptor.getValue().getOutBusinessNo());
+        assertEquals(Integer.valueOf(10), accountCaptor.getValue().getTotalCountSurplus());
+        assertEquals(Integer.valueOf(3), accountCaptor.getValue().getDayCountSurplus());
+        assertEquals(Integer.valueOf(5), accountCaptor.getValue().getMonthCountSurplus());
+    }
+
+    @Test
+    public void doSaveOrder_missingAccount_createsAccount() {
+        CreateOrderAggregate aggregate = createOrderAggregate();
+        when(raffleActivityAccountDao.updateAccountQuota(any(RaffleActivityAccountPO.class))).thenReturn(0);
+
+        activityRepository.doSaveOrder(aggregate);
+
+        verify(raffleActivityAccountDao).insert(any(RaffleActivityAccountPO.class));
+        verify(dbRouter).clear();
+    }
+
+    @Test
+    public void doSaveOrder_duplicateBusinessNumber_rollsBackAndClearsRoute() {
+        CreateOrderAggregate aggregate = createOrderAggregate();
+        doThrow(new DuplicateKeyException("duplicate out_business_no"))
+                .when(raffleActivityOrderDao).insert(any(RaffleActivityOrderPO.class));
+
+        try {
+            activityRepository.doSaveOrder(aggregate);
+            fail("重复业务单号应抛出唯一索引异常");
+        } catch (AppException e) {
+            assertEquals(ResponseCode.INDEX_DUP.getCode(), e.getCode());
+        }
+
+        verify(transactionStatus).setRollbackOnly();
+        verify(raffleActivityAccountDao, never()).updateAccountQuota(any(RaffleActivityAccountPO.class));
+        verify(dbRouter).clear();
+    }
+
+    private CreateOrderAggregate createOrderAggregate() {
+        ActivityOrderEntity order = ActivityOrderEntity.builder()
+                .userId("user001")
+                .sku(901100000001L)
+                .activityId(100301L)
+                .activityName("test activity")
+                .strategyId(100006L)
+                .orderId("order0000001")
+                .orderTime(new Date())
+                .totalCount(10)
+                .dayCount(3)
+                .monthCount(5)
+                .state(OrderStateVO.completed)
+                .outBusinessNo("business001")
+                .build();
+        return CreateOrderAggregate.builder()
+                .userId("user001")
+                .activityId(100301L)
+                .totalCount(10)
+                .dayCount(3)
+                .monthCount(5)
+                .activityOrderEntity(order)
+                .build();
     }
 }

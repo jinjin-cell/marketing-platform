@@ -2,7 +2,6 @@ package cn.qijiv.infrastructure.persistent.dao;
 
 import cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 /**
  * 抽奖活动账户 DAO
@@ -13,8 +12,8 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface IRaffleActivityAccountDao {
 
-    RaffleActivityAccountPO queryRaffleActivityAccount(
-            @Param("userId") String userId,
-            @Param("activityId") Long activityId);
+    int updateAccountQuota(RaffleActivityAccountPO raffleActivityAccount);
+
+    void insert(RaffleActivityAccountPO raffleActivityAccount);
 
 }

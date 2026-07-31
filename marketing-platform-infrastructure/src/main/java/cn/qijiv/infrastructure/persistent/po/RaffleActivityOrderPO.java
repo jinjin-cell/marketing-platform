@@ -49,6 +49,11 @@ public class RaffleActivityOrderPO {
     private String orderId;
 
     /**
+     * 外部业务单号
+     */
+    private String outBusinessNo;
+
+    /**
      * 下单时间
      */
     private Date orderTime;

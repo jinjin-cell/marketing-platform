@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
+import java.sql.Timestamp;
 
 import static org.junit.Assert.*;
 
@@ -59,8 +60,11 @@ public class ActivityRepositoryTest {
         );
         jdbcTemplate.update(
                 "INSERT INTO raffle_activity (activity_id, activity_name, activity_desc, begin_date_time, end_date_time, strategy_id, state, create_time, update_time) " +
-                "VALUES (?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), ?, ?, NOW(), NOW())",
-                TEST_ACTIVITY_ID, "测试活动", "测试描述", 10001L, "open"
+                "VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
+                TEST_ACTIVITY_ID, "测试活动", "测试描述",
+                new Timestamp(System.currentTimeMillis()),
+                new Timestamp(System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000),
+                10001L, "open"
         );
         jdbcTemplate.update(
                 "INSERT INTO raffle_activity_count (activity_count_id, total_count, day_count, month_count, create_time, update_time) " +

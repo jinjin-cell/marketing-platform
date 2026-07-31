@@ -24,4 +24,27 @@
           AND activity_id = #{activityId}
     </select>
 
+    <update id="updateAccountQuota"
+            parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO">
+        UPDATE raffle_activity_account
+        SET total_count = total_count + #{totalCount},
+            total_count_surplus = total_count_surplus + #{totalCountSurplus},
+            day_count = day_count + #{dayCount},
+            day_count_surplus = day_count_surplus + #{dayCountSurplus},
+            month_count = month_count + #{monthCount},
+            month_count_surplus = month_count_surplus + #{monthCountSurplus},
+            update_time = NOW()
+        WHERE user_id = #{userId}
+          AND activity_id = #{activityId}
+    </update>
+
+    <insert id="insert" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO">
+        INSERT INTO raffle_activity_account
+            (user_id, activity_id, total_count, total_count_surplus, day_count,
+             day_count_surplus, month_count, month_count_surplus)
+        VALUES
+            (#{userId}, #{activityId}, #{totalCount}, #{totalCountSurplus}, #{dayCount},
+             #{dayCountSurplus}, #{monthCount}, #{monthCountSurplus})
+    </insert>
+
 </mapper>

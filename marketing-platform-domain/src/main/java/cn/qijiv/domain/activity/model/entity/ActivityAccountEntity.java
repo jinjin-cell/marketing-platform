@@ -58,5 +58,6 @@ public class ActivityAccountEntity {
      */
     private Integer monthCountSurplus;
 
+
 }
 

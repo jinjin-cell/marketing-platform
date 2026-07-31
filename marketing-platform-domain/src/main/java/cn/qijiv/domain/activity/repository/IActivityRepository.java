@@ -2,6 +2,7 @@ package cn.qijiv.domain.activity.repository;
 
 import cn.qijiv.domain.activity.model.entity.ActivitySkuEntity;
 import cn.qijiv.domain.activity.model.entity.ActivityEntity;
+import cn.qijiv.domain.activity.model.aggregate.CreateOrderAggregate;
 import cn.qijiv.domain.activity.model.entity.ActivityCountEntity;
 
 /**
@@ -17,6 +18,9 @@ public interface IActivityRepository {
     ActivityEntity queryRaffleActivityByActivityId(Long activityId);
 
     ActivityCountEntity queryRaffleActivityCountByActivityCountId(Long activityCountId);
+
+    void doSaveOrder(CreateOrderAggregate createOrderAggregate);
+
 
 }
 

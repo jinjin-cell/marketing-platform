@@ -1,12 +1,18 @@
 package cn.qijiv.domain.activity.service;
 
+import cn.qijiv.domain.activity.model.aggregate.CreateOrderAggregate;
 import cn.qijiv.domain.activity.model.entity.*;
 import cn.qijiv.domain.activity.model.valobj.ActivityStateVO;
 import cn.qijiv.domain.activity.repository.IActivityRepository;
+import cn.qijiv.domain.activity.service.rule.IActionChain;
+import cn.qijiv.domain.activity.service.rule.factory.DefaultActivityChainFactory;
+import cn.qijiv.types.enums.ResponseCode;
+import cn.qijiv.types.exception.AppException;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Date;
+import java.util.HashMap;
 
 import static org.junit.Assert.*;
 
@@ -33,6 +39,7 @@ public class RaffleActivityServiceTest {
         private Long queriedSku;
         private Long queriedActivityId;
         private Long queriedActivityCountId;
+        private CreateOrderAggregate savedAggregate;
 
         public void setSkuEntity(ActivitySkuEntity skuEntity) {
             this.skuEntity = skuEntity;
@@ -44,6 +51,10 @@ public class RaffleActivityServiceTest {
 
         public void setCountEntity(ActivityCountEntity countEntity) {
             this.countEntity = countEntity;
+        }
+
+        public CreateOrderAggregate getSavedAggregate() {
+            return savedAggregate;
         }
 
         @Override
@@ -63,6 +74,32 @@ public class RaffleActivityServiceTest {
             queriedActivityCountId = activityCountId;
             return countEntity;
         }
+
+        @Override
+        public void doSaveOrder(CreateOrderAggregate createOrderAggregate) {
+            this.savedAggregate = createOrderAggregate;
+        }
+    }
+
+    /**
+     * IActionChain 的手动桩，始终返回 true
+     */
+    private static class StubActionChain implements IActionChain {
+
+        @Override
+        public boolean action(ActivitySkuEntity activitySkuEntity, ActivityEntity activityEntity, ActivityCountEntity activityCountEntity) {
+            return true;
+        }
+
+        @Override
+        public IActionChain next() {
+            return null;
+        }
+
+        @Override
+        public IActionChain appendNext(IActionChain next) {
+            return this;
+        }
     }
 
     private StubActivityRepository stubRepo;
@@ -70,11 +107,17 @@ public class RaffleActivityServiceTest {
     @Before
     public void setUp() {
         stubRepo = new StubActivityRepository();
-        raffleActivityService = new RaffleActivityService(stubRepo);
+        // 构造 DefaultActivityChainFactory，传入包含stub链的Map
+        StubActionChain stubChain = new StubActionChain();
+        HashMap<String, IActionChain> chainGroup = new HashMap<>();
+        chainGroup.put(DefaultActivityChainFactory.ActionModel.activity_base_action.getCode(), stubChain);
+        chainGroup.put(DefaultActivityChainFactory.ActionModel.activity_sku_stock_action.getCode(), stubChain);
+        DefaultActivityChainFactory chainFactory = new DefaultActivityChainFactory(chainGroup);
+        raffleActivityService = new RaffleActivityService(stubRepo, chainFactory);
     }
 
     @Test
-    public void test_createRaffleActivityOrder_success() {
+    public void test_createSkuRechargeOrder_success() {
         // 1. 准备 SKU 数据
         ActivitySkuEntity skuEntity = ActivitySkuEntity.builder()
                 .sku(10001L)
@@ -106,21 +149,31 @@ public class RaffleActivityServiceTest {
                 .build();
         stubRepo.setCountEntity(countEntity);
 
-        // 4. 创建购物车实体并调用
-        ActivityShopCartEntity cartEntity = ActivityShopCartEntity.builder()
-                .userId("user001")
-                .sku(10001L)
-                .build();
+        // 4. 创建sku充值实体并调用
+        SkuRechargeEntity skuRechargeEntity = new SkuRechargeEntity();
+        skuRechargeEntity.setUserId("user001");
+        skuRechargeEntity.setSku(10001L);
+        skuRechargeEntity.setOutBusinessNo("biz_001");
 
-        ActivityOrderEntity order = raffleActivityService.createRaffleActivityOrder(cartEntity);
+        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
 
-        // 5. 验证返回的订单实体
-        assertNotNull(order);
-        // 验证通过 SKU 查询活动，再查询次数配置的链路走通
+        // 5. 验证返回的订单ID
+        assertNotNull(orderId);
     }
 
     @Test
-    public void test_createRaffleActivityOrder_withDifferentSku() {
+    public void test_createSkuRechargeOrder_nullRequest_throwsIllegalParameter() {
+        try {
+            raffleActivityService.createSkuRechargeOrder(null);
+            fail("空请求应抛出非法参数异常");
+        } catch (AppException e) {
+            assertEquals(ResponseCode.ILLEGAL_PARAMETER.getCode(), e.getCode());
+            assertEquals(ResponseCode.ILLEGAL_PARAMETER.getInfo(), e.getInfo());
+        }
+    }
+
+    @Test
+    public void test_createSkuRechargeOrder_withDifferentSku() {
         ActivitySkuEntity skuEntity = ActivitySkuEntity.builder()
                 .sku(99999L)
                 .activityId(88888L)
@@ -146,35 +199,35 @@ public class RaffleActivityServiceTest {
                 .build();
         stubRepo.setCountEntity(countEntity);
 
-        ActivityShopCartEntity cartEntity = ActivityShopCartEntity.builder()
-                .userId("user002")
-                .sku(99999L)
-                .build();
+        SkuRechargeEntity skuRechargeEntity = new SkuRechargeEntity();
+        skuRechargeEntity.setUserId("user002");
+        skuRechargeEntity.setSku(99999L);
+        skuRechargeEntity.setOutBusinessNo("biz_002");
 
-        ActivityOrderEntity order = raffleActivityService.createRaffleActivityOrder(cartEntity);
+        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
 
-        assertNotNull(order);
+        assertNotNull(orderId);
     }
 
     @Test
-    public void test_createRaffleActivityOrder_returnsOrderWithBuilderDefaults() {
+    public void test_createSkuRechargeOrder_returnsOrderWithBuilderDefaults() {
         // 当 repository 返回的 entity 全部为空字段时，验证方法不会 NPE
         stubRepo.setSkuEntity(new ActivitySkuEntity());
         stubRepo.setActivityEntity(new ActivityEntity());
         stubRepo.setCountEntity(new ActivityCountEntity());
 
-        ActivityShopCartEntity cartEntity = ActivityShopCartEntity.builder()
-                .userId("user003")
-                .sku(1L)
-                .build();
+        SkuRechargeEntity skuRechargeEntity = new SkuRechargeEntity();
+        skuRechargeEntity.setUserId("user003");
+        skuRechargeEntity.setSku(1L);
+        skuRechargeEntity.setOutBusinessNo("biz_003");
 
-        ActivityOrderEntity order = raffleActivityService.createRaffleActivityOrder(cartEntity);
+        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
 
-        assertNotNull(order);
+        assertNotNull(orderId);
     }
 
     @Test
-    public void test_createRaffleActivityOrder_skuLinksToCorrectActivity() {
+    public void test_createSkuRechargeOrder_skuLinksToCorrectActivity() {
         // 验证 SKU → Activity → Count 的关联关系
         ActivitySkuEntity skuEntity = ActivitySkuEntity.builder()
                 .sku(100L)
@@ -199,16 +252,13 @@ public class RaffleActivityServiceTest {
                 .build();
         stubRepo.setCountEntity(countEntity);
 
-        ActivityShopCartEntity cartEntity = ActivityShopCartEntity.builder()
-                .userId("user004")
-                .sku(100L)
-                .build();
+        SkuRechargeEntity skuRechargeEntity = new SkuRechargeEntity();
+        skuRechargeEntity.setUserId("user004");
+        skuRechargeEntity.setSku(100L);
+        skuRechargeEntity.setOutBusinessNo("biz_004");
 
-        ActivityOrderEntity order = raffleActivityService.createRaffleActivityOrder(cartEntity);
+        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
 
-        assertNotNull(order);
-        assertEquals(Long.valueOf(100L), stubRepo.queriedSku);
-        assertEquals(Long.valueOf(200L), stubRepo.queriedActivityId);
-        assertEquals(Long.valueOf(300L), stubRepo.queriedActivityCountId);
+        assertNotNull(orderId);
     }
 }

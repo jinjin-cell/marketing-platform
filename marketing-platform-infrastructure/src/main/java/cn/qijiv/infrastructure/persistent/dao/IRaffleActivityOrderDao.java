@@ -15,7 +15,7 @@ import java.util.List;
 @Mapper
 public interface IRaffleActivityOrderDao {
 
-    int insert(RaffleActivityOrderPO raffleActivityOrder);
+    void insert(RaffleActivityOrderPO raffleActivityOrder);
 
     List<RaffleActivityOrderPO> queryRaffleActivityOrderByUserId(@Param("userId") String userId);
 
