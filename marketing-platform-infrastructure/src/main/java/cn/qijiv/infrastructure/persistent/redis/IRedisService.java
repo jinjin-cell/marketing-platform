@@ -47,4 +47,6 @@ public interface IRedisService {
 
     <T> RDelayedQueue<T> getDelayedQueue(RBlockingQueue<T> blockingQueue);
 
+    Boolean setNx(String key, long expired, TimeUnit timeUnit);
+
 }

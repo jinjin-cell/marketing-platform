@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.qijiv.infrastructure.persistent.dao.ITaskDao">
+
+    <resultMap id="TaskMap" type="cn.qijiv.infrastructure.persistent.po.TaskPO">
+        <id column="id" property="id"/>
+        <result column="topic" property="topic"/>
+        <result column="message" property="message"/>
+        <result column="state" property="state"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="cn.qijiv.infrastructure.persistent.po.TaskPO">
+        INSERT INTO task
+            (topic, message, state)
+        VALUES
+            (#{topic}, #{message}, #{state})
+    </insert>
+
+    <select id="queryTaskList" resultMap="TaskMap">
+        SELECT id, topic, message, state, create_time, update_time
+        FROM task
+        WHERE state = #{state}
+    </select>
+
+    <update id="updateTaskState">
+        UPDATE task
+        SET state = #{state},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>

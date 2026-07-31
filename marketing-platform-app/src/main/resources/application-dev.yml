@@ -32,6 +32,15 @@ thread:
 
 # Sharding-JDBC 多数据源配置；ds0 为配置库，ds1、ds2 为用户行为分库
 spring:
+  rabbitmq:
+    addresses: 111.228.17.153:5672
+    username: qijiv
+    password: 18903705503qQ
+    listener:
+      simple:
+        prefetch: 1
+    topic:
+      activity_sku_stock_zero: activity_sku_stock_zero
   shardingsphere:
     datasource:
       names: ds0,ds1,ds2

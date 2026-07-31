@@ -8,6 +8,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.LongCodec;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -142,6 +143,11 @@ public class RedissonService implements IRedisService {
     @Override
     public <T> RDelayedQueue<T> getDelayedQueue(RBlockingQueue<T> blockingQueue) {
         return redissonClient.getDelayedQueue(blockingQueue);
+    }
+
+    @Override
+    public Boolean setNx(String key, long expired, TimeUnit timeUnit) {
+        return redissonClient.getBucket(key).setIfAbsent("lock", Duration.ofMillis(timeUnit.toMillis(expired)));
     }
 
 }

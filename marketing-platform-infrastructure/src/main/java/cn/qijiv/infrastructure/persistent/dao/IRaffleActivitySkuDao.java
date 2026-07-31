@@ -15,4 +15,8 @@ public interface IRaffleActivitySkuDao {
 
     RaffleActivitySkuPO queryRaffleActivitySkuBySku(@Param("sku") Long sku);
 
+    int updateActivitySkuStock(@Param("sku") Long sku);
+
+    int clearActivitySkuStock(@Param("sku") Long sku);
+
 }

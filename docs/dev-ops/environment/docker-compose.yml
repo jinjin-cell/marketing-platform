@@ -91,6 +91,30 @@ services:
       redis:
         condition: service_healthy
 
+  # RabbitMQ Management：http://localhost:15672
+  rabbitmq:
+    image: rabbitmq:3.12.9
+    container_name: rabbitmq
+    hostname: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      TZ: Asia/Shanghai
+      RABBITMQ_DEFAULT_USER: qijiv
+      RABBITMQ_DEFAULT_PASS: 18903705503qQ
+    volumes:
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+    networks:
+      - my-network
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
 networks:
   my-network:
     driver: bridge

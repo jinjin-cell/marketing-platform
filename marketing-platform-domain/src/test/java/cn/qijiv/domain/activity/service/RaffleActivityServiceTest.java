@@ -2,6 +2,7 @@ package cn.qijiv.domain.activity.service;
 
 import cn.qijiv.domain.activity.model.aggregate.CreateOrderAggregate;
 import cn.qijiv.domain.activity.model.entity.*;
+import cn.qijiv.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 import cn.qijiv.domain.activity.model.valobj.ActivityStateVO;
 import cn.qijiv.domain.activity.repository.IActivityRepository;
 import cn.qijiv.domain.activity.service.rule.IActionChain;
@@ -41,6 +42,9 @@ public class RaffleActivityServiceTest {
         private Long queriedActivityCountId;
         private CreateOrderAggregate savedAggregate;
         private String existingOrderId;
+        private ActivitySkuStockKeyVO queuedStock;
+        private Long updatedStockSku;
+        private Long clearedStockSku;
 
         public void setSkuEntity(ActivitySkuEntity skuEntity) {
             this.skuEntity = skuEntity;
@@ -88,6 +92,40 @@ public class RaffleActivityServiceTest {
         @Override
         public void doSaveOrder(CreateOrderAggregate createOrderAggregate) {
             this.savedAggregate = createOrderAggregate;
+        }
+
+        @Override
+        public void cacheActivitySkuStockCount(String cacheKey, Integer stockCount) {
+        }
+
+        @Override
+        public boolean subtractionActivitySkuStock(Long sku, String cacheKey, Date endDateTime) {
+            return true;
+        }
+
+        @Override
+        public void activitySkuStockConsumeSendQueue(ActivitySkuStockKeyVO activitySkuStockKeyVO) {
+            queuedStock = activitySkuStockKeyVO;
+        }
+
+        @Override
+        public ActivitySkuStockKeyVO takeQueueValue() {
+            return queuedStock;
+        }
+
+        @Override
+        public void clearQueueValue() {
+            queuedStock = null;
+        }
+
+        @Override
+        public void updateActivitySkuStock(Long sku) {
+            updatedStockSku = sku;
+        }
+
+        @Override
+        public void clearActivitySkuStock(Long sku) {
+            clearedStockSku = sku;
         }
     }
 
@@ -285,5 +323,24 @@ public class RaffleActivityServiceTest {
         String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
 
         assertNotNull(orderId);
+    }
+
+    @Test
+    public void test_stockOperations_delegateToRepository() throws InterruptedException {
+        ActivitySkuStockKeyVO stockKey = ActivitySkuStockKeyVO.builder()
+                .sku(10001L)
+                .activityId(20001L)
+                .build();
+        stubRepo.queuedStock = stockKey;
+
+        assertSame(stockKey, raffleActivityService.takeQueueValue());
+
+        raffleActivityService.updateActivitySkuStock(10001L);
+        raffleActivityService.clearActivitySkuStock(10001L);
+        raffleActivityService.clearQueueValue();
+
+        assertEquals(Long.valueOf(10001L), stubRepo.updatedStockSku);
+        assertEquals(Long.valueOf(10001L), stubRepo.clearedStockSku);
+        assertNull(stubRepo.queuedStock);
     }
 }

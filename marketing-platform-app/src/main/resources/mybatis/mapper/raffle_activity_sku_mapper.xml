@@ -20,4 +20,19 @@
         WHERE sku = #{sku}
     </select>
 
+    <update id="updateActivitySkuStock">
+        UPDATE raffle_activity_sku
+        SET stock_count_surplus = stock_count_surplus - 1,
+            update_time = NOW()
+        WHERE sku = #{sku}
+          AND stock_count_surplus &gt; 0
+    </update>
+
+    <update id="clearActivitySkuStock">
+        UPDATE raffle_activity_sku
+        SET stock_count_surplus = 0,
+            update_time = NOW()
+        WHERE sku = #{sku}
+    </update>
+
 </mapper>
