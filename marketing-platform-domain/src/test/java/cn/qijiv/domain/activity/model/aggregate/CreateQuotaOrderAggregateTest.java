@@ -1,0 +1,67 @@
+package cn.qijiv.domain.activity.model.aggregate;
+
+import cn.qijiv.domain.activity.model.entity.ActivityOrderEntity;
+import cn.qijiv.domain.activity.model.valobj.OrderStateVO;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+
+/**
+ * 创建订单聚合实体单元测试
+ *
+ * @author jinlujia
+ * @since 2026-07-28
+ */
+public class CreateQuotaOrderAggregateTest {
+
+    /** 验证 Builder 能创建包含全部字段的聚合实体。 */
+    @Test
+    public void test_builder_createsAggregateWithAllFields() {
+        ActivityOrderEntity order = ActivityOrderEntity.builder()
+                .userId("user001")
+                .activityId(10001L)
+                .orderId("order_001")
+                .state(OrderStateVO.completed)
+                .build();
+
+        CreateQuotaOrderAggregate aggregate = CreateQuotaOrderAggregate.builder()
+                .userId("user001")
+                .activityId(10001L)
+                .totalCount(10)
+                .dayCount(3)
+                .monthCount(5)
+                .activityOrderEntity(order)
+                .build();
+
+        assertNotNull(aggregate);
+        assertNotNull(aggregate.getActivityOrderEntity());
+        assertEquals("user001", aggregate.getUserId());
+        assertEquals(Long.valueOf(10001L), aggregate.getActivityId());
+        assertEquals(Integer.valueOf(10), aggregate.getTotalCount());
+        assertEquals("order_001", aggregate.getActivityOrderEntity().getOrderId());
+    }
+
+    /** 验证无参构造创建的空聚合字段均为空。 */
+    @Test
+    public void test_noArgsConstructor_createsEmptyAggregate() {
+        CreateQuotaOrderAggregate aggregate = new CreateQuotaOrderAggregate();
+        assertNotNull(aggregate);
+        assertNull(aggregate.getUserId());
+        assertNull(aggregate.getActivityOrderEntity());
+    }
+
+    /** 验证聚合与内部订单的用户 ID 保持一致。 */
+    @Test
+    public void test_userId_consistentBetweenAggregateAndOrder() {
+        ActivityOrderEntity order = ActivityOrderEntity.builder()
+                .userId("user001").build();
+
+        CreateQuotaOrderAggregate aggregate = CreateQuotaOrderAggregate.builder()
+                .userId("user001")
+                .activityOrderEntity(order)
+                .build();
+
+        assertEquals(aggregate.getUserId(),
+                aggregate.getActivityOrderEntity().getUserId());
+    }
+}

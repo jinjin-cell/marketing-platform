@@ -22,12 +22,14 @@
             (#{userId}, #{activityId}, #{activityName}, #{strategyId}, #{orderId}, #{orderTime}, #{orderState})
     </insert>
 
-    <select id="queryUserRaffleOrder" resultMap="UserRaffleOrderMap">
+    <select id="queryNoUsedRaffleOrder" resultMap="UserRaffleOrderMap">
         SELECT id, user_id, activity_id, activity_name, strategy_id, order_id, order_time,
                order_state, create_time, update_time
         FROM user_raffle_order
         WHERE user_id = #{userId}
-          AND order_id = #{orderId}
+          AND activity_id = #{activityId}
+          AND order_state = 'create'
+        LIMIT 1
     </select>
 
     <update id="updateOrderState">

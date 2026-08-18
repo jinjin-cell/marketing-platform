@@ -10,9 +10,18 @@ import java.util.Collection;
  */
 public class UserIdShardingAlgorithm implements PreciseShardingAlgorithm<String> {
 
+    /** 数据库数量 */
     private static final int DATABASE_COUNT = 2;
+    /** 订单表数量 */
     private static final int ORDER_TABLE_COUNT = 4;
 
+    /**
+     * 根据用户 ID 哈希计算分片路由，优先匹配数据库，其次匹配表
+     *
+     * @param availableTargetNames 可用的目标数据源或表名集合
+     * @param shardingValue        分片键值信息
+     * @return 命中的数据库或表名
+     */
     @Override
     public String doSharding(Collection<String> availableTargetNames, PreciseShardingValue<String> shardingValue) {
         String userId = shardingValue.getValue();

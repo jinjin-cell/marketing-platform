@@ -14,15 +14,32 @@ import lombok.extern.slf4j.Slf4j;
 @Component("rule_stock")
 public class RuleStockLogicTreeNode implements ILogicTreeNode {
 
+    /** 策略抽奖调度服务，负责扣减奖品库存。 */
     private final IStrategyDispatch strategyDispatch;
 
+    /** 领域仓储，负责将库存扣减消息发送到延迟队列。 */
     private final IStrategyRepository strategyRepository;
 
+    /**
+     * 注入策略抽奖调度服务和领域仓储。
+     *
+     * @param strategyDispatch   策略抽奖调度服务
+     * @param strategyRepository 领域仓储
+     */
     public RuleStockLogicTreeNode(IStrategyDispatch strategyDispatch, IStrategyRepository strategyRepository) {
         this.strategyDispatch = strategyDispatch;
         this.strategyRepository = strategyRepository;
     }
 
+    /**
+     * 执行库存扣减校验：扣减成功则接管并返回奖品，库存不足则放行走兜底分支。
+     *
+     * @param userId     用户ID
+     * @param strategyId 策略ID
+     * @param awardId    当前抽中的奖品ID
+     * @param ruleValue  节点配置值
+     * @return 节点执行结果
+     */
     @Override
     public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue) {
         log.info("规则过滤-库存扣减 userId:{} strategyId:{} awardId:{}", userId, strategyId, awardId);

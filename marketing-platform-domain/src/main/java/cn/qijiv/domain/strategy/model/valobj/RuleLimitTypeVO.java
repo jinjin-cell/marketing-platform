@@ -11,15 +11,23 @@ import java.util.Arrays;
 @AllArgsConstructor
 public enum RuleLimitTypeVO {
 
+    /** 等于 */
     EQUAL(1, "等于"),
+    /** 大于 */
     GT(2, "大于"),
+    /** 小于 */
     LT(3, "小于"),
+    /** 大于等于 */
     GE(4, "大于等于"),
+    /** 小于等于 */
     LE(5, "小于等于"),
+    /** 枚举匹配 */
     ENUM(6, "枚举"),
     ;
 
+    /** 限定类型编码 */
     private final Integer code;
+    /** 限定类型描述 */
     private final String info;
 
     /**
@@ -54,6 +62,12 @@ public enum RuleLimitTypeVO {
         }
     }
 
+    /**
+     * 将字符串转换为 BigDecimal，供数值型限定关系比较使用。
+     *
+     * @param value 待转换的数值字符串
+     * @return 转换后的 BigDecimal 数值
+     */
     private BigDecimal number(String value) {
         try {
             // 使用 BigDecimal 避免浮点数比较产生精度误差。

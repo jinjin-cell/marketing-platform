@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
+/** 抽奖策略实体，包含策略基础信息与规则模型解析能力。 */
 @Data
 @Builder
 @NoArgsConstructor

@@ -1,0 +1,98 @@
+package cn.qijiv.domain.activity.service.quota;
+
+import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
+import cn.qijiv.domain.activity.model.entity.ActivityCountEntity;
+import cn.qijiv.domain.activity.model.entity.ActivityEntity;
+import cn.qijiv.domain.activity.model.entity.ActivitySkuEntity;
+import cn.qijiv.domain.activity.model.entity.SkuRechargeEntity;
+import cn.qijiv.domain.activity.repository.IActivityRepository;
+import cn.qijiv.domain.activity.service.IRaffleActivityAccountQuotaService;
+import cn.qijiv.domain.activity.service.quota.rule.IActionChain;
+import cn.qijiv.domain.activity.service.quota.rule.factory.DefaultActivityChainFactory;
+import cn.qijiv.types.enums.ResponseCode;
+import cn.qijiv.types.exception.AppException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+
+/**
+ * 抽奖活动账户额度抽象类
+ */
+@Slf4j
+public abstract class AbstractRaffleActivityAccountQuota extends RaffleActivityAccountQuotaSupport implements IRaffleActivityAccountQuotaService {
+
+    /**
+     * 构造方法注入活动仓库与责任链工厂
+     *
+     * @param activityRepository 活动仓库
+     * @param defaultActivityChainFactory 默认活动责任链工厂
+     */
+    public AbstractRaffleActivityAccountQuota(IActivityRepository activityRepository, DefaultActivityChainFactory defaultActivityChainFactory) {
+        super(activityRepository, defaultActivityChainFactory);
+    }
+
+    /**
+     * 创建SKU账户充值订单；校验参数、幂等处理、查询活动信息、执行责任链校验并保存订单
+     *
+     * @param skuRechargeEntity 活动商品充值实体对象
+     * @return 订单ID
+     */
+    @Override
+    public String createSkuRechargeOrder(SkuRechargeEntity skuRechargeEntity) {
+        // 1. 参数校验
+        if (null == skuRechargeEntity) {
+            throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+        }
+        String userId = skuRechargeEntity.getUserId();
+        Long sku = skuRechargeEntity.getSku();
+        String outBusinessNo = skuRechargeEntity.getOutBusinessNo();
+        if (null == sku || StringUtils.isBlank(userId) || StringUtils.isBlank(outBusinessNo)) {
+            throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+        }
+
+        // 2. 幂等校验。Bloom 判定不存在时跳过数据库，判定可能存在时再查询数据库确认。
+        String existingOrderId = activityRepository.queryOrderIdByOutBusinessNo(userId, outBusinessNo);
+        if (null != existingOrderId) {
+            return existingOrderId;
+        }
+
+        // 3. 查询基础信息
+        // 3.1 通过sku查询活动信息
+        ActivitySkuEntity activitySkuEntity = queryActivitySku(sku);
+        // 3.2 查询活动信息
+        ActivityEntity activityEntity = queryRaffleActivityByActivityId(activitySkuEntity.getActivityId());
+        // 3.3 查询次数信息（用户在活动上可参与的次数）
+        ActivityCountEntity activityCountEntity = queryRaffleActivityCountByActivityCountId(activitySkuEntity.getActivityCountId());
+
+        // 4. 活动动作规则校验 todo 后续处理规则过滤流程，暂时也不处理责任链结果
+        IActionChain actionChain = defaultActivityChainFactory.openActionChain();
+        actionChain.action(activitySkuEntity, activityEntity, activityCountEntity);
+
+        // 5. 构建订单聚合对象
+        CreateQuotaOrderAggregate createQuotaOrderAggregate = buildOrderAggregate(skuRechargeEntity, activitySkuEntity, activityEntity, activityCountEntity);
+
+        // 6. 保存订单
+        doSaveOrder(createQuotaOrderAggregate);
+
+        // 7. 返回单号
+        return createQuotaOrderAggregate.getActivityOrderEntity().getOrderId();
+    }
+
+    /**
+     * 构建活动充值订单聚合对象
+     *
+     * @param skuRechargeEntity 活动商品充值实体对象
+     * @param activitySkuEntity 活动SKU实体
+     * @param activityEntity 活动实体
+     * @param activityCountEntity 活动次数配置实体
+     * @return 创建充值订单聚合对象
+     */
+    protected abstract CreateQuotaOrderAggregate buildOrderAggregate(SkuRechargeEntity skuRechargeEntity, ActivitySkuEntity activitySkuEntity, ActivityEntity activityEntity, ActivityCountEntity activityCountEntity);
+
+    /**
+     * 保存活动充值订单
+     *
+     * @param createQuotaOrderAggregate 创建充值订单聚合对象
+     */
+    protected abstract void doSaveOrder(CreateQuotaOrderAggregate createQuotaOrderAggregate);
+
+}

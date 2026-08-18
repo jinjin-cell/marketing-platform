@@ -13,6 +13,15 @@ public class RuleLockLogicTreeNode implements ILogicTreeNode {
     //用户抽奖次数，后续完成这部分流程开发的时候，从数据库/Redis中获取
     private Long userRaffleCount = 10L;
 
+    /**
+     * 执行次数解锁判断：用户抽奖次数达到门槛则放行，否则规则接管。
+     *
+     * @param userId     用户ID
+     * @param strategyId 策略ID
+     * @param awardId    当前抽中的奖品ID
+     * @param ruleValue  次数锁门槛配置值
+     * @return 节点执行结果
+     */
     @Override
     public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue) {
     log.info("规则过滤-次数锁 userId:{} strategyId:{} awardId:{}", userId, strategyId, awardId);

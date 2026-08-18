@@ -15,14 +15,18 @@ import java.util.Arrays;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
 
+/** 订单布隆过滤器初始化器单元测试：验证历史订单号加载逻辑。 */
 @RunWith(MockitoJUnitRunner.class)
 public class OrderBloomFilterInitializerTest {
 
+    /** Mock 的订单 DAO，用于查询历史订单号。 */
     @Mock
     private IRaffleActivityOrderDao raffleActivityOrderDao;
+    /** Mock 的订单号布隆过滤器，用于初始化与写入历史订单号。 */
     @Mock
     private OrderBusinessNoBloomFilter orderBloomFilter;
 
+    /** 验证初始化器先初始化过滤器，再将所有历史订单号写入。 */
     @Test
     public void initializesThenLoadsEveryHistoricalBusinessKey() {
         RaffleActivityOrderPO first = order("user001", "business001");
@@ -40,6 +44,7 @@ public class OrderBloomFilterInitializerTest {
         inOrder.verify(orderBloomFilter).add("user002", "business002");
     }
 
+    /** 构造指定用户与业务单号的订单 PO 对象。 */
     private RaffleActivityOrderPO order(String userId, String outBusinessNo) {
         RaffleActivityOrderPO order = new RaffleActivityOrderPO();
         order.setUserId(userId);

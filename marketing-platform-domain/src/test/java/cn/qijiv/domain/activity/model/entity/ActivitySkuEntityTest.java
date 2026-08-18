@@ -12,6 +12,7 @@ import static org.junit.Assert.*;
  */
 public class ActivitySkuEntityTest {
 
+    /** 验证 Builder 能创建包含全部字段的 SKU 实体。 */
     @Test
     public void test_builder_createsEntityWithAllFields() {
         ActivitySkuEntity entity = ActivitySkuEntity.builder()
@@ -30,6 +31,7 @@ public class ActivitySkuEntityTest {
         assertEquals(Integer.valueOf(50), entity.getStockCountSurplus());
     }
 
+    /** 验证无参构造创建的空实体字段均为空。 */
     @Test
     public void test_noArgsConstructor_createsEmptyEntity() {
         ActivitySkuEntity entity = new ActivitySkuEntity();
@@ -38,6 +40,7 @@ public class ActivitySkuEntityTest {
         assertNull(entity.getStockCount());
     }
 
+    /** 验证剩余库存小于总库存。 */
     @Test
     public void test_stockCountSurplus_lessThanStockCount() {
         ActivitySkuEntity entity = ActivitySkuEntity.builder()

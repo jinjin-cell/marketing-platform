@@ -25,6 +25,11 @@ public class DefaultTreeFactory {
      */
     private final Map<String, ILogicTreeNode> logicTreeNodeGroup;
 
+    /**
+     * 注入全部规则树节点，并在构造时固化为不可变路由表。
+     *
+     * @param logicTreeNodeGroup 规则Key到业务节点的映射
+     */
     public DefaultTreeFactory(Map<String, ILogicTreeNode> logicTreeNodeGroup) {
         this.logicTreeNodeGroup = Collections.unmodifiableMap(
                 new LinkedHashMap<>(logicTreeNodeGroup));

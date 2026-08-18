@@ -35,12 +35,27 @@ import java.util.stream.Collectors;
 @Slf4j
 public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatch {
 
+    /** 领域仓储，负责提供策略、奖品和规则数据。 */
     private final IStrategyRepository repository;
 
+    /**
+     * 注入领域仓储。
+     *
+     * @param repository 领域仓储
+     */
     public StrategyArmoryDispatch(IStrategyRepository repository) {
         this.repository = repository;
     }
 
+    /**
+     * 装配抽奖策略的概率表。
+     *
+     * <p>为完整奖品范围生成普通概率表；配置了权重规则时，再为每个权重档位
+     * 过滤出对应奖品并生成权重概率表，同时缓存各奖品的剩余库存。</p>
+     *
+     * @param strategyId 策略ID
+     * @return 装配是否成功
+     */
     @Override
     public boolean assembleLotteryStrategy(Long strategyId) {
         // 1. 奖品概率是装配基础；没有奖品时不创建任何概率表。
@@ -94,6 +109,13 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
         return true;
     }
 
+    /**
+     * 缓存奖品剩余库存，用于后续扣减。
+     *
+     * @param strategyId  策略ID
+     * @param awardId     奖品ID
+     * @param awardCount  奖品剩余库存
+     */
     private void cacheStrategyAwardCount(Long strategyId, Integer awardId, Integer awardCount) {
         String cacheKey = Constants.RedisKey.STRATEGY_AWARD_COUNT_KEY + strategyId + Constants.UNDERLINE + awardId;
         repository.cacheStrategyAwardCount(cacheKey, awardCount);
@@ -147,12 +169,25 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
         log.info("策略装配完成 - strategyKey: {}, 查找表大小: {}", strategyKey, rateTableList.size());
     }
 
+    /**
+     * 使用策略完整奖品范围概率表抽取一个奖品。
+     *
+     * @param strategyId 策略ID
+     * @return 随机抽中的奖品ID
+     */
     @Override
     public Integer getRandomAwardId(Long strategyId) {
         // 普通抽奖直接使用 strategyId 对应的完整概率表。
         return getRandomAwardIdByKey(strategyId, String.valueOf(strategyId));
     }
 
+    /**
+     * 使用指定权重档位的奖品范围概率表抽取一个奖品。
+     *
+     * @param strategyId      策略ID
+     * @param ruleWeightValue 完整权重配置，例如 4000:102,103,104,105
+     * @return 随机抽中的奖品ID
+     */
     @Override
     public Integer getRandomAwardId(Long strategyId, String ruleWeightValue) {
         if (ruleWeightValue == null || ruleWeightValue.trim().isEmpty()) {
@@ -203,11 +238,25 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
         }
     }
 
+    /**
+     * 拼接权重概率表的业务key。
+     *
+     * @param strategyId      策略ID
+     * @param ruleWeightValue 权重配置
+     * @return 形如 策略ID_权重配置 的完整key
+     */
     private String buildStrategyKey(Long strategyId, String ruleWeightValue) {
         // 示例：100001_4000:102,103,104,105。
         return String.valueOf(strategyId).concat("_").concat(ruleWeightValue.trim());
     }
 
+    /**
+     * 原子扣减奖品库存。
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     * @return true-扣减成功，false-库存不足或奖品不存在
+     */
     @Override
     public Boolean subtractionAwardStock(Long strategyId, Integer awardId) {
          String cacheKey = Constants.RedisKey.STRATEGY_AWARD_COUNT_KEY + strategyId + Constants.UNDERLINE + awardId;

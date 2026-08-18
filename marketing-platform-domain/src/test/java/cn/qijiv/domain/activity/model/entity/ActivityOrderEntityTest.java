@@ -15,6 +15,7 @@ import static org.junit.Assert.*;
  */
 public class ActivityOrderEntityTest {
 
+    /** 验证 Builder 能创建包含全部字段的订单实体。 */
     @Test
     public void test_builder_createsEntityWithAllFields() {
         Date orderTime = new Date();
@@ -44,6 +45,7 @@ public class ActivityOrderEntityTest {
         assertEquals(OrderStateVO.completed, entity.getState());
     }
 
+    /** 验证无参构造创建的空实体字段均为空。 */
     @Test
     public void test_noArgsConstructor_createsEmptyEntity() {
         ActivityOrderEntity entity = new ActivityOrderEntity();

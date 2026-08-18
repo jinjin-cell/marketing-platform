@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
+/** 规则树值对象，描述一棵规则树的节点及其跳转关系。 */
 @Data
 @Builder
 @AllArgsConstructor

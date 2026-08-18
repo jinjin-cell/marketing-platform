@@ -26,9 +26,11 @@ import static org.junit.Assert.*;
 @SpringBootTest
 public class ActivitySkuDaoTest {
 
+    /** SKU DAO，用于按 sku 查询活动 SKU 数据。 */
     @Resource
     private IRaffleActivitySkuDao raffleActivitySkuDao;
 
+    /** JdbcTemplate，用于直接操作数据库插入/清理测试数据。 */
     @Resource
     private JdbcTemplate jdbcTemplate;
 
@@ -36,6 +38,7 @@ public class ActivitySkuDaoTest {
     private static final Long TEST_ACTIVITY_ID = 999888777L;
     private static final Long TEST_COUNT_ID = 999888777L;
 
+    /** 在每个测试方法前插入测试 SKU 数据。 */
     @Before
     public void setUp() {
         // 插入测试数据到 raffle_activity_sku 表
@@ -47,12 +50,14 @@ public class ActivitySkuDaoTest {
         log.info("已插入测试SKU数据: sku={}", TEST_SKU);
     }
 
+    /** 在每个测试方法后清理测试 SKU 数据。 */
     @After
     public void tearDown() {
         jdbcTemplate.update("DELETE FROM raffle_activity_sku WHERE sku = ?", TEST_SKU);
         log.info("已清理测试SKU数据: sku={}", TEST_SKU);
     }
 
+    /** 验证存在指定 sku 时能正确查询出完整 SKU 数据。 */
     @Test
     public void test_queryRaffleActivitySkuBySku_exists() {
         RaffleActivitySkuPO sku = raffleActivitySkuDao.queryRaffleActivitySkuBySku(TEST_SKU);
@@ -69,6 +74,7 @@ public class ActivitySkuDaoTest {
                 sku.getStockCount(), sku.getStockCountSurplus());
     }
 
+    /** 验证不存在的 sku 查询返回 null。 */
     @Test
     public void test_queryRaffleActivitySkuBySku_notExists() {
         RaffleActivitySkuPO sku = raffleActivitySkuDao.queryRaffleActivitySkuBySku(-1L);

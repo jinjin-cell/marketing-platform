@@ -25,13 +25,17 @@ import javax.annotation.Resource;
 @SpringBootTest
 public class DataDiscoveryTest {
 
+    /** SKU DAO，用于探查 SKU 数据。 */
     @Resource
     private IRaffleActivitySkuDao skuDao;
+    /** 活动 DAO，用于探查活动数据。 */
     @Resource
     private IRaffleActivityDao activityDao;
+    /** 次数配置 DAO，用于探查次数配置数据。 */
     @Resource
     private IRaffleActivityCountDao countDao;
 
+    /** 探查若干候选 sku 在数据库中是否存在并打印结果。 */
     @Test
     public void discoverSkuData() {
         Long[] testSkus = {901100000001L, 10001L, 1L, 1001L};
@@ -41,6 +45,7 @@ public class DataDiscoveryTest {
         }
     }
 
+    /** 探查若干候选活动 ID 在数据库中是否存在并打印结果。 */
     @Test
     public void discoverActivityData() {
         Long[] testIds = {10001L, 1L, 1001L, 20001L};
@@ -50,6 +55,7 @@ public class DataDiscoveryTest {
         }
     }
 
+    /** 探查若干候选次数配置 ID 在数据库中是否存在并打印结果。 */
     @Test
     public void discoverCountData() {
         Long[] testIds = {10001L, 1L, 1001L, 20001L};

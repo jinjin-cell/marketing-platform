@@ -30,6 +30,7 @@ public class StrategyRepositoryStockTest {
     private IRedisService redisService;
     private IStrategyAwardDao strategyAwardDao;
 
+    /** 初始化仓储，并通过反射注入 Mock 的 Redis 与 DAO 依赖。 */
     @Before
     public void setUp() {
         repository = new StrategyRespository();
@@ -39,6 +40,7 @@ public class StrategyRepositoryStockTest {
         ReflectionTestUtils.setField(repository, "strategyAwardDao", strategyAwardDao);
     }
 
+    /** 库存余量大于 0 且槽位唯一时扣减成功。 */
     @Test
     public void subtractionAwardStock_positiveSurplusAndUniqueSlot_returnsTrue() {
         when(redisService.decr(STOCK_KEY)).thenReturn(4L);
@@ -50,6 +52,7 @@ public class StrategyRepositoryStockTest {
         verify(redisService, never()).setAtomicLong(STOCK_KEY, 0);
     }
 
+    /** 库存余量为负时回写 0 并返回扣减失败。 */
     @Test
     public void subtractionAwardStock_negativeSurplus_restoresZeroAndReturnsFalse() {
         when(redisService.decr(STOCK_KEY)).thenReturn(-1L);
@@ -60,6 +63,7 @@ public class StrategyRepositoryStockTest {
         verify(redisService, never()).setNx(STOCK_KEY + "_-1");
     }
 
+    /** 库存余量槽位重复（并发冲突）时扣减失败。 */
     @Test
     public void subtractionAwardStock_duplicateSurplusSlot_returnsFalse() {
         when(redisService.decr(STOCK_KEY)).thenReturn(4L);
@@ -68,6 +72,7 @@ public class StrategyRepositoryStockTest {
         assertFalse(repository.subtractionAwardStock(STOCK_KEY));
     }
 
+    /** 验证奖品库存缓存使用原子初始化，不会重复覆盖已存在值。 */
     @Test
     public void cacheStrategyAwardCount_usesAtomicInitialization() {
         repository.cacheStrategyAwardCount(STOCK_KEY, 10);
@@ -76,6 +81,7 @@ public class StrategyRepositoryStockTest {
         verify(redisService, never()).setAtomicLong(STOCK_KEY, 10);
     }
 
+    /** 验证库存扣减消息成功写入延迟队列。 */
     @Test
     @SuppressWarnings("unchecked")
     public void awardStockConsumeSendQueue_validMessage_offersDelayedUpdate() {
@@ -94,6 +100,7 @@ public class StrategyRepositoryStockTest {
         verify(delayedQueue).offer(message, 3L, TimeUnit.SECONDS);
     }
 
+    /** 数据库库存更新成功后删除奖品列表缓存。 */
     @Test
     public void updateStrategyAwardStock_databaseUpdated_invalidatesAwardCache() {
         when(strategyAwardDao.subtractionAwardStock(100001L, 107)).thenReturn(1);

@@ -7,5 +7,11 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface IRuleTreeDao {
 
+    /**
+     * 按规则树ID查询规则树根配置。
+     *
+     * @param treeId 规则树ID
+     * @return 规则树根配置；不存在时返回null
+     */
     RuleTreePO queryRuleTreeByTreeId(String treeId);
 }

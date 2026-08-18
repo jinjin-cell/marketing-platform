@@ -14,12 +14,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class DBRouterStrategy implements IDBRouterStrategy {
 
+    /**
+     * 设置数据库分片路由，使后续数据库操作路由到指定数据库
+     *
+     * @param dbKey 路由键（如用户ID）
+     */
     @Override
     public void doRouter(String dbKey) {
         HintManager hintManager = HintManager.getInstance();
         hintManager.setDatabaseShardingValue(dbKey);
     }
 
+    /**
+     * 清除当前线程的路由设置
+     */
     @Override
     public void clear() {
         HintManager.clear();

@@ -13,14 +13,14 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <insert id="insert" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountMonthPO">
+    <insert id="insertActivityAccountMonth" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountMonthPO">
         INSERT INTO raffle_activity_account_month
             (user_id, activity_id, month, month_count, month_count_surplus)
         VALUES
             (#{userId}, #{activityId}, #{month}, #{monthCount}, #{monthCountSurplus})
     </insert>
 
-    <select id="queryRaffleActivityAccountMonth" resultMap="RaffleActivityAccountMonthMap">
+    <select id="queryActivityAccountMonthByUserId" resultMap="RaffleActivityAccountMonthMap">
         SELECT id, user_id, activity_id, month, month_count, month_count_surplus, create_time, update_time
         FROM raffle_activity_account_month
         WHERE user_id = #{userId}
@@ -28,15 +28,15 @@
           AND month = #{month}
     </select>
 
-    <update id="updateAccountQuota"
+    <update id="updateActivityAccountMonthSubtractionQuota"
             parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountMonthPO">
         UPDATE raffle_activity_account_month
-        SET month_count = month_count + #{monthCount},
-            month_count_surplus = month_count_surplus + #{monthCountSurplus},
+        SET month_count_surplus = month_count_surplus - 1,
             update_time = NOW()
         WHERE user_id = #{userId}
           AND activity_id = #{activityId}
           AND month = #{month}
+          AND month_count_surplus > 0
     </update>
 
 </mapper>

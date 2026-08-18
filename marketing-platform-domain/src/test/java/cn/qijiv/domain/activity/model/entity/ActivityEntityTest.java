@@ -15,6 +15,7 @@ import static org.junit.Assert.*;
  */
 public class ActivityEntityTest {
 
+    /** 验证 Builder 能创建包含全部字段的活动实体。 */
     @Test
     public void test_builder_createsEntityWithAllFields() {
         Date begin = new Date();
@@ -41,6 +42,7 @@ public class ActivityEntityTest {
         assertEquals(ActivityStateVO.open, entity.getState());
     }
 
+    /** 验证无参构造创建的空实体字段均为空。 */
     @Test
     public void test_noArgsConstructor_createsEmptyEntity() {
         ActivityEntity entity = new ActivityEntity();
@@ -49,6 +51,7 @@ public class ActivityEntityTest {
         assertNull(entity.getState());
     }
 
+    /** 验证全参构造能正确创建活动实体。 */
     @Test
     public void test_allArgsConstructor_createsEntity() {
         Date begin = new Date();
@@ -59,6 +62,7 @@ public class ActivityEntityTest {
         assertEquals(ActivityStateVO.create, entity.getState());
     }
 
+    /** 验证 Setter 方法能修改实体字段。 */
     @Test
     public void test_setters_modifyFields() {
         ActivityEntity entity = new ActivityEntity();

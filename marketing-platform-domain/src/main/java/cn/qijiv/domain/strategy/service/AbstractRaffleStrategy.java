@@ -28,6 +28,13 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
     /** 规则树工厂，负责创建抽奖后置决策树引擎。 */
     protected final DefaultTreeFactory defaultTreeFactory;
 
+    /**
+     * 注入领域仓储、责任链工厂和规则树工厂。
+     *
+     * @param repository   领域仓储
+     * @param chainFactory 责任链工厂
+     * @param treeFactory  规则树工厂
+     */
     protected AbstractRaffleStrategy(
             IStrategyRepository repository,
             DefaultChainFactory chainFactory,
@@ -84,6 +91,14 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
         return buildRaffleAwardEntity(strategyId, treeStrategyAwardVO.getAwardId(), treeStrategyAwardVO.getAwardRuleValue());
     }
 
+    /**
+     * 根据策略奖品配置构建抽奖结果实体。
+     *
+     * @param strategyId  策略ID
+     * @param awardId     奖品ID
+     * @param awardConfig 奖品规则配置，可为空
+     * @return 抽奖结果实体
+     */
     protected final RaffleAwardEntity buildRaffleAwardEntity(
             Long strategyId, Integer awardId, String awardConfig) {
         StrategyAwardEntity strategyAward = repository.queryStrategyAwardEntity(strategyId, awardId);

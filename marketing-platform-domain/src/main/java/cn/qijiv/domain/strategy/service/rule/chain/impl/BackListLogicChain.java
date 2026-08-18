@@ -20,12 +20,25 @@ import java.util.List;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BackListLogicChain extends AbstractLogicChain {
 
+    /** 领域仓储，用于查询黑名单规则配置。 */
     private final IStrategyRepository repository;
 
+    /**
+     * 注入领域仓储。
+     *
+     * @param repository 领域仓储
+     */
     public BackListLogicChain(IStrategyRepository repository) {
         this.repository = repository;
     }
 
+    /**
+     * 执行黑名单规则判断：用户命中黑名单时直接接管抽奖，否则放行到下一个节点。
+     *
+     * @param userId     用户ID
+     * @param strategyId 策略ID
+     * @return 责任链抽奖结果，黑名单命中时为固定奖品
+     */
     @Override
     public DefaultChainFactory.StrategyAwardVO logic(String userId, Long strategyId) {
         // 黑名单是策略级前置规则，配置格式为：固定奖品ID:用户ID,用户ID,...
@@ -66,6 +79,12 @@ public class BackListLogicChain extends AbstractLogicChain {
         return nextLogic(userId, strategyId);
     }
 
+    /**
+     * 校验黑名单规则指定的奖品是否属于当前策略。
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     */
     private void validateAward(Long strategyId, Integer awardId) {
         List<StrategyAwardEntity> strategyAwards = repository.queryStrategyAwardList(strategyId);
         if (strategyAwards == null || strategyAwards.stream()
@@ -75,6 +94,11 @@ public class BackListLogicChain extends AbstractLogicChain {
         }
     }
 
+    /**
+     * 返回本节点的规则模型名称。
+     *
+     * @return 规则模型名称，即 {@code rule_blacklist}
+     */
     @Override
     protected String ruleModel() {
         return DefaultChainFactory.RULE_BLACKLIST;

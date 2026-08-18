@@ -2,6 +2,9 @@ package cn.qijiv.domain.activity.service.armory;
 
 import java.util.Date;
 
+/**
+ * 活动调度接口
+ */
 public interface IActivityDispatch {
 
     /**

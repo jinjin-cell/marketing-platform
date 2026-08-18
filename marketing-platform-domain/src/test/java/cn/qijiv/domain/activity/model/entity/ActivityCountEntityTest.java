@@ -12,6 +12,7 @@ import static org.junit.Assert.*;
  */
 public class ActivityCountEntityTest {
 
+    /** 验证 Builder 能创建包含全部字段的次数配置实体。 */
     @Test
     public void test_builder_createsEntityWithAllFields() {
         ActivityCountEntity entity = ActivityCountEntity.builder()
@@ -28,6 +29,7 @@ public class ActivityCountEntityTest {
         assertEquals(Integer.valueOf(5), entity.getMonthCount());
     }
 
+    /** 验证日次数与月次数均不超过总次数。 */
     @Test
     public void test_dayCount_notExceedTotalCount() {
         ActivityCountEntity entity = ActivityCountEntity.builder()
@@ -40,6 +42,7 @@ public class ActivityCountEntityTest {
         assertTrue(entity.getMonthCount() <= entity.getTotalCount());
     }
 
+    /** 验证全参构造能正确赋值。 */
     @Test
     public void test_allArgsConstructor() {
         ActivityCountEntity entity = new ActivityCountEntity(10001L, 10, 3, 5);

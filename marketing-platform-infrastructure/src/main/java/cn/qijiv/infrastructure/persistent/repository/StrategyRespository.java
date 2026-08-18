@@ -57,27 +57,40 @@ public class StrategyRespository implements IStrategyRepository {
     private static final long STRATEGY_RATE_TABLE_CACHE_TTL_MINUTES = 30L;  // 抽奖策略奖品率表缓存过期时间
     private static final long RULE_TREE_CACHE_TTL_MINUTES = 30L;   // 规则树缓存过期时间
 
+    /** 策略奖品 DAO */
     @Resource
     private IStrategyAwardDao strategyAwardDao;
 
+    /** 策略 DAO */
     @Resource
     private IStrategyDao strategyDao;
 
+    /** 策略规则 DAO */
     @Resource
     private IStrategyRuleDao strategyRuleDao;
 
+    /** 规则树 DAO */
     @Resource
     private IRuleTreeDao ruleTreeDao;
 
+    /** 规则树节点 DAO */
     @Resource
     private IRuleTreeNodeDao ruleTreeNodeDao;
 
+    /** 规则树节点连线 DAO */
     @Resource
     private IRuleTreeNodeLineDao ruleTreeNodeLineDao;
 
+    /** Redis 服务 */
     @Resource
     private IRedisService redisService;
 
+    /**
+     * 查询策略奖品列表，优先从缓存获取
+     *
+     * @param strategyId 策略ID
+     * @return 策略奖品实体列表
+     */
     @Override
     public List<StrategyAwardEntity> queryStrategyAwardList(Long strategyId) {
         // 1. 先从 Redis 缓存中查询
@@ -116,6 +129,13 @@ public class StrategyRespository implements IStrategyRepository {
         return entityList;
     }
 
+    /**
+     * 按策略ID与奖品ID查询单个策略奖品
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     * @return 策略奖品实体，不存在时返回 null
+     */
     @Override
     public StrategyAwardEntity queryStrategyAwardEntity(Long strategyId, Integer awardId) {
         if (strategyId == null || awardId == null) {
@@ -193,6 +213,13 @@ public class StrategyRespository implements IStrategyRepository {
                 .build();
     }
 
+    /**
+     * 查询策略级规则
+     *
+     * @param strategyId 策略ID
+     * @param ruleModel  规则模型
+     * @return 策略规则实体，不存在时返回 null
+     */
     @Override
     public StrategyRuleEntity queryStrategyRule(Long strategyId, String ruleModel) {
         // 按策略ID和规则模型精确查询策略级规则，例如 rule_weight。
@@ -211,6 +238,14 @@ public class StrategyRespository implements IStrategyRepository {
                 .build();
     }
 
+    /**
+     * 查询奖品级规则
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     * @param ruleModel  规则模型
+     * @return 策略规则实体，不存在时返回 null
+     */
     @Override
     public StrategyRuleEntity queryStrategyAwardRule(Long strategyId, Integer awardId, String ruleModel) {
         StrategyRulePO strategyRulePO = strategyRuleDao.queryStrategyAwardRule(strategyId, awardId, ruleModel);
@@ -227,6 +262,13 @@ public class StrategyRespository implements IStrategyRepository {
                 .build();
     }
 
+    /**
+     * 查询策略奖品规则模型配置
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     * @return 策略奖品规则模型值对象，不存在时返回 null
+     */
     @Override
     public StrategyAwardRuleModelVO queryStrategyAwardRuleModelVO(
             Long strategyId, Integer awardId) {
@@ -240,6 +282,12 @@ public class StrategyRespository implements IStrategyRepository {
                 .build();
     }
 
+    /**
+     * 查询规则树，优先从缓存获取，未命中时从数据库装配
+     *
+     * @param treeId 规则树ID
+     * @return 规则树值对象，不存在时返回 null
+     */
     @Override
     public RuleTreeVO queryRuleTreeVOByTreeId(String treeId) {
         if (treeId == null || treeId.trim().isEmpty()) {
@@ -381,6 +429,11 @@ public class StrategyRespository implements IStrategyRepository {
         redisService.setAtomicLongIfAbsent(cacheKey, awardCount);
     }
 
+    /**
+     * 发送奖品库存消耗消息到延迟队列
+     *
+     * @param strategyAwardStockKeyVO 策略奖品库存键
+     */
     @Override
     public void awardStockConsumeSendQueue(StrategyAwardStockKeyVO strategyAwardStockKeyVO) {
         if (strategyAwardStockKeyVO == null
@@ -395,6 +448,11 @@ public class StrategyRespository implements IStrategyRepository {
         delayedQueue.offer(strategyAwardStockKeyVO, 3, TimeUnit.SECONDS);
     }
 
+    /**
+     * 从延迟队列取出奖品库存消耗消息
+     *
+     * @return 策略奖品库存键，队列为空时返回 null
+     */
     @Override
     public StrategyAwardStockKeyVO takeQueueValue(){
         String cacheKey = Constants.RedisKey.STRATEGY_AWARD_COUNT_QUERY_KEY;
@@ -402,6 +460,12 @@ public class StrategyRespository implements IStrategyRepository {
         return blockingQueue.poll();
     }
 
+    /**
+     * 更新数据库奖品库存，并失效奖品列表缓存
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     */
     @Override
     public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
         int affectedRows = strategyAwardDao.subtractionAwardStock(strategyId, awardId);

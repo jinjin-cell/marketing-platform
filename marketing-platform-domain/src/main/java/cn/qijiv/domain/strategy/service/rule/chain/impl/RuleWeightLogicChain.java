@@ -17,9 +17,17 @@ import org.springframework.stereotype.Component;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RuleWeightLogicChain extends AbstractLogicChain {
 
+    /** 领域仓储，用于查询权重规则配置。 */
     private final IStrategyRepository repository;
+    /** 策略抽奖调度服务，用于按权重档位抽取奖品。 */
     private final IStrategyDispatch strategyDispatch;
 
+    /**
+     * 注入领域仓储和策略抽奖调度服务。
+     *
+     * @param repository       领域仓储
+     * @param strategyDispatch 策略抽奖调度服务
+     */
     public RuleWeightLogicChain(IStrategyRepository repository, IStrategyDispatch strategyDispatch) {
         this.repository = repository;
         this.strategyDispatch = strategyDispatch;
@@ -78,6 +86,11 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
         return 4500L;
     }
 
+    /**
+     * 返回本节点的规则模型名称。
+     *
+     * @return 规则模型名称，即 {@code rule_weight}
+     */
     @Override
     protected String ruleModel() {
         return DefaultChainFactory.RULE_WEIGHT;

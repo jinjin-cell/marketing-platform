@@ -16,7 +16,7 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <select id="queryRaffleActivityAccount" resultMap="RaffleActivityAccountMap">
+    <select id="queryActivityAccountByUserId" resultMap="RaffleActivityAccountMap">
         SELECT id, user_id, activity_id, total_count, total_count_surplus, day_count,
                day_count_surplus, month_count, month_count_surplus, create_time, update_time
         FROM raffle_activity_account
@@ -46,5 +46,27 @@
             (#{userId}, #{activityId}, #{totalCount}, #{totalCountSurplus}, #{dayCount},
              #{dayCountSurplus}, #{monthCount}, #{monthCountSurplus})
     </insert>
+
+    <update id="updateActivityAccountSubtractionQuota" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO">
+        update raffle_activity_account
+        set total_count_surplus = total_count_surplus - 1,
+            day_count_surplus = day_count_surplus - 1,
+            month_count_surplus = month_count_surplus - 1,
+            update_time = now()
+        where user_id = #{userId} and activity_id = #{activityId} and total_count_surplus > 0 and day_count_surplus > 0 and month_count_surplus > 0
+    </update>
+
+    <update id="updateActivityAccountMonthSurplusImageQuota" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO">
+        update raffle_activity_account
+        set month_count_surplus = #{monthCountSurplus} - 1, update_time = now()
+        where user_id = #{userId} and activity_id = #{activityId}
+    </update>
+
+    <update id="updateActivityAccountDaySurplusImageQuota" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountDayPO">
+        update raffle_activity_account
+        set day_count_surplus = #{dayCountSurplus} - 1, update_time = now()
+        where user_id = #{userId} and activity_id = #{activityId}
+    </update>
+
 
 </mapper>

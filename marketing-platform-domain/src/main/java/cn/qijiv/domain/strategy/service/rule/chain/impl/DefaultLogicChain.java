@@ -14,12 +14,25 @@ import org.springframework.stereotype.Component;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DefaultLogicChain extends AbstractLogicChain {
 
+    /** 策略抽奖调度服务，负责执行普通概率抽奖。 */
     private final IStrategyDispatch strategyDispatch;
 
+    /**
+     * 注入策略抽奖调度服务。
+     *
+     * @param strategyDispatch 策略抽奖调度服务
+     */
     public DefaultLogicChain(IStrategyDispatch strategyDispatch) {
         this.strategyDispatch = strategyDispatch;
     }
 
+    /**
+     * 执行默认概率抽奖，作为责任链的兜底节点。
+     *
+     * @param userId     用户ID
+     * @param strategyId 策略ID
+     * @return 责任链抽奖结果，为普通概率抽中的奖品
+     */
     @Override
     public DefaultChainFactory.StrategyAwardVO logic(String userId, Long strategyId) {
         // 前置规则都未接管时，由默认节点执行策略普通概率抽奖。
@@ -31,6 +44,11 @@ public class DefaultLogicChain extends AbstractLogicChain {
                 .build();
     }
 
+    /**
+     * 返回本节点的规则模型名称。
+     *
+     * @return 规则模型名称，即 {@code default}
+     */
     @Override
     protected String ruleModel() {
         return "default";

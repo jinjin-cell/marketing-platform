@@ -9,12 +9,24 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.util.concurrent.*;
 
+/**
+ * 线程池配置类，根据配置属性构建线程池执行器 Bean
+ */
 @Slf4j
 @EnableAsync
 @Configuration
 @EnableConfigurationProperties(ThreadPoolConfigProperties.class)
 public class ThreadPoolConfig {
 
+    /**
+     * 根据配置属性创建线程池执行器，并按策略名称实例化对应的拒绝策略
+     *
+     * @param properties 线程池配置属性
+     * @return 线程池执行器
+     * @throws ClassNotFoundException 类加载异常
+     * @throws InstantiationException 实例化异常
+     * @throws IllegalAccessException 非法访问异常
+     */
     @Bean
     @ConditionalOnMissingBean(ThreadPoolExecutor.class)
     public ThreadPoolExecutor threadPoolExecutor(ThreadPoolConfigProperties properties) throws ClassNotFoundException, InstantiationException, IllegalAccessException {

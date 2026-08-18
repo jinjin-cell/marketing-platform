@@ -1,6 +1,6 @@
 package cn.qijiv.test.infrastructure;
 
-import cn.qijiv.domain.activity.model.aggregate.CreateOrderAggregate;
+import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
 import cn.qijiv.domain.activity.model.entity.ActivityCountEntity;
 import cn.qijiv.domain.activity.model.entity.ActivityEntity;
 import cn.qijiv.domain.activity.model.entity.ActivityOrderEntity;
@@ -48,33 +48,46 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+/** 活动仓储单元测试：使用 Mock 验证查询缓存、订单保存与额度累计逻辑。 */
 @RunWith(MockitoJUnitRunner.class)
 public class ActivityRepositoryUnitTest {
 
+    /** Mock 的 Redis 服务，用于模拟缓存读写。 */
     @Mock
     private IRedisService redisService;
+    /** Mock 的活动 DAO，用于查询活动数据。 */
     @Mock
     private IRaffleActivityDao raffleActivityDao;
+    /** Mock 的 SKU DAO，用于查询 SKU 数据。 */
     @Mock
     private IRaffleActivitySkuDao raffleActivitySkuDao;
+    /** Mock 的次数配置 DAO，用于查询次数配置数据。 */
     @Mock
     private IRaffleActivityCountDao raffleActivityCountDao;
+    /** Mock 的订单 DAO，用于插入与查询订单。 */
     @Mock
     private IRaffleActivityOrderDao raffleActivityOrderDao;
+    /** Mock 的账户 DAO，用于更新或创建账户额度。 */
     @Mock
     private IRaffleActivityAccountDao raffleActivityAccountDao;
+    /** Mock 的事务模板，用于控制事务回滚。 */
     @Mock
     private TransactionTemplate transactionTemplate;
+    /** Mock 的事务状态，用于验证回滚标记。 */
     @Mock
     private TransactionStatus transactionStatus;
+    /** Mock 的分库路由策略，用于验证路由与清理。 */
     @Mock
     private IDBRouterStrategy dbRouter;
+    /** Mock 的订单号布隆过滤器，用于验证去重查询。 */
     @Mock
     private OrderBusinessNoBloomFilter orderBloomFilter;
 
+    /** 被测的活动仓储，由 Mock 依赖注入构建。 */
     @InjectMocks
     private ActivityRepository activityRepository;
 
+    /** 让事务模板直接执行回调，以便验证事务内的行为。 */
     @Before
     public void executeTransactionCallbacks() {
         when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
@@ -83,6 +96,7 @@ public class ActivityRepositoryUnitTest {
         });
     }
 
+    /** 验证查询已存在 SKU 时能完整映射所有字段。 */
     @Test
     public void queryActivitySku_existingSku_mapsAllFields() {
         RaffleActivitySkuPO skuPO = new RaffleActivitySkuPO();
@@ -103,6 +117,7 @@ public class ActivityRepositoryUnitTest {
         verify(raffleActivitySkuDao).queryRaffleActivitySkuBySku(10001L);
     }
 
+    /** 验证活动查询缓存命中时直接返回缓存，不再访问数据库。 */
     @Test
     public void queryRaffleActivity_cacheHit_returnsCachedEntityWithoutDatabaseQuery() {
         String cacheKey = Constants.RedisKey.ACTIVITY_KEY + 20001L;
@@ -119,6 +134,7 @@ public class ActivityRepositoryUnitTest {
         verify(redisService, never()).setValue(cacheKey, cached);
     }
 
+    /** 验证活动查询缓存未命中时映射数据库实体并写入缓存。 */
     @Test
     public void queryRaffleActivity_cacheMiss_mapsDatabaseEntityAndCachesIt() {
         String cacheKey = Constants.RedisKey.ACTIVITY_KEY + 20001L;
@@ -148,6 +164,7 @@ public class ActivityRepositoryUnitTest {
         verify(redisService).setValue(cacheKey, result);
     }
 
+    /** 验证次数配置查询缓存命中时直接返回缓存，不再访问数据库。 */
     @Test
     public void queryRaffleActivityCount_cacheHit_returnsCachedEntityWithoutDatabaseQuery() {
         String cacheKey = Constants.RedisKey.ACTIVITY_COUNT_KEY + 30001L;
@@ -164,6 +181,7 @@ public class ActivityRepositoryUnitTest {
         verify(redisService, never()).setValue(cacheKey, cached);
     }
 
+    /** 验证次数配置查询缓存未命中时映射数据库实体并写入缓存。 */
     @Test
     public void queryRaffleActivityCount_cacheMiss_mapsDatabaseEntityAndCachesIt() {
         String cacheKey = Constants.RedisKey.ACTIVITY_COUNT_KEY + 30001L;
@@ -185,9 +203,10 @@ public class ActivityRepositoryUnitTest {
         verify(redisService).setValue(cacheKey, result);
     }
 
+    /** 验证账户已存在时仅插入订单并更新账户额度，不重复创建账户。 */
     @Test
     public void doSaveOrder_existingAccount_insertsOrderAndAddsQuota() {
-        CreateOrderAggregate aggregate = createOrderAggregate();
+        CreateQuotaOrderAggregate aggregate = createOrderAggregate();
         when(raffleActivityAccountDao.updateAccountQuota(any(RaffleActivityAccountPO.class))).thenReturn(1);
 
         activityRepository.doSaveOrder(aggregate);
@@ -208,9 +227,10 @@ public class ActivityRepositoryUnitTest {
         assertEquals(Integer.valueOf(5), accountCaptor.getValue().getMonthCountSurplus());
     }
 
+    /** 验证账户不存在时插入订单的同时创建账户。 */
     @Test
     public void doSaveOrder_missingAccount_createsAccount() {
-        CreateOrderAggregate aggregate = createOrderAggregate();
+        CreateQuotaOrderAggregate aggregate = createOrderAggregate();
         when(raffleActivityAccountDao.updateAccountQuota(any(RaffleActivityAccountPO.class))).thenReturn(0);
 
         activityRepository.doSaveOrder(aggregate);
@@ -219,6 +239,7 @@ public class ActivityRepositoryUnitTest {
         verify(dbRouter).clear();
     }
 
+    /** 验证布隆过滤器判不存在时跳过数据库查询直接返回 null。 */
     @Test
     public void queryOrder_bloomSaysAbsent_skipsDatabase() {
         when(orderBloomFilter.mightContain("user001", "business001")).thenReturn(false);
@@ -230,6 +251,7 @@ public class ActivityRepositoryUnitTest {
         verify(dbRouter, never()).doRouter("user001");
     }
 
+    /** 验证布隆过滤器判可能存在时再向数据库确认订单。 */
     @Test
     public void queryOrder_bloomSaysPossible_confirmsWithDatabase() {
         RaffleActivityOrderPO order = new RaffleActivityOrderPO();
@@ -244,9 +266,10 @@ public class ActivityRepositoryUnitTest {
         verify(dbRouter).clear();
     }
 
+    /** 验证重复业务单号触发唯一索引异常时回滚事务并清理路由。 */
     @Test
     public void doSaveOrder_duplicateBusinessNumber_rollsBackAndClearsRoute() {
-        CreateOrderAggregate aggregate = createOrderAggregate();
+        CreateQuotaOrderAggregate aggregate = createOrderAggregate();
         doThrow(new DuplicateKeyException("duplicate out_business_no"))
                 .when(raffleActivityOrderDao).insert(any(RaffleActivityOrderPO.class));
 
@@ -262,7 +285,8 @@ public class ActivityRepositoryUnitTest {
         verify(dbRouter).clear();
     }
 
-    private CreateOrderAggregate createOrderAggregate() {
+    /** 构造一个创建订单聚合实体的默认测试数据。 */
+    private CreateQuotaOrderAggregate createOrderAggregate() {
         ActivityOrderEntity order = ActivityOrderEntity.builder()
                 .userId("user001")
                 .sku(901100000001L)
@@ -277,7 +301,7 @@ public class ActivityRepositoryUnitTest {
                 .state(OrderStateVO.completed)
                 .outBusinessNo("business001")
                 .build();
-        return CreateOrderAggregate.builder()
+        return CreateQuotaOrderAggregate.builder()
                 .userId("user001")
                 .activityId(100301L)
                 .totalCount(10)

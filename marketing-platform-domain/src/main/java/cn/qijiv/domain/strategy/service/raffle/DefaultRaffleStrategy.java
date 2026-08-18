@@ -22,6 +22,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRaffleAward, IRaffleStock {
 
+    /**
+     * 注入领域仓储、责任链工厂和规则树工厂。
+     *
+     * @param repository           领域仓储
+     * @param defaultChainFactory  责任链工厂
+     * @param defaultTreeFactory   规则树工厂
+     */
     public DefaultRaffleStrategy(
             IStrategyRepository repository,
             DefaultChainFactory defaultChainFactory,
@@ -72,22 +79,46 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRa
         return result == null ? originalAward(awardId) : result;
     }
 
+    /**
+     * 保留责任链抽中的原奖品，用于规则树未接管时的结果返回。
+     *
+     * @param awardId 原奖品ID
+     * @return 规则树抽奖结果
+     */
     private DefaultTreeFactory.StrategyAwardVO originalAward(Integer awardId) {
         return DefaultTreeFactory.StrategyAwardVO.builder()
                 .awardId(awardId)
                 .build();
     }
 
+    /**
+     * 从延迟队列取出一条已到期的库存扣减消息。
+     *
+     * @return 库存扣减消息
+     * @throws InterruptedException 线程被中断时抛出
+     */
      @Override
     public StrategyAwardStockKeyVO takeQueueValue() throws InterruptedException {
         return repository.takeQueueValue();
     }
 
+    /**
+     * 将一次成功的 Redis 库存扣减同步到数据库。
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     */
     @Override
     public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
         repository.updateStrategyAwardStock(strategyId, awardId);
     }
 
+    /**
+     * 查询抽奖策略奖品列表。
+     *
+     * @param strategyId 策略ID
+     * @return 抽奖策略奖品列表
+     */
     @Override
     public List<StrategyAwardEntity> queryRaffleStrategyAwardList(Long strategyId) {
         return repository.queryStrategyAwardList(strategyId);

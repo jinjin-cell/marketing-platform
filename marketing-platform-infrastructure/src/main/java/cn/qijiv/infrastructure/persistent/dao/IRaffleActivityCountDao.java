@@ -13,6 +13,12 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface IRaffleActivityCountDao {
 
+    /**
+     * 按活动次数配置ID查询活动次数配置。
+     *
+     * @param activityCountId 活动次数配置ID
+     * @return 活动次数配置
+     */
     RaffleActivityCountPO queryRaffleActivityCountByActivityCountId(
             @Param("activityCountId") Long activityCountId);
 

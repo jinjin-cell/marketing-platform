@@ -22,9 +22,11 @@ import java.util.List;
 @SpringBootTest
 public class AwardDaoTest {
 
+    /** 奖品 DAO，用于查询奖品列表。 */
     @Resource
     private IAwardDao awardDao;
 
+    /** 验证查询奖品列表并打印查询结果。 */
     @Test
     public void test_queryAwardList() {
         List<AwardPO> list = awardDao.queryAwardList();

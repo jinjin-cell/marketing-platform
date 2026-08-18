@@ -14,13 +14,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+/** Redis 服务集成测试：验证基础读写与删除能力。 */
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class RedisServiceTest {
 
+    /** Redis 服务接口，用于执行缓存读写操作。 */
     @Resource
     private IRedisService redisService;
 
+    /** 验证 Redis 的写入、读取、存在性判断与删除全流程。 */
     @Test
     public void test_setGetAndDelete() {
         String key = "test:marketing-platform:redis:" + UUID.randomUUID();

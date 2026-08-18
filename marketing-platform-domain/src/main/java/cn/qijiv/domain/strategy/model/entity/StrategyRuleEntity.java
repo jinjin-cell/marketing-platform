@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/** 抽奖策略规则实体，记录策略规则或奖品规则配置，并提供权重规则解析能力。 */
 @Data
 @Builder
 @NoArgsConstructor

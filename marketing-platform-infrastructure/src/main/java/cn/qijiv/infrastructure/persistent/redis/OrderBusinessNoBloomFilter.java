@@ -13,8 +13,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class OrderBusinessNoBloomFilter {
 
+    /** Redisson 客户端 */
     private final RedissonClient redissonClient;
+    /** 预期插入元素数量 */
     private final long expectedInsertions;
+    /** 期望误判率 */
     private final double falseProbability;
 
     public OrderBusinessNoBloomFilter(
@@ -26,10 +29,20 @@ public class OrderBusinessNoBloomFilter {
         this.falseProbability = falseProbability;
     }
 
+    /**
+     * 初始化布隆过滤器容量与误判率参数
+     */
     public void initialize() {
         bloomFilter().tryInit(expectedInsertions, falseProbability);
     }
 
+    /**
+     * 判断业务号是否可能已存在
+     *
+     * @param userId        用户ID
+     * @param outBusinessNo 外部业务号
+     * @return 可能存在返回 true，允许少量误判
+     */
     public boolean mightContain(String userId, String outBusinessNo) {
         RBloomFilter<String> bloomFilter = bloomFilter();
         ensureInitialized(bloomFilter);
@@ -45,6 +58,9 @@ public class OrderBusinessNoBloomFilter {
         bloomFilter.add(toBusinessKey(userId, outBusinessNo));
     }
 
+    /**
+     * 获取订单业务号布隆过滤器实例
+     */
     private RBloomFilter<String> bloomFilter() {
         return redissonClient.getBloomFilter(
                 Constants.RedisKey.ACTIVITY_ORDER_BUSINESS_NO_BLOOM_FILTER,
@@ -52,12 +68,24 @@ public class OrderBusinessNoBloomFilter {
         );
     }
 
+    /**
+     * 校验布隆过滤器已初始化，避免产生假阴性
+     *
+     * @param bloomFilter 布隆过滤器
+     */
     private void ensureInitialized(RBloomFilter<String> bloomFilter) {
         if (!bloomFilter.isExists()) {
             throw new IllegalStateException("订单业务号布隆过滤器未初始化，拒绝产生假阴性");
         }
     }
 
+    /**
+     * 拼接业务键，防止不同用户的外部业务号相互冲突
+     *
+     * @param userId        用户ID
+     * @param outBusinessNo 外部业务号
+     * @return 拼接后的业务键
+     */
     private String toBusinessKey(String userId, String outBusinessNo) {
         return userId.length() + ":" + userId + ":" + outBusinessNo;
     }

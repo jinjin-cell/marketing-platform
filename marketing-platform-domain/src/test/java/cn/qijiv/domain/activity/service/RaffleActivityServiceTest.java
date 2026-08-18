@@ -1,12 +1,14 @@
 package cn.qijiv.domain.activity.service;
 
-import cn.qijiv.domain.activity.model.aggregate.CreateOrderAggregate;
+import cn.qijiv.domain.activity.model.aggregate.CreatePartakeOrderAggregate;
+import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
 import cn.qijiv.domain.activity.model.entity.*;
 import cn.qijiv.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 import cn.qijiv.domain.activity.model.valobj.ActivityStateVO;
 import cn.qijiv.domain.activity.repository.IActivityRepository;
-import cn.qijiv.domain.activity.service.rule.IActionChain;
-import cn.qijiv.domain.activity.service.rule.factory.DefaultActivityChainFactory;
+import cn.qijiv.domain.activity.service.quota.RaffleActivityAccountQuotaService;
+import cn.qijiv.domain.activity.service.quota.rule.IActionChain;
+import cn.qijiv.domain.activity.service.quota.rule.factory.DefaultActivityChainFactory;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import org.junit.Before;
@@ -27,7 +29,7 @@ import static org.junit.Assert.*;
  */
 public class RaffleActivityServiceTest {
 
-    private RaffleActivityService raffleActivityService;
+    private RaffleActivityAccountQuotaService raffleActivityService;
 
     /**
      * IActivityRepository 的手动桩，用于模拟数据库查询行为。
@@ -40,7 +42,7 @@ public class RaffleActivityServiceTest {
         private Long queriedSku;
         private Long queriedActivityId;
         private Long queriedActivityCountId;
-        private CreateOrderAggregate savedAggregate;
+        private CreateQuotaOrderAggregate savedAggregate;
         private String existingOrderId;
         private ActivitySkuStockKeyVO queuedStock;
         private Long updatedStockSku;
@@ -58,7 +60,7 @@ public class RaffleActivityServiceTest {
             this.countEntity = countEntity;
         }
 
-        public CreateOrderAggregate getSavedAggregate() {
+        public CreateQuotaOrderAggregate getSavedAggregate() {
             return savedAggregate;
         }
 
@@ -90,8 +92,8 @@ public class RaffleActivityServiceTest {
         }
 
         @Override
-        public void doSaveOrder(CreateOrderAggregate createOrderAggregate) {
-            this.savedAggregate = createOrderAggregate;
+        public void doSaveOrder(CreateQuotaOrderAggregate createQuotaOrderAggregate) {
+            this.savedAggregate = createQuotaOrderAggregate;
         }
 
         @Override
@@ -127,6 +129,31 @@ public class RaffleActivityServiceTest {
         public void clearActivitySkuStock(Long sku) {
             clearedStockSku = sku;
         }
+
+        @Override
+        public void saveCreatePartakeOrderAggregate(CreatePartakeOrderAggregate createPartakeOrderAggregate) {
+
+        }
+
+        @Override
+        public ActivityAccountDayEntity queryActivityAccountDayByUserId(String userId, Long activityId, String day) {
+            return null;
+        }
+
+        @Override
+        public ActivityAccountEntity queryActivityAccountByUserId(String userId, Long activityId) {
+            return null;
+        }
+
+        @Override
+        public ActivityAccountMonthEntity queryActivityAccountMonthByUserId(String userId, Long activityId, String month) {
+            return null;
+        }
+
+        @Override
+        public UserRaffleOrderEntity queryNoUsedRaffleOrder(PartakeRaffleActivityEntity partakeRaffleActivityEntity) {
+            return null;
+        }
     }
 
     /**
@@ -152,6 +179,7 @@ public class RaffleActivityServiceTest {
 
     private StubActivityRepository stubRepo;
 
+    /** 构造 stub 仓储与责任链工厂，初始化被测服务。 */
     @Before
     public void setUp() {
         stubRepo = new StubActivityRepository();
@@ -161,9 +189,10 @@ public class RaffleActivityServiceTest {
         chainGroup.put(DefaultActivityChainFactory.ActionModel.activity_base_action.getCode(), stubChain);
         chainGroup.put(DefaultActivityChainFactory.ActionModel.activity_sku_stock_action.getCode(), stubChain);
         DefaultActivityChainFactory chainFactory = new DefaultActivityChainFactory(chainGroup);
-        raffleActivityService = new RaffleActivityService(stubRepo, chainFactory);
+        raffleActivityService = new RaffleActivityAccountQuotaService(stubRepo, chainFactory);
     }
 
+    /** 验证正常创建 SKU 充值订单时返回非空订单 ID。 */
     @Test
     public void test_createSkuRechargeOrder_success() {
         // 1. 准备 SKU 数据
@@ -209,6 +238,7 @@ public class RaffleActivityServiceTest {
         assertNotNull(orderId);
     }
 
+    /** 验证传入空请求时抛出非法参数异常。 */
     @Test
     public void test_createSkuRechargeOrder_nullRequest_throwsIllegalParameter() {
         try {
@@ -220,6 +250,7 @@ public class RaffleActivityServiceTest {
         }
     }
 
+    /** 验证业务单号已存在时直接返回原订单，不再重复创建。 */
     @Test
     public void test_createSkuRechargeOrder_existingBusinessNo_returnsOriginalOrder() {
         stubRepo.setExistingOrderId("123456789012");
@@ -235,6 +266,7 @@ public class RaffleActivityServiceTest {
         assertNull(stubRepo.getSavedAggregate());
     }
 
+    /** 验证使用不同 SKU 时仍能正常创建订单。 */
     @Test
     public void test_createSkuRechargeOrder_withDifferentSku() {
         ActivitySkuEntity skuEntity = ActivitySkuEntity.builder()
@@ -272,6 +304,7 @@ public class RaffleActivityServiceTest {
         assertNotNull(orderId);
     }
 
+    /** 验证实体字段为空时方法不会抛出空指针异常。 */
     @Test
     public void test_createSkuRechargeOrder_returnsOrderWithBuilderDefaults() {
         // 当 repository 返回的 entity 全部为空字段时，验证方法不会 NPE
@@ -289,6 +322,7 @@ public class RaffleActivityServiceTest {
         assertNotNull(orderId);
     }
 
+    /** 验证 SKU 与活动、次数配置的关联关系正确。 */
     @Test
     public void test_createSkuRechargeOrder_skuLinksToCorrectActivity() {
         // 验证 SKU → Activity → Count 的关联关系
@@ -325,6 +359,7 @@ public class RaffleActivityServiceTest {
         assertNotNull(orderId);
     }
 
+    /** 验证库存相关操作正确委托给仓储实现。 */
     @Test
     public void test_stockOperations_delegateToRepository() throws InterruptedException {
         ActivitySkuStockKeyVO stockKey = ActivitySkuStockKeyVO.builder()

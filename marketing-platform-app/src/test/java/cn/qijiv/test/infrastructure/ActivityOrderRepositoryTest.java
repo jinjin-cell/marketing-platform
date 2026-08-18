@@ -1,6 +1,6 @@
 package cn.qijiv.test.infrastructure;
 
-import cn.qijiv.domain.activity.model.aggregate.CreateOrderAggregate;
+import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
 import cn.qijiv.domain.activity.model.entity.ActivityOrderEntity;
 import cn.qijiv.domain.activity.model.valobj.OrderStateVO;
 import cn.qijiv.infrastructure.persistent.repository.ActivityRepository;
@@ -21,6 +21,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+/** 活动订单仓储集成测试：验证订单落库、账户额度累计与重复单号回滚。 */
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class ActivityOrderRepositoryTest {
@@ -28,12 +29,15 @@ public class ActivityOrderRepositoryTest {
     private static final String USER_ID = "order_flow_test_001";
     private static final Long ACTIVITY_ID = 100301L;
 
+    /** 活动仓储，用于保存订单与查询订单 ID。 */
     @Resource
     private ActivityRepository activityRepository;
 
+    /** JdbcTemplate，用于校验订单与账户数据。 */
     @Resource
     private JdbcTemplate jdbcTemplate;
 
+    /** 每个测试前后清理该用户遗留的订单与账户数据。 */
     @Before
     @After
     public void cleanTestData() {
@@ -41,6 +45,7 @@ public class ActivityOrderRepositoryTest {
         jdbcTemplate.update("DELETE FROM raffle_activity_account WHERE user_id = ? AND activity_id = ?", USER_ID, ACTIVITY_ID);
     }
 
+    /** 验证订单持久化、账户额度累计，以及重复业务单号触发唯一索引并回滚。 */
     @Test
     public void doSaveOrder_persistsOrdersAccumulatesQuotaAndRollsBackDuplicate() {
         activityRepository.doSaveOrder(createAggregate("100000000001", "order-flow-business-001", 10, 3, 5));
@@ -62,8 +67,9 @@ public class ActivityOrderRepositoryTest {
         assertAccountQuota(12, 12, 4, 4, 6, 6);
     }
 
-    private CreateOrderAggregate createAggregate(String orderId, String outBusinessNo,
-                                                   int totalCount, int dayCount, int monthCount) {
+    /** 构造指定额度的创建订单聚合实体。 */
+    private CreateQuotaOrderAggregate createAggregate(String orderId, String outBusinessNo,
+                                                      int totalCount, int dayCount, int monthCount) {
         ActivityOrderEntity order = ActivityOrderEntity.builder()
                 .userId(USER_ID)
                 .sku(901100000001L)
@@ -78,7 +84,7 @@ public class ActivityOrderRepositoryTest {
                 .state(OrderStateVO.completed)
                 .outBusinessNo(outBusinessNo)
                 .build();
-        return CreateOrderAggregate.builder()
+        return CreateQuotaOrderAggregate.builder()
                 .userId(USER_ID)
                 .activityId(ACTIVITY_ID)
                 .totalCount(totalCount)
@@ -88,6 +94,7 @@ public class ActivityOrderRepositoryTest {
                 .build();
     }
 
+    /** 查询该用户在当前库表下的订单数量。 */
     private Integer queryOrderCount() {
         return jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM raffle_activity_order WHERE user_id = ?",
@@ -96,6 +103,7 @@ public class ActivityOrderRepositoryTest {
         );
     }
 
+    /** 断言账户的总额度、日额度与月额度及其剩余值。 */
     private void assertAccountQuota(int totalCount, int totalCountSurplus,
                                     int dayCount, int dayCountSurplus,
                                     int monthCount, int monthCountSurplus) {

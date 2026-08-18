@@ -13,7 +13,9 @@ import java.util.List;
 @Component
 public class OrderBloomFilterInitializer implements SmartInitializingSingleton {
 
+    /** 活动订单 DAO，用于查询全量历史订单业务号 */
     private final IRaffleActivityOrderDao raffleActivityOrderDao;
+    /** 订单业务号布隆过滤器 */
     private final OrderBusinessNoBloomFilter orderBloomFilter;
 
     public OrderBloomFilterInitializer(IRaffleActivityOrderDao raffleActivityOrderDao,
@@ -22,6 +24,9 @@ public class OrderBloomFilterInitializer implements SmartInitializingSingleton {
         this.orderBloomFilter = orderBloomFilter;
     }
 
+    /**
+     * 应用单例初始化完成后，将全部历史订单业务号加载进布隆过滤器
+     */
     @Override
     public void afterSingletonsInstantiated() {
         orderBloomFilter.initialize();

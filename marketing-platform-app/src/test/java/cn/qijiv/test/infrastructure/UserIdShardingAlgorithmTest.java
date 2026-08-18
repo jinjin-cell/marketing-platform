@@ -8,10 +8,13 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
+/** 用户 ID 分库分表算法单元测试：验证库表路由与边界场景。 */
 public class UserIdShardingAlgorithmTest {
 
+    /** 被测的分片算法实例。 */
     private final UserIdShardingAlgorithm algorithm = new UserIdShardingAlgorithm();
 
+    /** 验证同一用户 ID 根据 hash 取模路由到一致的库与订单表。 */
     @Test
     public void routesDatabaseAndOrderTableBySameUserHash() {
         String userId = "order_flow_test_001";
@@ -31,6 +34,7 @@ public class UserIdShardingAlgorithmTest {
         assertEquals("raffle_activity_order_00" + Math.floorMod(hash, 4), table);
     }
 
+    /** 验证 Integer.MIN_VALUE 哈希不会产生负数路由。 */
     @Test
     public void handlesIntegerMinValueHashWithoutNegativeRoute() {
         String minHashUserId = "polygenelubricants";

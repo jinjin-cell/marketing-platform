@@ -34,6 +34,7 @@ public class StrategyRepositoryAwardCacheTest {
     private IRedisService redisService;
     private IStrategyAwardDao strategyAwardDao;
 
+    /** 初始化仓储，并通过反射注入 Mock 的 Redis 与 DAO 依赖。 */
     @Before
     public void setUp() {
         repository = new StrategyRespository();
@@ -43,6 +44,7 @@ public class StrategyRepositoryAwardCacheTest {
         ReflectionTestUtils.setField(repository, "strategyAwardDao", strategyAwardDao);
     }
 
+    /** 缓存命中时直接复用缓存的奖品列表，不再访问数据库。 */
     @Test
     public void queryStrategyAwardEntity_cacheHit_reusesAwardList() {
         StrategyAwardEntity first = StrategyAwardEntity.builder().awardId(101).build();
@@ -56,6 +58,7 @@ public class StrategyRepositoryAwardCacheTest {
         verify(strategyAwardDao, never()).queryStrategyAwardListByStrategyId(STRATEGY_ID);
     }
 
+    /** 缓存未命中时从数据库加载奖品列表并写入缓存。 */
     @Test
     public void queryStrategyAwardEntity_cacheMiss_loadsAndCachesAwardList() {
         StrategyAwardPO awardPO = new StrategyAwardPO();
@@ -80,6 +83,7 @@ public class StrategyRepositoryAwardCacheTest {
                 TimeUnit.MINUTES);
     }
 
+    /** 目标奖品不在缓存列表中时返回 null。 */
     @Test
     public void queryStrategyAwardEntity_awardNotFound_returnsNull() {
         StrategyAwardEntity award = StrategyAwardEntity.builder().awardId(101).build();

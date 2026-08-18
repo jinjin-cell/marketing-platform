@@ -12,17 +12,20 @@ import static org.junit.Assert.*;
  */
 public class OrderStateVOTest {
 
+    /** 验证 completed（完成）状态的编码与描述。 */
     @Test
     public void test_completed_state() {
         assertEquals("completed", OrderStateVO.completed.getCode());
         assertEquals("完成", OrderStateVO.completed.getDesc());
     }
 
+    /** 验证 valueOf 能根据编码解析出正确的枚举。 */
     @Test
     public void test_valueOf_returnsCorrectEnum() {
         assertEquals(OrderStateVO.completed, OrderStateVO.valueOf("completed"));
     }
 
+    /** 验证传入非法编码时 valueOf 抛出 IllegalArgumentException。 */
     @Test(expected = IllegalArgumentException.class)
     public void test_valueOf_invalidValue_throwsException() {
         OrderStateVO.valueOf("invalid");

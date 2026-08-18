@@ -13,14 +13,14 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <insert id="insert" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountDayPO">
+    <insert id="insertActivityAccountDay" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountDayPO">
         INSERT INTO raffle_activity_account_day
             (user_id, activity_id, day, day_count, day_count_surplus)
         VALUES
             (#{userId}, #{activityId}, #{day}, #{dayCount}, #{dayCountSurplus})
     </insert>
 
-    <select id="queryRaffleActivityAccountDay" resultMap="RaffleActivityAccountDayMap">
+    <select id="queryActivityAccountDayByUserId" resultMap="RaffleActivityAccountDayMap">
         SELECT id, user_id, activity_id, day, day_count, day_count_surplus, create_time, update_time
         FROM raffle_activity_account_day
         WHERE user_id = #{userId}
@@ -28,15 +28,15 @@
           AND day = #{day}
     </select>
 
-    <update id="updateAccountQuota"
+    <update id="updateActivityAccountDaySubtractionQuota"
             parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountDayPO">
         UPDATE raffle_activity_account_day
-        SET day_count = day_count + #{dayCount},
-            day_count_surplus = day_count_surplus + #{dayCountSurplus},
+        SET day_count_surplus = day_count_surplus - 1,
             update_time = NOW()
         WHERE user_id = #{userId}
           AND activity_id = #{activityId}
           AND day = #{day}
+          AND day_count_surplus > 0
     </update>
 
 </mapper>

@@ -24,6 +24,12 @@ public class DecisionTreeEngine implements IDecisionTreeEngine {
     /** 本次执行使用的树结构配置。 */
     private final RuleTreeVO ruleTreeVO;
 
+    /**
+     * 注入节点路由表和树结构配置，并校验配置完整性。
+     *
+     * @param logicTreeNodeGroup 规则Key到业务节点的路由表
+     * @param ruleTreeVO         本次执行使用的树结构配置
+     */
     public DecisionTreeEngine(
             Map<String, ILogicTreeNode> logicTreeNodeGroup,
             RuleTreeVO ruleTreeVO) {
@@ -97,6 +103,13 @@ public class DecisionTreeEngine implements IDecisionTreeEngine {
         return strategyAwardVO;
     }
 
+    /**
+     * 根据节点执行结果选择下一条连线对应的目标节点。
+     *
+     * @param ruleTreeNode 当前规则树节点
+     * @param checkType    节点执行结果
+     * @return 下一个节点名称；没有匹配的出边时返回 {@code null}
+     */
     private String nextNode(RuleTreeNodeVO ruleTreeNode, RuleLogicCheckTypeVO checkType) {
         List<RuleTreeNodeLineVO> lines = ruleTreeNode.getTreeNodeLineVOList();
         if (lines == null || lines.isEmpty()) {

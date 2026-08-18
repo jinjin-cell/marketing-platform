@@ -33,12 +33,15 @@ import static org.junit.Assert.*;
 @SpringBootTest
 public class ActivityRepositoryTest {
 
+    /** 活动仓储，用于查询 SKU、活动与次数配置数据。 */
     @Resource
     private ActivityRepository activityRepository;
 
+    /** Redis 服务，用于清理与校验活动缓存。 */
     @Resource
     private IRedisService redisService;
 
+    /** JdbcTemplate，用于直接操作数据库插入/清理测试数据。 */
     @Resource
     private JdbcTemplate jdbcTemplate;
 
@@ -46,6 +49,7 @@ public class ActivityRepositoryTest {
     private static final Long TEST_ACTIVITY_ID = 888777666L;
     private static final Long TEST_COUNT_ID = 888777666L;
 
+    /** 在每个测试方法前清空缓存并插入测试数据。 */
     @Before
     public void setUp() {
         // 清空相关缓存
@@ -75,6 +79,7 @@ public class ActivityRepositoryTest {
         log.info("已插入测试数据: activityId={}, countId={}, sku={}", TEST_ACTIVITY_ID, TEST_COUNT_ID, TEST_SKU);
     }
 
+    /** 在每个测试方法后清理缓存与数据库中的测试数据。 */
     @After
     public void tearDown() {
         redisService.delete(Constants.RedisKey.ACTIVITY_KEY + TEST_ACTIVITY_ID);
@@ -87,6 +92,7 @@ public class ActivityRepositoryTest {
 
     // ==================== queryActivitySku ====================
 
+    /** 验证存在指定 sku 时能正确查询出完整 SKU 实体。 */
     @Test
     public void test_queryActivitySku_exists() {
         ActivitySkuEntity entity = activityRepository.queryActivitySku(TEST_SKU);
@@ -103,6 +109,7 @@ public class ActivityRepositoryTest {
 
     // ==================== queryRaffleActivityByActivityId ====================
 
+    /** 验证存在指定活动 ID 时能正确查询出活动实体。 */
     @Test
     public void test_queryRaffleActivityByActivityId_exists() {
         ActivityEntity entity = activityRepository.queryRaffleActivityByActivityId(TEST_ACTIVITY_ID);
@@ -118,6 +125,7 @@ public class ActivityRepositoryTest {
                 entity.getState(), entity.getStrategyId());
     }
 
+    /** 验证活动查询首次走数据库并写缓存，二次查询命中缓存且结果一致。 */
     @Test
     public void test_queryRaffleActivityByActivityId_cacheWorks() {
         String cacheKey = Constants.RedisKey.ACTIVITY_KEY + TEST_ACTIVITY_ID;
@@ -144,6 +152,7 @@ public class ActivityRepositoryTest {
 
     // ==================== queryRaffleActivityCountByActivityCountId ====================
 
+    /** 验证存在指定次数配置 ID 时能正确查询出次数配置实体。 */
     @Test
     public void test_queryRaffleActivityCountByActivityCountId_exists() {
         ActivityCountEntity entity = activityRepository.queryRaffleActivityCountByActivityCountId(TEST_COUNT_ID);
@@ -159,6 +168,7 @@ public class ActivityRepositoryTest {
                 entity.getDayCount(), entity.getMonthCount());
     }
 
+    /** 验证次数配置查询首次走数据库并写缓存，二次查询命中缓存且结果一致。 */
     @Test
     public void test_queryRaffleActivityCountByActivityCountId_cacheWorks() {
         String cacheKey = Constants.RedisKey.ACTIVITY_COUNT_KEY + TEST_COUNT_ID;

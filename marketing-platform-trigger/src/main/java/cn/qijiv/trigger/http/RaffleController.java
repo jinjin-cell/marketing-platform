@@ -34,10 +34,14 @@ import java.util.List;
 @RequestMapping("/api/${app.config.api-version:v1}/raffle/")
 public class RaffleController implements IRaffleService {
 
+    /** 系统用户ID，随机抽奖场景下使用 */
     private static final String SYSTEM_USER_ID = "system";
 
+    /** 奖品列表查询服务 */
     private final IRaffleAward raffleAward;
+    /** 抽奖策略服务 */
     private final IRaffleStrategy raffleStrategy;
+    /** 策略装配服务 */
     private final IStrategyArmory strategyArmory;
 
     public RaffleController(
@@ -143,6 +147,11 @@ public class RaffleController implements IRaffleService {
         }
     }
 
+    /**
+     * 校验策略ID是否合法
+     *
+     * @param strategyId 策略ID
+     */
     private void validateStrategyId(Long strategyId) {
         if (strategyId == null || strategyId <= 0) {
             throw new AppException(
@@ -151,6 +160,12 @@ public class RaffleController implements IRaffleService {
         }
     }
 
+    /**
+     * 构造成功响应
+     *
+     * @param data 响应数据
+     * @return 统一响应对象
+     */
     private <T> Response<T> success(T data) {
         return Response.<T>builder()
                 .code(ResponseCode.SUCCESS.getCode())
@@ -159,6 +174,12 @@ public class RaffleController implements IRaffleService {
                 .build();
     }
 
+    /**
+     * 构造业务失败响应
+     *
+     * @param exception 业务异常
+     * @return 统一响应对象
+     */
     private <T> Response<T> failure(AppException exception) {
         return Response.<T>builder()
                 .code(exception.getCode())
@@ -166,6 +187,11 @@ public class RaffleController implements IRaffleService {
                 .build();
     }
 
+    /**
+     * 构造系统异常响应
+     *
+     * @return 统一响应对象
+     */
     private <T> Response<T> systemFailure() {
         return Response.<T>builder()
                 .code(ResponseCode.UN_ERROR.getCode())

@@ -21,20 +21,35 @@ import java.util.Set;
 @Service
 public class DefaultChainFactory {
 
+    /** 默认概率抽奖节点的 Spring Bean 名称，同时也是数据库规则模型名称。 */
     public static final String DEFAULT_CHAIN = "default";
     /** 黑名单责任链节点的 Spring Bean 名称，同时也是数据库规则模型名称。 */
     public static final String RULE_BLACKLIST = "rule_blacklist";
     /** 权重责任链节点的 Spring Bean 名称，同时也是数据库规则模型名称。 */
     public static final String RULE_WEIGHT = "rule_weight";
 
+    /** Spring Bean 容器，用于按名称获取责任链节点实例。 */
     private final ListableBeanFactory beanFactory;
+    /** 领域仓储，用于查询策略及其规则配置。 */
     private final IStrategyRepository repository;
 
+    /**
+     * 注入 Spring Bean 容器和领域仓储。
+     *
+     * @param beanFactory Spring Bean 容器
+     * @param repository  领域仓储
+     */
     public DefaultChainFactory(ListableBeanFactory beanFactory, IStrategyRepository repository) {
         this.beanFactory = beanFactory;
         this.repository = repository;
     }
 
+    /**
+     * 按策略配置打开一条抽奖前置责任链，链尾始终追加默认概率抽奖节点。
+     *
+     * @param strategyId 策略ID
+     * @return 责任链头节点
+     */
     public ILogicChain openLogicChain(Long strategyId) {
         StrategyEntity strategy = repository.queryStrategyEntityByStrategyId(strategyId);
         if (strategy == null) {
@@ -91,6 +106,12 @@ public class DefaultChainFactory {
         return ordered;
     }
 
+    /**
+     * 按 Spring Bean 名称获取责任链节点实例。
+     *
+     * @param beanName 责任链节点 Bean 名称
+     * @return 责任链节点实例
+     */
     private ILogicChain getChain(String beanName) {
         try {
             return beanFactory.getBean(beanName, ILogicChain.class);

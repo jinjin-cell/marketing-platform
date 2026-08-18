@@ -12,6 +12,7 @@ import static org.junit.Assert.*;
  */
 public class ActivityAccountEntityTest {
 
+    /** 验证 Builder 能创建包含全部字段的账户实体。 */
     @Test
     public void test_builder_createsEntityWithAllFields() {
         ActivityAccountEntity entity = ActivityAccountEntity.builder()
@@ -36,6 +37,7 @@ public class ActivityAccountEntityTest {
         assertEquals(Integer.valueOf(3), entity.getMonthCountSurplus());
     }
 
+    /** 验证各剩余次数均不超过对应总次数。 */
     @Test
     public void test_surplusCounts_notExceedTotalCounts() {
         ActivityAccountEntity entity = ActivityAccountEntity.builder()
@@ -52,6 +54,7 @@ public class ActivityAccountEntityTest {
         assertTrue(entity.getMonthCountSurplus() <= entity.getMonthCount());
     }
 
+    /** 验证无参构造创建的空实体字段均为空。 */
     @Test
     public void test_noArgsConstructor_createsEmptyEntity() {
         ActivityAccountEntity entity = new ActivityAccountEntity();

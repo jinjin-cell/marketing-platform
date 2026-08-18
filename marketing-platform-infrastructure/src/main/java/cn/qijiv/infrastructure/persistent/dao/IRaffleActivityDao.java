@@ -13,6 +13,12 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface IRaffleActivityDao {
 
+    /**
+     * 按活动ID查询抽奖活动。
+     *
+     * @param activityId 活动ID
+     * @return 抽奖活动
+     */
     RaffleActivityPO queryRaffleActivityByActivityId(@Param("activityId") Long activityId);
 
 }

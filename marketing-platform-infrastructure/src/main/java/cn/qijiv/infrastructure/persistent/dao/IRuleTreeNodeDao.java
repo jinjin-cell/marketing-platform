@@ -9,5 +9,11 @@ import java.util.List;
 @Mapper
 public interface IRuleTreeNodeDao {
 
+    /**
+     * 按规则树ID查询规则树节点列表。
+     *
+     * @param treeId 规则树ID
+     * @return 规则树节点列表
+     */
     List<RuleTreeNodePO> queryRuleTreeNodeListByTreeId(String treeId);
 }

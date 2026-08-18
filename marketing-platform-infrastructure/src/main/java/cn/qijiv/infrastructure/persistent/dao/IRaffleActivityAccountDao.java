@@ -1,5 +1,6 @@
 package cn.qijiv.infrastructure.persistent.dao;
 
+import cn.qijiv.infrastructure.persistent.db.annotation.DBRouter;
 import cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -12,8 +13,28 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface IRaffleActivityAccountDao {
 
+    /**
+     * 更新活动账户的抽奖次数（总/日/月）及其剩余次数。
+     *
+     * @param raffleActivityAccount 活动账户信息
+     * @return 受影响的行数
+     */
     int updateAccountQuota(RaffleActivityAccountPO raffleActivityAccount);
 
+    /**
+     * 新增一条活动账户记录。
+     *
+     * @param raffleActivityAccount 活动账户信息
+     */
     void insert(RaffleActivityAccountPO raffleActivityAccount);
+
+    @DBRouter
+    RaffleActivityAccountPO queryActivityAccountByUserId(RaffleActivityAccountPO raffleActivityAccountReq);
+
+    int updateActivityAccountSubtractionQuota(RaffleActivityAccountPO raffleActivityAccount);
+
+    void updateActivityAccountMonthSurplusImageQuota(RaffleActivityAccountPO raffleActivityAccount);
+
+    void updateActivityAccountDaySurplusImageQuota(RaffleActivityAccountPO raffleActivityAccount);
 
 }

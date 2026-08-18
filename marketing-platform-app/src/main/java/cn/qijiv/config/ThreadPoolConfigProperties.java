@@ -3,6 +3,9 @@ package cn.qijiv.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/**
+ * 线程池执行器配置属性，对应配置前缀 thread.pool.executor.config
+ */
 @Data
 @ConfigurationProperties(prefix = "thread.pool.executor.config", ignoreInvalidFields = true)
 public class ThreadPoolConfigProperties {

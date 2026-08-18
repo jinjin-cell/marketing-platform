@@ -16,6 +16,12 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(RedisClientConfigProperties.class)
 public class RedisClientConfig {
 
+    /**
+     * 构建 Redisson 客户端，根据配置属性设置服务器地址、认证信息与连接池等参数
+     *
+     * @param properties Redis 客户端配置属性
+     * @return Redisson 客户端实例
+     */
     @Bean(destroyMethod = "shutdown")
     @ConditionalOnMissingBean(RedissonClient.class)
     public RedissonClient redissonClient(RedisClientConfigProperties properties) {

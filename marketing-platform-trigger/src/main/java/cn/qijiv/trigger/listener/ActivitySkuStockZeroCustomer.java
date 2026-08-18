@@ -1,6 +1,6 @@
 package cn.qijiv.trigger.listener;
 
-import cn.qijiv.domain.activity.service.ISkuStock;
+import cn.qijiv.domain.activity.service.IRaffleActivitySkuStockService;
 import cn.qijiv.types.event.BaseEvent;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
@@ -22,12 +22,19 @@ import javax.annotation.Resource;
 @Component
 public class ActivitySkuStockZeroCustomer {
 
+    /** 活动sku库存为0消息主题 */
     @Value("${spring.rabbitmq.topic.activity_sku_stock_zero}")
     private String topic;
 
+    /** 活动sku库存服务 */
     @Resource
-    private ISkuStock skuStock;
+    private IRaffleActivitySkuStockService skuStock;
 
+    /**
+     * 监听活动sku库存消耗为0消息，清空库存并释放延迟队列
+     *
+     * @param message 消息体 JSON
+     */
     @RabbitListener(queuesToDeclare = @Queue(value = "activity_sku_stock_zero"))
     public void listener(String message) {
         try {

@@ -13,9 +13,13 @@ import javax.annotation.Resource;
 @Component
 public class UpdateAwardStockJob {
 
+    /** 奖品库存服务 */
     @Resource
     private IRaffleStock raffleStock;
 
+    /**
+     * 定时执行：从延迟队列取出消耗记录，异步更新奖品库存
+     */
     @Scheduled(cron = "0/5 * * * * ?")
     public void exec() {
         try {

@@ -33,6 +33,7 @@ public class StrategyRepositoryRuleTreeCacheTest {
     private IRuleTreeNodeDao ruleTreeNodeDao;
     private IRuleTreeNodeLineDao ruleTreeNodeLineDao;
 
+    /** 初始化仓储，并通过反射注入 Mock 的 Redis 与 DAO 依赖。 */
     @Before
     public void setUp() {
         repository = new StrategyRespository();
@@ -48,6 +49,7 @@ public class StrategyRepositoryRuleTreeCacheTest {
         ReflectionTestUtils.setField(repository, "ruleTreeNodeLineDao", ruleTreeNodeLineDao);
     }
 
+    /** 验证规则树查询先查缓存未命中再查数据库，并写入缓存后复用。 */
     @Test
     public void test_queryRuleTreeVOByTreeId_cacheMissThenCacheHit() {
         RuleTreePO treePO = new RuleTreePO();
@@ -87,6 +89,7 @@ public class StrategyRepositoryRuleTreeCacheTest {
         verify(ruleTreeNodeLineDao).queryRuleTreeNodeLineListByTreeId(TREE_ID);
     }
 
+    /** 验证策略概率表写入 Redis 时设置了过期时间。 */
     @Test
     public void test_storeStrategyRateTable_setsExpiration() {
         repository.storeStrategyRateTable("100001", Collections.singletonList(101));
