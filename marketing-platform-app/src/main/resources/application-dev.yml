@@ -22,7 +22,8 @@ activity:
 # 分库分表路由配置
 db-router:
   db-count: 2
-  tb-count: 1
+  # 每库分表数量，需与 spring.shardingsphere.sharding.tables.*.actual-data-nodes 的 _00$->{0..3} 保持一致
+  table-count: 4
 
 # 线程池配置
 thread:
@@ -96,6 +97,18 @@ spring:
             standard:
               sharding-column: user_id
               precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+        raffle_activity_account_day:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_account_day
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+        raffle_activity_account_month:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_account_month
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
         task:
           actual-data-nodes: ds$->{1..2}.task
           database-strategy:
@@ -103,6 +116,16 @@ spring:
               algorithm-class-name: cn.qijiv.infrastructure.persistent.db.TaskDBHintAlgorithm
         user_award_record:
           actual-data-nodes: ds$->{1..2}.user_award_record_00$->{0..3}
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+          table-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+        user_raffle_order:
+          actual-data-nodes: ds$->{1..2}.user_raffle_order_00$->{0..3}
           database-strategy:
             standard:
               sharding-column: user_id

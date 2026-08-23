@@ -7,13 +7,11 @@ import java.util.Collection;
 
 /**
  * 根据用户 ID 路由活动订单与账户，避免旧版 Groovy 内联算法在高版本 JDK 上的反射兼容问题。
+ * <p>
+ * 分库、分表数量从 {@link DBRouterConfig} 读取，与 yaml 中 db-router 配置保持一致，
+ * 避免硬编码与配置漂移。
  */
 public class UserIdShardingAlgorithm implements PreciseShardingAlgorithm<String> {
-
-    /** 数据库数量 */
-    private static final int DATABASE_COUNT = 2;
-    /** 订单表数量 */
-    private static final int ORDER_TABLE_COUNT = 4;
 
     /**
      * 根据用户 ID 哈希计算分片路由，优先匹配数据库，其次匹配表
@@ -30,12 +28,12 @@ public class UserIdShardingAlgorithm implements PreciseShardingAlgorithm<String>
         }
 
         int hash = userId.hashCode();
-        String database = "ds" + (Math.floorMod(hash, DATABASE_COUNT) + 1);
+        String database = "ds" + (Math.floorMod(hash, DBRouterConfig.dbCount()) + 1);
         if (availableTargetNames.contains(database)) {
             return database;
         }
 
-        String table = shardingValue.getLogicTableName() + "_00" + Math.floorMod(hash, ORDER_TABLE_COUNT);
+        String table = shardingValue.getLogicTableName() + "_00" + Math.floorMod(hash, DBRouterConfig.tableCount());
         if (availableTargetNames.contains(table)) {
             return table;
         }

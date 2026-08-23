@@ -1,11 +1,38 @@
 server:
   port: 8091
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 50
+    accept-count: 10
+
+# 应用配置
+app:
+  config:
+    api-version: v1
+    cross-origin: ${APP_CROSS_ORIGIN:*}
+
+activity:
+  order:
+    bloom-filter:
+      expected-insertions: 1000000
+      false-probability: 0.001
 
 redis:
   address: ${REDIS_ADDRESS}
   username: ${REDIS_USERNAME}
   password: ${REDIS_PASSWORD}
   database: ${REDIS_DATABASE:0}
+  connection-pool-size: 32
+  connection-minimum-idle-size: 8
+  connect-timeout: 10000
+  timeout: 3000
+
+# 分库分表路由配置
+db-router:
+  db-count: 2
+  # 每库分表数量，需与 spring.shardingsphere.sharding.tables.*.actual-data-nodes 的 _00$->{0..3} 保持一致
+  table-count: 4
 
 # 线程池配置
 thread:
@@ -18,27 +45,112 @@ thread:
         block-queue-size: 5000
         policy: CallerRunsPolicy
 
-# 数据库配置
-#spring:
-#  datasource:
-#    username: root
-#    password: 123456
-#    url: jdbc:mysql://127.0.0.1:3306/xfg_frame_archetype?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#  hikari:
-#    pool-name: Retail_HikariCP
-#    minimum-idle: 15 #最小空闲连接数量
-#    idle-timeout: 180000 #空闲连接存活最大时间，默认600000（10分钟）
-#    maximum-pool-size: 25 #连接池最大连接数，默认是10
-#    auto-commit: true  #此属性控制从池返回的连接的默认自动提交行为,默认值：true
-#    max-lifetime: 1800000 #此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认1800000即30分钟
-#    connection-timeout: 30000 #数据库连接超时时间,默认30秒，即30000
-#    connection-test-query: SELECT 1
-#  type: com.zaxxer.hikari.HikariDataSource
+# Sharding-JDBC 多数据源配置；ds0 为配置库，ds1、ds2 为用户行为分库
+# 连接信息通过环境变量注入（对齐 redis 的 ${REDIS_*} 写法），部署时必须设置
+spring:
+  rabbitmq:
+    addresses: ${RABBITMQ_ADDRESSES}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    listener:
+      simple:
+        prefetch: 1
+    topic:
+      activity_sku_stock_zero: activity_sku_stock_zero
+      send_award: send_award
+  shardingsphere:
+    datasource:
+      names: ds0,ds1,ds2
+      ds0:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB_DS0}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        username: ${MYSQL_USERNAME}
+        password: ${MYSQL_PASSWORD}
+        pool-name: Retail_HikariCP_DS0
+        minimum-idle: 5
+        maximum-pool-size: 10
+      ds1:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB_DS1}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        username: ${MYSQL_USERNAME}
+        password: ${MYSQL_PASSWORD}
+        pool-name: Retail_HikariCP_DS1
+        minimum-idle: 5
+        maximum-pool-size: 10
+      ds2:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB_DS2}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        username: ${MYSQL_USERNAME}
+        password: ${MYSQL_PASSWORD}
+        pool-name: Retail_HikariCP_DS2
+        minimum-idle: 5
+        maximum-pool-size: 10
+    sharding:
+      default-data-source-name: ds0
+      tables:
+        raffle_activity_order:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_order_00$->{0..3}
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+          table-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+        raffle_activity_account:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_account
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+        raffle_activity_account_day:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_account_day
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+        raffle_activity_account_month:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_account_month
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+        task:
+          actual-data-nodes: ds$->{1..2}.task
+          database-strategy:
+            hint:
+              algorithm-class-name: cn.qijiv.infrastructure.persistent.db.TaskDBHintAlgorithm
+        user_award_record:
+          actual-data-nodes: ds$->{1..2}.user_award_record_00$->{0..3}
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+          table-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+        user_raffle_order:
+          actual-data-nodes: ds$->{1..2}.user_raffle_order_00$->{0..3}
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+          table-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+    props:
+      sql:
+        show: false
 
-#mybatis:
-#  mapper-locations: classpath:/mybatis/mapper/*.xml
-#  config-location:  classpath:/mybatis/config/mybatis-config.xml
+mybatis:
+  mapper-locations: classpath:/mybatis/mapper/*.xml
+  config-location: classpath:/mybatis/config/mybatis-config.xml
 
 # 日志
 logging:
