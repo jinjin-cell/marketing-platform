@@ -16,6 +16,27 @@ public interface IDBRouterStrategy {
     void doRouter(String dbKey);
 
     /**
+     * 手动设置分库路由
+     *
+     * @param dbIdx 库索引，从1开始
+     */
+    void setDBKey(int dbIdx);
+
+    /**
+     * 手动设置分表路由
+     *
+     * @param tbIdx 表索引，从0开始
+     */
+    void setTBKey(int tbIdx);
+
+    /**
+     * 获取分库数量
+     *
+     * @return 分库数量
+     */
+    int dbCount();
+
+    /**
      * 清除路由设置
      */
     void clear();

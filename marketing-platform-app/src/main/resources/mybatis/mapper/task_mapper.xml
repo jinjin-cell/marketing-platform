@@ -4,7 +4,9 @@
 
     <resultMap id="TaskMap" type="cn.qijiv.infrastructure.persistent.po.TaskPO">
         <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
         <result column="topic" property="topic"/>
+        <result column="message_id" property="messageId"/>
         <result column="message" property="message"/>
         <result column="state" property="state"/>
         <result column="create_time" property="createTime"/>
@@ -13,13 +15,13 @@
 
     <insert id="insert" parameterType="cn.qijiv.infrastructure.persistent.po.TaskPO">
         INSERT INTO task
-            (topic, message, state)
+            (user_id, topic, message_id, message, state)
         VALUES
-            (#{topic}, #{message}, #{state})
+            (#{userId}, #{topic}, #{messageId}, #{message}, #{state})
     </insert>
 
     <select id="queryTaskList" resultMap="TaskMap">
-        SELECT id, topic, message, state, create_time, update_time
+        SELECT id, user_id, topic, message_id, message, state, create_time, update_time
         FROM task
         WHERE state = #{state}
     </select>
@@ -30,5 +32,27 @@
             update_time = NOW()
         WHERE id = #{id}
     </update>
+
+
+    <update id="updateTaskSendMessageCompleted"
+            parameterType="cn.qijiv.infrastructure.persistent.po.TaskPO">
+        update task
+        set state = 'completed', update_time = now()
+        where user_id = #{userId} and message_id = #{messageId}
+    </update>
+
+    <update id="updateTaskSendMessageFail" parameterType="cn.qijiv.infrastructure.persistent.po.TaskPO">
+        update task
+        set state = 'fail', update_time = now()
+        where user_id = #{userId} and message_id = #{messageId}
+    </update>
+
+    <select id="queryNoSendMessageTaskList" resultMap="TaskMap">
+        select id, user_id, topic, message_id, message, state, create_time, update_time
+        from task
+        where state = 'fail' or (state = 'create' and now() - update_time > 6)
+        limit 10
+    </select>
+
 
 </mapper>
