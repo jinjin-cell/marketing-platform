@@ -3,7 +3,7 @@ server:
   tomcat:
     threads:
       max: 200   # 最大线程数
-      min-square: 50   # 最小线程数
+      min-spare: 50   # 最小空闲线程数
     accept-count: 10   # 接受连接数
 # 应用配置
 app:
