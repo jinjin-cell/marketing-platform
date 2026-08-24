@@ -14,8 +14,10 @@ import cn.qijiv.types.exception.AppException;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -153,6 +155,11 @@ public class RaffleActivityServiceTest {
         @Override
         public UserRaffleOrderEntity queryNoUsedRaffleOrder(PartakeRaffleActivityEntity partakeRaffleActivityEntity) {
             return null;
+        }
+
+        @Override
+        public List<ActivitySkuEntity> queryActivitySkuListByActivityId(Long activityId) {
+            return Collections.emptyList();
         }
     }
 

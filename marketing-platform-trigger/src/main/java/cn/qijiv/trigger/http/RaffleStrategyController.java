@@ -1,10 +1,10 @@
 package cn.qijiv.trigger.http;
 
-import cn.qijiv.api.IRaffleService;
+import cn.qijiv.api.IRaffleStrategyService;
 import cn.qijiv.api.dto.RaffleAwardListRequestDTO;
 import cn.qijiv.api.dto.RaffleAwardListResponseDTO;
-import cn.qijiv.api.dto.RaffleRequestDTO;
-import cn.qijiv.api.dto.RaffleResponseDTO;
+import cn.qijiv.api.dto.RaffleStrategyRequestDTO;
+import cn.qijiv.api.dto.RaffleStrategyResponseDTO;
 import cn.qijiv.domain.strategy.model.entity.RaffleAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.RaffleFactorEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
@@ -31,8 +31,8 @@ import java.util.List;
 @Slf4j
 @RestController
 @CrossOrigin("${app.config.cross-origin:*}")
-@RequestMapping("/api/${app.config.api-version:v1}/raffle/")
-public class RaffleController implements IRaffleService {
+@RequestMapping("/api/${app.config.api-version:v1}/raffle/strategy/")
+public class RaffleStrategyController implements IRaffleStrategyService {
 
     /** 系统用户ID，随机抽奖场景下使用 */
     private static final String SYSTEM_USER_ID = "system";
@@ -44,7 +44,7 @@ public class RaffleController implements IRaffleService {
     /** 策略装配服务 */
     private final IStrategyArmory strategyArmory;
 
-    public RaffleController(
+    public RaffleStrategyController(
             IRaffleAward raffleAward,
             IRaffleStrategy raffleStrategy,
             IStrategyArmory strategyArmory) {
@@ -117,7 +117,7 @@ public class RaffleController implements IRaffleService {
     /** 执行一次随机抽奖。 */
     @Override
     @RequestMapping(value = "random_raffle", method = RequestMethod.POST)
-    public Response<RaffleResponseDTO> randomRaffle(@RequestBody RaffleRequestDTO requestDTO) {
+    public Response<RaffleStrategyResponseDTO> randomRaffle(@RequestBody RaffleStrategyRequestDTO requestDTO) {
         Long strategyId = requestDTO == null ? null : requestDTO.getStrategyId();
         try {
             validateStrategyId(strategyId);
@@ -131,7 +131,7 @@ public class RaffleController implements IRaffleService {
                 throw new IllegalStateException("抽奖服务未返回有效奖品");
             }
 
-            Response<RaffleResponseDTO> response = success(RaffleResponseDTO.builder()
+            Response<RaffleStrategyResponseDTO> response = success(RaffleStrategyResponseDTO.builder()
                     .awardId(raffleResult.getAwardId())
                     .awardIndex(raffleResult.getSort())
                     .build());

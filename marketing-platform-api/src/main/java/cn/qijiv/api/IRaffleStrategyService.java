@@ -2,8 +2,8 @@ package cn.qijiv.api;
 
 import cn.qijiv.api.dto.RaffleAwardListRequestDTO;
 import cn.qijiv.api.dto.RaffleAwardListResponseDTO;
-import cn.qijiv.api.dto.RaffleRequestDTO;
-import cn.qijiv.api.dto.RaffleResponseDTO;
+import cn.qijiv.api.dto.RaffleStrategyRequestDTO;
+import cn.qijiv.api.dto.RaffleStrategyResponseDTO;
 import cn.qijiv.types.model.Response;
 import java.util.List;
 
@@ -13,7 +13,7 @@ import java.util.List;
  * @author qijiv
  * @since 2026-07-18
  */
-public interface IRaffleService {
+public interface IRaffleStrategyService {
 
     /**
      * 策略装配接口
@@ -37,6 +37,6 @@ public interface IRaffleService {
      * @param requestDTO 请求参数
      * @return 抽奖结果
      */
-    Response<RaffleResponseDTO> randomRaffle(RaffleRequestDTO requestDTO);
+    Response<RaffleStrategyResponseDTO> randomRaffle(RaffleStrategyRequestDTO requestDTO);
 
 }

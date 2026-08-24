@@ -15,6 +15,7 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+    <!--suppress SqlResolve -->
     <insert id="insert" parameterType="cn.qijiv.infrastructure.persistent.po.UserRaffleOrderPO">
         INSERT INTO user_raffle_order
             (user_id, activity_id, activity_name, strategy_id, order_id, order_time, order_state)
@@ -22,6 +23,7 @@
             (#{userId}, #{activityId}, #{activityName}, #{strategyId}, #{orderId}, #{orderTime}, #{orderState})
     </insert>
 
+    <!--suppress SqlResolve -->
     <select id="queryNoUsedRaffleOrder" resultMap="UserRaffleOrderMap">
         SELECT id, user_id, activity_id, activity_name, strategy_id, order_id, order_time,
                order_state, create_time, update_time
@@ -32,12 +34,19 @@
         LIMIT 1
     </select>
 
+    <!--suppress SqlResolve -->
     <update id="updateOrderState">
         UPDATE user_raffle_order
         SET order_state = #{orderState},
             update_time = NOW()
         WHERE user_id = #{userId}
           AND order_id = #{orderId}
+    </update>
+    <!--suppress SqlResolve -->
+    <update id="updateUserRaffleOrderStateUsed">
+        update user_raffle_order
+        set order_state = 'used', update_time = now()
+        where user_id = #{userId} and order_id = #{orderId} and order_state = 'create'
     </update>
 
 </mapper>

@@ -6,11 +6,10 @@ package cn.qijiv.domain.activity.service.armory;
 public interface IActivityArmory {
 
     /**
-     * 预热活动SKU库存
+     * 根据活动ID预热活动SKU库存
      *
-     * @param sku 活动商品SKU
+     * @param activityId 活动ID
      * @return 预热结果
      */
-    boolean assembleActivitySku(Long sku);
-
+    boolean assembleActivitySkuByActivityId(Long activityId);
 }

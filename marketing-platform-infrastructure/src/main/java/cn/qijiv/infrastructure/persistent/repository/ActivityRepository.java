@@ -25,7 +25,9 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Resource;
@@ -456,10 +458,10 @@ public class ActivityRepository implements IActivityRepository {
     /**
      * 查询账户日账户
      *
-     * @param userId
-     * @param activityId
-     * @param day
-     * @return
+     * @param userId     用户ID
+     * @param activityId 活动ID
+     * @param day        日期
+     * @return 日账户实体，不存在时返回 null
      */
     @Override
     public ActivityAccountDayEntity queryActivityAccountDayByUserId(String userId, Long activityId, String day) {
@@ -484,9 +486,9 @@ public class ActivityRepository implements IActivityRepository {
     /**
      * 查询账户
      *
-     * @param userId
-     * @param activityId
-     * @return
+     * @param userId     用户ID
+     * @param activityId 活动ID
+     * @return 账户实体，不存在时返回 null
      */
     @Override
     public ActivityAccountEntity queryActivityAccountByUserId(String userId, Long activityId) {
@@ -513,10 +515,10 @@ public class ActivityRepository implements IActivityRepository {
     /**
      * 账户月账户
      *
-     * @param userId
-     * @param activityId
-     * @param month
-     * @return
+     * @param userId     用户ID
+     * @param activityId 活动ID
+     * @param month      月份
+     * @return 月账户实体，不存在时返回 null
      */
     @Override
     public ActivityAccountMonthEntity queryActivityAccountMonthByUserId(String userId, Long activityId, String month) {
@@ -541,9 +543,8 @@ public class ActivityRepository implements IActivityRepository {
     /**
      * 查询用户参与活动订单
      *
-     * @param userId
-     * @param activityId
-     * @return
+     * @param partakeRaffleActivityEntity 参与活动实体
+     * @return 用户抽奖订单实体，不存在时返回 null
      */
     @Override
     public UserRaffleOrderEntity queryNoUsedRaffleOrder(PartakeRaffleActivityEntity partakeRaffleActivityEntity) {
@@ -565,6 +566,28 @@ public class ActivityRepository implements IActivityRepository {
         return userRaffleOrderEntity;
 
     }
+
+    /**
+     * 查询活动sku列表
+     *
+     * @param activityId 活动ID
+     * @return 活动SKU实体列表
+     */
+    @Override
+    public List<ActivitySkuEntity> queryActivitySkuListByActivityId(Long activityId) {
+        List<RaffleActivitySkuPO> raffleActivitySkus = raffleActivitySkuDao.queryActivitySkuListByActivityId(activityId);
+        List<ActivitySkuEntity> activitySkuEntities = new ArrayList<>(raffleActivitySkus.size());
+        for (RaffleActivitySkuPO raffleActivitySku:raffleActivitySkus){
+            ActivitySkuEntity activitySkuEntity = new ActivitySkuEntity();
+            activitySkuEntity.setSku(raffleActivitySku.getSku());
+            activitySkuEntity.setActivityCountId(raffleActivitySku.getActivityCountId());
+            activitySkuEntity.setStockCount(raffleActivitySku.getStockCount());
+            activitySkuEntity.setStockCountSurplus(raffleActivitySku.getStockCountSurplus());
+            activitySkuEntities.add(activitySkuEntity);
+        }
+        return activitySkuEntities;
+    }
+
 
 
 }

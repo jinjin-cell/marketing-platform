@@ -2,8 +2,8 @@ package cn.qijiv.trigger.http;
 
 import cn.qijiv.api.dto.RaffleAwardListRequestDTO;
 import cn.qijiv.api.dto.RaffleAwardListResponseDTO;
-import cn.qijiv.api.dto.RaffleRequestDTO;
-import cn.qijiv.api.dto.RaffleResponseDTO;
+import cn.qijiv.api.dto.RaffleStrategyRequestDTO;
+import cn.qijiv.api.dto.RaffleStrategyResponseDTO;
 import cn.qijiv.domain.strategy.model.entity.RaffleAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.RaffleFactorEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
@@ -38,7 +38,7 @@ class RaffleControllerTest {
     /** Mock 的策略装配服务。 */
     private IStrategyArmory strategyArmory;
     /** 被测的抽奖控制器。 */
-    private RaffleController controller;
+    private RaffleStrategyController controller;
 
     /** 初始化各 Mock 依赖并构建被测控制器。 */
     @BeforeEach
@@ -46,7 +46,7 @@ class RaffleControllerTest {
         raffleAward = mock(IRaffleAward.class);
         raffleStrategy = mock(IRaffleStrategy.class);
         strategyArmory = mock(IStrategyArmory.class);
-        controller = new RaffleController(raffleAward, raffleStrategy, strategyArmory);
+        controller = new RaffleStrategyController(raffleAward, raffleStrategy, strategyArmory);
     }
 
     /** 验证策略装配接口返回成功与装配结果。 */
@@ -93,10 +93,10 @@ class RaffleControllerTest {
     void randomRaffleMapsAwardAndSort() {
         when(raffleStrategy.performRaffle(any(RaffleFactorEntity.class)))
                 .thenReturn(RaffleAwardEntity.builder().awardId(102).sort(5).build());
-        RaffleRequestDTO request = new RaffleRequestDTO();
+        RaffleStrategyRequestDTO request = new RaffleStrategyRequestDTO();
         request.setStrategyId(100001L);
 
-        Response<RaffleResponseDTO> response = controller.randomRaffle(request);
+        Response<RaffleStrategyResponseDTO> response = controller.randomRaffle(request);
 
         assertEquals(ResponseCode.SUCCESS.getCode(), response.getCode());
         assertEquals(Integer.valueOf(102), response.getData().getAwardId());
@@ -110,7 +110,7 @@ class RaffleControllerTest {
     /** 验证空请求返回非法参数，且不调用领域服务。 */
     @Test
     void invalidRequestReturnsIllegalParameterWithoutCallingDomain() {
-        Response<RaffleResponseDTO> response = controller.randomRaffle(null);
+        Response<RaffleStrategyResponseDTO> response = controller.randomRaffle(null);
 
         assertEquals(ResponseCode.ILLEGAL_PARAMETER.getCode(), response.getCode());
         verifyNoInteractions(raffleStrategy);
@@ -121,10 +121,10 @@ class RaffleControllerTest {
     void randomRafflePreservesBusinessError() {
         when(raffleStrategy.performRaffle(any(RaffleFactorEntity.class)))
                 .thenThrow(new AppException("1001", "策略未装配"));
-        RaffleRequestDTO request = new RaffleRequestDTO();
+        RaffleStrategyRequestDTO request = new RaffleStrategyRequestDTO();
         request.setStrategyId(100001L);
 
-        Response<RaffleResponseDTO> response = controller.randomRaffle(request);
+        Response<RaffleStrategyResponseDTO> response = controller.randomRaffle(request);
 
         assertEquals("1001", response.getCode());
         assertEquals("策略未装配", response.getInfo());

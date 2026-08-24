@@ -54,7 +54,7 @@ spring:
       ds0:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://111.228.17.153:13306/big_market?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        jdbc-url: jdbc:mysql://111.228.17.153:13306/big_market?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
         username: root
         password: 123456
         pool-name: Retail_HikariCP_DS0
@@ -63,7 +63,7 @@ spring:
       ds1:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://111.228.17.153:13306/big_market_01?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        jdbc-url: jdbc:mysql://111.228.17.153:13306/big_market_01?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
         username: root
         password: 123456
         pool-name: Retail_HikariCP_DS1
@@ -72,7 +72,7 @@ spring:
       ds2:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://111.228.17.153:13306/big_market_02?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        jdbc-url: jdbc:mysql://111.228.17.153:13306/big_market_02?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
         username: root
         password: 123456
         pool-name: Retail_HikariCP_DS2

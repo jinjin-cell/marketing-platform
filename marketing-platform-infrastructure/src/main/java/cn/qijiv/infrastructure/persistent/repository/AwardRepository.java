@@ -7,9 +7,11 @@ import cn.qijiv.domain.award.respository.IAwardRepository;
 import cn.qijiv.infrastructure.event.EventPublisher;
 import cn.qijiv.infrastructure.persistent.dao.ITaskDao;
 import cn.qijiv.infrastructure.persistent.dao.IUserAwardRecordDao;
+import cn.qijiv.infrastructure.persistent.dao.IUserRaffleOrderDao;
 import cn.qijiv.infrastructure.persistent.db.IDBRouterStrategy;
 import cn.qijiv.infrastructure.persistent.po.TaskPO;
 import cn.qijiv.infrastructure.persistent.po.UserAwardRecordPO;
+import cn.qijiv.infrastructure.persistent.po.UserRaffleOrderPO;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import com.alibaba.fastjson.JSON;
@@ -34,6 +36,8 @@ public class AwardRepository implements IAwardRepository {
     private ITaskDao taskDao;
     @Resource
     private IUserAwardRecordDao userAwardRecordDao;
+    @Resource
+    private IUserRaffleOrderDao userRaffleOrderDao;
     @Resource
     private IDBRouterStrategy dbRouter;
     @Resource
@@ -67,6 +71,10 @@ public class AwardRepository implements IAwardRepository {
         task.setMessage(JSON.toJSONString(taskEntity.getMessage()));
         task.setState(taskEntity.getState().getCode());
 
+        UserRaffleOrderPO  userRaffleOrderReq = new UserRaffleOrderPO();
+        userRaffleOrderReq.setUserId(userAwardRecordEntity.getUserId());
+        userRaffleOrderReq.setOrderId(userAwardRecordEntity.getOrderId());
+
         try {
             dbRouter.doRouter(userId);
             transactionTemplate.execute(status -> {
@@ -75,6 +83,14 @@ public class AwardRepository implements IAwardRepository {
                     userAwardRecordDao.insert(userAwardRecord);
                     // 写入任务
                     taskDao.insert(task);
+                    //更新抽奖单
+                    int count = userRaffleOrderDao.updateUserRaffleOrderStateUsed(userRaffleOrderReq);
+                    if (1 != count) {
+                        status.setRollbackOnly();
+                        log.error("写入中奖记录，用户抽奖单已使用过，不可重复抽奖 userId: {} activityId: {} awardId: {}", userId, activityId, awardId);
+                        throw new AppException(ResponseCode.ACTIVITY_ORDER_ERROR.getCode(), ResponseCode.ACTIVITY_ORDER_ERROR.getInfo());
+                    }
+
                     return 1;
                 } catch (DuplicateKeyException e) {
                     status.setRollbackOnly();

@@ -4,6 +4,8 @@ import cn.qijiv.infrastructure.persistent.po.RaffleActivitySkuPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 抽奖活动SKU DAO
  *
@@ -37,4 +39,5 @@ public interface IRaffleActivitySkuDao {
      */
     int clearActivitySkuStock(@Param("sku") Long sku);
 
+    List<RaffleActivitySkuPO> queryActivitySkuListByActivityId(Long activityId);
 }

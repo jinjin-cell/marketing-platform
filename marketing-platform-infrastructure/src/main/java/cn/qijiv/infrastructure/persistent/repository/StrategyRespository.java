@@ -1,18 +1,8 @@
 package cn.qijiv.infrastructure.persistent.repository;
 
 import cn.qijiv.domain.strategy.repository.IStrategyRepository;
-import cn.qijiv.infrastructure.persistent.dao.IStrategyAwardDao;
-import cn.qijiv.infrastructure.persistent.dao.IStrategyDao;
-import cn.qijiv.infrastructure.persistent.dao.IStrategyRuleDao;
-import cn.qijiv.infrastructure.persistent.dao.IRuleTreeDao;
-import cn.qijiv.infrastructure.persistent.dao.IRuleTreeNodeDao;
-import cn.qijiv.infrastructure.persistent.dao.IRuleTreeNodeLineDao;
-import cn.qijiv.infrastructure.persistent.po.RuleTreeNodeLinePO;
-import cn.qijiv.infrastructure.persistent.po.RuleTreeNodePO;
-import cn.qijiv.infrastructure.persistent.po.RuleTreePO;
-import cn.qijiv.infrastructure.persistent.po.StrategyAwardPO;
-import cn.qijiv.infrastructure.persistent.po.StrategyPO;
-import cn.qijiv.infrastructure.persistent.po.StrategyRulePO;
+import cn.qijiv.infrastructure.persistent.dao.*;
+import cn.qijiv.infrastructure.persistent.po.*;
 import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyRuleEntity;
@@ -24,6 +14,7 @@ import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
 import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 import cn.qijiv.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -56,6 +47,14 @@ public class StrategyRespository implements IStrategyRepository {
     private static final long STRATEGY_AWARD_CACHE_TTL_MINUTES = 10L;  // 抽奖策略奖品缓存过期时间
     private static final long STRATEGY_RATE_TABLE_CACHE_TTL_MINUTES = 30L;  // 抽奖策略奖品率表缓存过期时间
     private static final long RULE_TREE_CACHE_TTL_MINUTES = 30L;   // 规则树缓存过期时间
+
+    /** 抽奖活动 DAO */
+    @Resource
+    private IRaffleActivityDao raffleActivityDao;
+
+    /** 抽奖活动用户日次数 DAO */
+    @Resource
+    private IRaffleActivityAccountDayDao raffleActivityAccountDayDao;
 
     /** 策略奖品 DAO */
     @Resource
@@ -228,30 +227,6 @@ public class StrategyRespository implements IStrategyRepository {
             return null;
         }
         // 基础设施PO转换为领域实体，规则字符串的解析由领域实体负责。
-        return StrategyRuleEntity.builder()
-                .strategyId(Long.valueOf(strategyRulePO.getStrategyId()))
-                .awardId(strategyRulePO.getAwardId())
-                .ruleType(strategyRulePO.getRuleType())
-                .ruleModel(strategyRulePO.getRuleModel())
-                .ruleValue(strategyRulePO.getRuleValue())
-                .ruleDesc(strategyRulePO.getRuleDesc())
-                .build();
-    }
-
-    /**
-     * 查询奖品级规则
-     *
-     * @param strategyId 策略ID
-     * @param awardId    奖品ID
-     * @param ruleModel  规则模型
-     * @return 策略规则实体，不存在时返回 null
-     */
-    @Override
-    public StrategyRuleEntity queryStrategyAwardRule(Long strategyId, Integer awardId, String ruleModel) {
-        StrategyRulePO strategyRulePO = strategyRuleDao.queryStrategyAwardRule(strategyId, awardId, ruleModel);
-        if (strategyRulePO == null) {
-            return null;
-        }
         return StrategyRuleEntity.builder()
                 .strategyId(Long.valueOf(strategyRulePO.getStrategyId()))
                 .awardId(strategyRulePO.getAwardId())
@@ -476,5 +451,41 @@ public class StrategyRespository implements IStrategyRepository {
         String cacheKey = Constants.RedisKey.STRATEGY_AWARD_LIST_KEY + strategyId;
         redisService.delete(cacheKey);
     }
+
+    /**
+     * 根据活动ID查询策略ID
+     *
+     * @param activityId 活动ID
+     * @return 策略ID
+     */
+    @Override
+    public Long queryStrategyIdByActivityId(Long activityId) {
+        return raffleActivityDao.queryStrategyIdByActivityId(activityId);
+    }
+
+    /**
+     * 根据用户ID和策略ID查询今日已参与次数
+     *
+     * @param userId   用户ID
+     * @param strategyId 策略ID
+     * @return 今日已参与次数
+     */
+    @Override
+    public Integer queryTodayUserRaffleCount(String userId, Long strategyId) {
+        // 策略ID → 活动ID
+        Long activityId = raffleActivityDao.queryActivityIdByStrategyId(strategyId);
+        // 封装参数
+        RaffleActivityAccountDayPO raffleActivityAccountDayReq = new RaffleActivityAccountDayPO();
+        raffleActivityAccountDayReq.setUserId(userId);
+        raffleActivityAccountDayReq.setActivityId(activityId);
+        raffleActivityAccountDayReq.setDay(LocalDate.now().toString());
+        RaffleActivityAccountDayPO raffleActivityAccountDay =
+                raffleActivityAccountDayDao.queryActivityAccountDayByUserId(raffleActivityAccountDayReq);
+        if (null == raffleActivityAccountDay) return 0;
+        // 总次数 - 剩余次数 = 今日已参与次数
+        return raffleActivityAccountDay.getDayCount() - raffleActivityAccountDay.getDayCountSurplus();
+    }
+
+
 
 }

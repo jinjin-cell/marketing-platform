@@ -15,11 +15,20 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+    <!--suppress SqlResolve -->
     <select id="queryRaffleActivityByActivityId" resultMap="RaffleActivityMap">
         SELECT id, activity_id, activity_name, activity_desc, begin_date_time, end_date_time,
                strategy_id, state, create_time, update_time
         FROM raffle_activity
         WHERE activity_id = #{activityId}
+    </select>
+    <!--suppress SqlResolve -->
+    <select id="queryStrategyIdByActivityId" resultType="java.lang.Long">
+        select strategy_id from raffle_activity where activity_id = #{activityId}
+    </select>
+    <!--suppress SqlResolve -->
+    <select id="queryActivityIdByStrategyId" resultType="java.lang.Long">
+        select activity_id from raffle_activity where strategy_id = #{strategyId}
     </select>
 
 </mapper>
