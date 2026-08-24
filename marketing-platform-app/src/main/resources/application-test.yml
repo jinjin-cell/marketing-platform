@@ -54,7 +54,7 @@ spring:
       ds0:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://${MYSQL_HOST:111.228.17.153}:${MYSQL_PORT:13306}/${MYSQL_DB_DS0:big_market}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        jdbc-url: jdbc:mysql://${MYSQL_HOST:111.228.17.153}:${MYSQL_PORT:13306}/${MYSQL_DB_DS0:big_market}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
         username: ${MYSQL_USERNAME:root}
         password: ${MYSQL_PASSWORD:123456}
         pool-name: Retail_HikariCP_DS0
@@ -63,7 +63,7 @@ spring:
       ds1:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://${MYSQL_HOST:111.228.17.153}:${MYSQL_PORT:13306}/${MYSQL_DB_DS1:big_market_01}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        jdbc-url: jdbc:mysql://${MYSQL_HOST:111.228.17.153}:${MYSQL_PORT:13306}/${MYSQL_DB_DS1:big_market_01}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
         username: ${MYSQL_USERNAME:root}
         password: ${MYSQL_PASSWORD:123456}
         pool-name: Retail_HikariCP_DS1
@@ -72,7 +72,7 @@ spring:
       ds2:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://${MYSQL_HOST:111.228.17.153}:${MYSQL_PORT:13306}/${MYSQL_DB_DS2:big_market_02}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+        jdbc-url: jdbc:mysql://${MYSQL_HOST:111.228.17.153}:${MYSQL_PORT:13306}/${MYSQL_DB_DS2:big_market_02}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
         username: ${MYSQL_USERNAME:root}
         password: ${MYSQL_PASSWORD:123456}
         pool-name: Retail_HikariCP_DS2

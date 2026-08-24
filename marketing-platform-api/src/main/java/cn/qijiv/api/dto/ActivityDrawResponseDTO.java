@@ -6,19 +6,23 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 抽奖响应参数
+ * 活动抽奖响应参数
  *
  * @author qijiv
- * @since 2026-07-18
+ * @since 2026-08-24
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RaffleResponseDTO {
+public class ActivityDrawResponseDTO {
 
-    /** 奖品ID。 */
+    // 奖品ID
     private Integer awardId;
-    /** 策略奖品配置中的排序编号。 */
+    // 奖品标题
+    private String awardTitle;
+    // 排序编号【策略奖品配置的奖品顺序编号】
     private Integer awardIndex;
+
 }
+

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 活动装配与库存扣减服务
@@ -21,25 +22,30 @@ public class ActivityArmory implements IActivityArmory, IActivityDispatch {
     private IActivityRepository activityRepository;
 
     /**
-     * 预热活动SKU库存、活动信息与活动次数配置到缓存
+     * 根据活动ID预热活动SKU库存
      *
-     * @param sku 活动商品SKU
+     * @param activityId 活动ID
      * @return 预热结果
      */
     @Override
-    public boolean assembleActivitySku(Long sku) {
-        // 预热活动sku库存
-        ActivitySkuEntity activitySkuEntity = activityRepository.queryActivitySku(sku);
-        cacheActivitySkuStockCount(sku, activitySkuEntity.getStockCount());
+    public boolean assembleActivitySkuByActivityId(Long activityId) {
+        List<ActivitySkuEntity> activitySkuEntities = activityRepository.queryActivitySkuListByActivityId(activityId);
+        if (activitySkuEntities == null || activitySkuEntities.isEmpty()) {
+            log.warn("活动SKU列表为空，无法预热 activityId: {}", activityId);
+            return false;
+        }
+        for (ActivitySkuEntity activitySkuEntity : activitySkuEntities) {
+            cacheActivitySkuStockCount(activitySkuEntity.getSku(), activitySkuEntity.getStockCountSurplus());
+            // 预热活动次数【查询时预热到缓存】
+            activityRepository.queryRaffleActivityCountByActivityCountId(activitySkuEntity.getActivityCountId());
+        }
 
         // 预热活动【查询时预热到缓存】
-        activityRepository.queryRaffleActivityByActivityId(activitySkuEntity.getActivityId());
-
-        // 预热活动次数【查询时预热到缓存】
-        activityRepository.queryRaffleActivityCountByActivityCountId(activitySkuEntity.getActivityCountId());
+        activityRepository.queryRaffleActivityByActivityId(activityId);
 
         return true;
     }
+
 
     /**
      * 缓存活动SKU库存数量

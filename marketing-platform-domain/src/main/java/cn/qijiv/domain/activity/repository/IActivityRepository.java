@@ -6,6 +6,7 @@ import cn.qijiv.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 活动仓库接口
@@ -117,12 +118,49 @@ public interface IActivityRepository {
      */
     void saveCreatePartakeOrderAggregate(CreatePartakeOrderAggregate createPartakeOrderAggregate);
 
+    /**
+     * 根据用户ID、活动ID和天查询活动账户日实体
+     *
+     * @param userId 用户ID
+     * @param activityId 活动ID
+     * @param day 天
+     * @return 活动账户日实体
+     */
     ActivityAccountDayEntity queryActivityAccountDayByUserId(String userId, Long activityId, String day);
 
+    /**
+     * 根据用户ID和活动ID查询活动账户实体
+     *
+     * @param userId 用户ID
+     * @param activityId 活动ID
+     * @return 活动账户实体
+     */
     ActivityAccountEntity queryActivityAccountByUserId(String userId, Long activityId);
 
+    /**
+     * 根据用户ID、活动ID和月查询活动账户月实体
+     *
+     * @param userId 用户ID
+     * @param activityId 活动ID
+     * @param month 月
+     * @return 活动账户月实体
+     */
     ActivityAccountMonthEntity queryActivityAccountMonthByUserId(String userId, Long activityId, String month);
 
+    /**
+     * 根据参与抽奖活动实体查询未使用的抽奖订单实体
+     *
+     * @param partakeRaffleActivityEntity 参与抽奖活动实体
+     * @return 抽奖订单实体
+     */
     UserRaffleOrderEntity queryNoUsedRaffleOrder(PartakeRaffleActivityEntity partakeRaffleActivityEntity);
+
+    /**
+     * 根据活动ID查询活动SKU列表
+     *
+     * @param activityId 活动ID
+     * @return 活动SKU实体列表
+     */
+    List<ActivitySkuEntity> queryActivitySkuListByActivityId(Long activityId);
 }
 

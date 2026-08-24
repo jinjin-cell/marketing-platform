@@ -20,5 +20,11 @@ public interface IUserRaffleOrderDao {
     UserRaffleOrderPO queryNoUsedRaffleOrder(UserRaffleOrderPO userRaffleOrderReq);
 
 
-
+    /**
+     * 更新用户抽奖订单状态为已使用
+     *
+     * @param userRaffleOrderReq 用户抽奖订单请求参数
+     * @return 更新影响的行数
+     */
+    int updateUserRaffleOrderStateUsed(UserRaffleOrderPO userRaffleOrderReq);
 }

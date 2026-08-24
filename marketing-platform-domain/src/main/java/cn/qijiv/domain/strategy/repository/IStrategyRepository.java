@@ -71,16 +71,6 @@ public interface IStrategyRepository {
     StrategyRuleEntity queryStrategyRule(Long strategyId, String ruleModel);
 
     /**
-     * 查询奖品规则
-     *
-     * @param strategyId 抽奖策略ID
-     * @param awardId    抽奖奖品ID
-     * @param ruleModel  规则模型
-     * @return 奖品规则实体
-     */
-    StrategyRuleEntity queryStrategyAwardRule(Long strategyId, Integer awardId, String ruleModel);
-
-    /**
      * 查询奖品绑定的规则树模型。
      *
      * @param strategyId 策略ID
@@ -127,4 +117,9 @@ public interface IStrategyRepository {
     /** 将一次成功的 Redis 库存扣减同步到数据库。 */
     void updateStrategyAwardStock(Long strategyId, Integer awardId);
 
+    /** 根据活动ID查询策略ID。 */
+    Long queryStrategyIdByActivityId(Long activityId);
+
+    /** 查询用户今日已抽奖次数。 */
+    Integer queryTodayUserRaffleCount(String userId, Long strategyId);
 }

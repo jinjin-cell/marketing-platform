@@ -110,6 +110,19 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
     }
 
     /**
+     * 根据活动ID装配抽奖策略的概率表。
+     *
+     * @param activityId 活动ID
+     * @return 装配是否成功
+     */
+    @Override
+    public boolean assembleLotteryStrategyByActivityId(Long activityId) {
+        Long strategyId = repository.queryStrategyIdByActivityId(activityId);
+        return assembleLotteryStrategy(strategyId);
+
+    }
+
+    /**
      * 缓存奖品剩余库存，用于后续扣减。
      *
      * @param strategyId  策略ID

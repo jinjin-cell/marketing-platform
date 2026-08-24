@@ -11,11 +11,15 @@ import cn.qijiv.domain.activity.service.quota.rule.IActionChain;
 import cn.qijiv.domain.activity.service.quota.rule.factory.DefaultActivityChainFactory;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
+import lombok.Getter;
+import lombok.Setter;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -36,37 +40,20 @@ public class RaffleActivityServiceTest {
      */
     private static class StubActivityRepository implements IActivityRepository {
 
+        @Setter
         private ActivitySkuEntity skuEntity;
+        @Setter
         private ActivityEntity activityEntity;
+        @Setter
         private ActivityCountEntity countEntity;
         private Long queriedSku;
-        private Long queriedActivityId;
-        private Long queriedActivityCountId;
+        @Getter
         private CreateQuotaOrderAggregate savedAggregate;
+        @Setter
         private String existingOrderId;
         private ActivitySkuStockKeyVO queuedStock;
         private Long updatedStockSku;
         private Long clearedStockSku;
-
-        public void setSkuEntity(ActivitySkuEntity skuEntity) {
-            this.skuEntity = skuEntity;
-        }
-
-        public void setActivityEntity(ActivityEntity activityEntity) {
-            this.activityEntity = activityEntity;
-        }
-
-        public void setCountEntity(ActivityCountEntity countEntity) {
-            this.countEntity = countEntity;
-        }
-
-        public CreateQuotaOrderAggregate getSavedAggregate() {
-            return savedAggregate;
-        }
-
-        public void setExistingOrderId(String existingOrderId) {
-            this.existingOrderId = existingOrderId;
-        }
 
         @Override
         public ActivitySkuEntity queryActivitySku(Long sku) {
@@ -76,13 +63,11 @@ public class RaffleActivityServiceTest {
 
         @Override
         public ActivityEntity queryRaffleActivityByActivityId(Long activityId) {
-            queriedActivityId = activityId;
             return activityEntity;
         }
 
         @Override
         public ActivityCountEntity queryRaffleActivityCountByActivityCountId(Long activityCountId) {
-            queriedActivityCountId = activityCountId;
             return countEntity;
         }
 
@@ -153,6 +138,11 @@ public class RaffleActivityServiceTest {
         @Override
         public UserRaffleOrderEntity queryNoUsedRaffleOrder(PartakeRaffleActivityEntity partakeRaffleActivityEntity) {
             return null;
+        }
+
+        @Override
+        public List<ActivitySkuEntity> queryActivitySkuListByActivityId(Long activityId) {
+            return Collections.emptyList();
         }
     }
 
