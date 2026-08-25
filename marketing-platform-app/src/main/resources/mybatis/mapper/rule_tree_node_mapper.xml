@@ -19,4 +19,14 @@
         ORDER BY id
     </select>
 
+    <select id="queryRuleLockNodeListByTreeIds" resultMap="RuleTreeNodeMap">
+        SELECT id, tree_id, rule_key, rule_desc, rule_value, create_time, update_time
+        FROM rule_tree_node
+        WHERE rule_key = 'rule_lock'
+          AND tree_id IN
+        <foreach collection="treeIds" item="treeId" open="(" separator="," close=")">
+            #{treeId}
+        </foreach>
+    </select>
+
 </mapper>

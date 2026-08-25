@@ -15,14 +15,6 @@ import java.util.List;
 public interface IStrategyAwardDao {
 
     /**
-     * 查询策略奖品列表
-     *
-     * @param strategyId 策略ID
-     * @return 策略奖品列表
-     */
-    List<StrategyAwardPO> queryStrategyAwardList(Long strategyId);
-
-    /**
      * 按策略ID查询策略奖品完整列表。
      *
      * @param strategyId 策略ID

@@ -13,6 +13,8 @@ import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 import cn.qijiv.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;
 import cn.qijiv.domain.strategy.service.rule.tree.factory.engine.IDecisionTreeEngine;
 
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -53,6 +55,18 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRa
     @Override
     protected DefaultTreeFactory.StrategyAwardVO raffleLogicTree(
             String userId, Long strategyId, Integer awardId) {
+        return raffleLogicTree(userId, strategyId, awardId, null);
+    }
+
+    /**
+     * 查询奖品绑定的规则树并执行，同时把活动结束时间透传给库存扣减节点。
+     *
+     * <p>奖品没有绑定规则树时，原奖品直接通过；绑定后则从数据库装配完整规则树，
+     * 再交给决策树引擎逐节点执行。</p>
+     */
+    @Override
+    protected DefaultTreeFactory.StrategyAwardVO raffleLogicTree(
+            String userId, Long strategyId, Integer awardId, Date endDateTime) {
         StrategyAwardRuleModelVO strategyAwardRuleModelVO =
                 repository.queryStrategyAwardRuleModelVO(strategyId, awardId);
         if (strategyAwardRuleModelVO == null) {
@@ -74,7 +88,7 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRa
 
         IDecisionTreeEngine treeEngine = defaultTreeFactory.openLogicTree(ruleTree);
         DefaultTreeFactory.StrategyAwardVO result =
-                treeEngine.process(userId, strategyId, awardId);
+                treeEngine.process(userId, strategyId, awardId, endDateTime);
         // 所有规则均放行时引擎不会接管结果，继续发放责任链抽中的原奖品。
         return result == null ? originalAward(awardId) : result;
     }
@@ -113,14 +127,23 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRa
         repository.updateStrategyAwardStock(strategyId, awardId);
     }
 
+    @Override
+    public List<StrategyAwardEntity> queryRaffleStrategyAwardList(Long strategyId) {
+        return repository.queryStrategyAwardList(strategyId);
+    }
+
     /**
-     * 查询抽奖策略奖品列表。
+     * 根据活动ID查询抽奖策略奖品列表。
      *
-     * @param strategyId 策略ID
+     * @param activityId 活动ID
      * @return 抽奖策略奖品列表
      */
     @Override
-    public List<StrategyAwardEntity> queryRaffleStrategyAwardList(Long strategyId) {
+    public List<StrategyAwardEntity> queryRaffleStrategyAwardListByActivityId(Long activityId) {
+        Long strategyId = repository.queryStrategyIdByActivityId(activityId);
+        if (strategyId == null) {
+            return Collections.emptyList();
+        }
         return repository.queryStrategyAwardList(strategyId);
     }
 

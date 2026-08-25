@@ -61,6 +61,9 @@ public class Constants {
     /** 活动 SKU 库存数量缓存 Key 前缀，后接 SKU ID */
     public static String ACTIVITY_SKU_STOCK_COUNT_KEY = "activity_sku_stock_count_key_";
 
+    /** 活动 SKU 库存清理缓存 Key 前缀，后接 SKU ID */
+    public static String ACTIVITY_SKU_COUNT_CLEAR_KEY = "activity_sku_count_clear_key_";
+
 
 }
 

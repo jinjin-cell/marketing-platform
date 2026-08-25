@@ -1,5 +1,7 @@
 package cn.qijiv.domain.strategy.service.armory;
 
+import java.util.Date;
+
 /**
  * 策略抽奖调度接口，对调用方只暴露抽奖操作；概率表缺失时由实现负责恢复装配。
  */
@@ -27,11 +29,12 @@ public interface IStrategyDispatch {
     /**
      * 减少抽奖奖品库存
      *
-     * @param strategyId 策略ID
-     * @param awardId    奖品ID
+     * @param strategyId  策略ID
+     * @param awardId     奖品ID
+     * @param endDateTime 活动结束时间，用于设置库存锁缓存的有效期，可为空
      * @return 是否成功
      */
-    Boolean subtractionAwardStock(Long strategyId, Integer awardId);
+    Boolean subtractionAwardStock(Long strategyId, Integer awardId, Date endDateTime);
 
 
 }

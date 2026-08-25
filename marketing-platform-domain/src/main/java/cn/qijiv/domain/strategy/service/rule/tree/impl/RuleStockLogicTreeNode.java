@@ -9,6 +9,8 @@ import cn.qijiv.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;
 import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
+
 /** 规则树中的库存校验和扣减节点。 */
 @Slf4j
 @Component("rule_stock")
@@ -34,17 +36,18 @@ public class RuleStockLogicTreeNode implements ILogicTreeNode {
     /**
      * 执行库存扣减校验：扣减成功则接管并返回奖品，库存不足则放行走兜底分支。
      *
-     * @param userId     用户ID
-     * @param strategyId 策略ID
-     * @param awardId    当前抽中的奖品ID
-     * @param ruleValue  节点配置值
+     * @param userId      用户ID
+     * @param strategyId  策略ID
+     * @param awardId     当前抽中的奖品ID
+     * @param ruleValue   节点配置值
+     * @param endDateTime 活动结束时间，用于设置库存锁缓存的有效期
      * @return 节点执行结果
      */
     @Override
-    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue) {
+    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue, Date endDateTime) {
         log.info("规则过滤-库存扣减 userId:{} strategyId:{} awardId:{}", userId, strategyId, awardId);
         // 扣减库存
-        Boolean status = strategyDispatch.subtractionAwardStock(strategyId, awardId);
+        Boolean status = strategyDispatch.subtractionAwardStock(strategyId, awardId, endDateTime);
         // true；库存扣减成功，TAKE_OVER 规则节点接管，返回奖品ID，奖品规则配置
         if (Boolean.TRUE.equals(status)) {
             log.info("规则过滤-库存扣减-成功 userId:{} strategyId:{} awardId:{}", userId, strategyId, awardId);

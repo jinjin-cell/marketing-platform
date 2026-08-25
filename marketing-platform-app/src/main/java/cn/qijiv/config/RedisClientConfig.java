@@ -2,6 +2,7 @@ package cn.qijiv.config;
 
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -30,6 +31,8 @@ public class RedisClientConfig {
         }
 
         Config config = new Config();
+        // 使用 JSON 编解码器，避免缓存对象乱码或依赖 JDK 序列化
+        config.setCodec(JsonJacksonCodec.INSTANCE);
         SingleServerConfig serverConfig = config
                 .useSingleServer()
                 .setAddress(properties.getAddress())

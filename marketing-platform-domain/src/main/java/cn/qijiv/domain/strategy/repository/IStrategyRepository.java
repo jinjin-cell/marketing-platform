@@ -7,7 +7,9 @@ import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
 import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 import cn.qijiv.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 抽奖策略仓库
@@ -87,6 +89,14 @@ public interface IStrategyRepository {
      */
     RuleTreeVO queryRuleTreeVOByTreeId(String treeId);
 
+    /**
+     * 批量查询规则树的次数解锁配置
+     *
+     * @param treeIds 规则树ID列表
+     * @return 规则树ID -> 解锁次数
+     */
+    Map<String, Integer> queryAwardRuleLockCount(List<String> treeIds);
+
 
     /**
      * 缓存抽奖奖品库存
@@ -103,6 +113,15 @@ public interface IStrategyRepository {
      * @param cacheKey 缓存key
      */
     Boolean subtractionAwardStock(String cacheKey);
+
+    /**
+     * 原子扣减奖品库存，并按活动结束时间给库存锁设置缓存有效期。
+     *
+     * @param cacheKey    缓存key
+     * @param endDateTime 活动结束时间，可为空；为空时不设置锁缓存有效期
+     * @return true-扣减成功，false-库存不足或奖品不存在
+     */
+    Boolean subtractionAwardStock(String cacheKey, Date endDateTime);
 
     /**
      * 发送抽奖奖品库存扣减消息到队列

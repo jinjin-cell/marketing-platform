@@ -4,10 +4,12 @@ import cn.qijiv.api.dto.RaffleAwardListRequestDTO;
 import cn.qijiv.api.dto.RaffleAwardListResponseDTO;
 import cn.qijiv.api.dto.RaffleStrategyRequestDTO;
 import cn.qijiv.api.dto.RaffleStrategyResponseDTO;
+import cn.qijiv.domain.activity.service.IRaffleActivityAccountQuotaService;
 import cn.qijiv.domain.strategy.model.entity.RaffleAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.RaffleFactorEntity;
 import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
 import cn.qijiv.domain.strategy.service.IRaffleAward;
+import cn.qijiv.domain.strategy.service.IRaffleRule;
 import cn.qijiv.domain.strategy.service.IRaffleStrategy;
 import cn.qijiv.domain.strategy.service.armory.IStrategyArmory;
 import cn.qijiv.types.enums.ResponseCode;
@@ -33,10 +35,14 @@ class RaffleControllerTest {
 
     /** Mock 的奖品查询服务。 */
     private IRaffleAward raffleAward;
+    /** Mock 的抽奖规则查询服务。 */
+    private IRaffleRule raffleRule;
     /** Mock 的抽奖策略服务。 */
     private IRaffleStrategy raffleStrategy;
     /** Mock 的策略装配服务。 */
     private IStrategyArmory strategyArmory;
+    /** Mock 的活动账户额度服务。 */
+    private IRaffleActivityAccountQuotaService raffleActivityAccountQuotaService;
     /** 被测的抽奖控制器。 */
     private RaffleStrategyController controller;
 
@@ -44,9 +50,11 @@ class RaffleControllerTest {
     @BeforeEach
     void setUp() {
         raffleAward = mock(IRaffleAward.class);
+        raffleRule = mock(IRaffleRule.class);
         raffleStrategy = mock(IRaffleStrategy.class);
         strategyArmory = mock(IStrategyArmory.class);
-        controller = new RaffleStrategyController(raffleAward, raffleStrategy, strategyArmory);
+        raffleActivityAccountQuotaService = mock(IRaffleActivityAccountQuotaService.class);
+        controller = new RaffleStrategyController(raffleAward, raffleRule, raffleStrategy, strategyArmory, raffleActivityAccountQuotaService);
     }
 
     /** 验证策略装配接口返回成功与装配结果。 */
@@ -69,11 +77,17 @@ class RaffleControllerTest {
                 .awardTitle("随机积分")
                 .awardSubTitle("1至100积分")
                 .sort(3)
+                .ruleModels("tree_lock_1")
                 .build();
-        when(raffleAward.queryRaffleStrategyAwardList(100001L))
+        when(raffleAward.queryRaffleStrategyAwardListByActivityId(100301L))
                 .thenReturn(Collections.singletonList(award));
+        when(raffleRule.queryAwardRuleLockCount(any()))
+                .thenReturn(Collections.emptyMap());
+        when(raffleActivityAccountQuotaService.queryRaffleActivityAccountDayPartakeCount(100301L, "qijiv"))
+                .thenReturn(0);
         RaffleAwardListRequestDTO request = new RaffleAwardListRequestDTO();
-        request.setStrategyId(100001L);
+        request.setActivityId(100301L);
+        request.setUserId("qijiv");
 
         Response<List<RaffleAwardListResponseDTO>> response =
                 controller.queryRaffleAwardList(request);
@@ -86,6 +100,8 @@ class RaffleControllerTest {
         assertEquals("随机积分", result.getAwardTitle());
         assertEquals("1至100积分", result.getAwardSubTitle());
         assertEquals(Integer.valueOf(3), result.getSort());
+        assertEquals(Boolean.TRUE, result.getIsAwardUnlock());
+        assertEquals(Integer.valueOf(0), result.getWaitUnlockCount());
     }
 
     /** 验证随机抽奖接口正确映射奖项与排序，并携带默认用户与策略 ID。 */

@@ -17,6 +17,7 @@ import cn.qijiv.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -114,6 +115,7 @@ public class StrategyRespository implements IStrategyRepository {
                         .awardCount(strategyAwardPO.getAwardCount())
                         .awardCountSurplus(strategyAwardPO.getAwardCountSurplus())
                         .awardRate(strategyAwardPO.getAwardRate())
+                        .ruleModels(strategyAwardPO.getRuleModels())
                         .sort(strategyAwardPO.getSort())
                         .build())
                 .collect(Collectors.toList());
@@ -293,6 +295,30 @@ public class StrategyRespository implements IStrategyRepository {
         return ruleTreeVO;
     }
 
+    /**
+     * 批量查询规则树的次数解锁配置
+     *
+     * @param treeIds 规则树ID列表
+     * @return 规则树ID -> 解锁次数
+     */
+    @Override
+    public Map<String, Integer> queryAwardRuleLockCount(List<String> treeIds) {
+        if (treeIds == null || treeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<RuleTreeNodePO> nodePOList = ruleTreeNodeDao.queryRuleLockNodeListByTreeIds(treeIds);
+        if (nodePOList == null || nodePOList.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<String, Integer> lockCountMap = new LinkedHashMap<>();
+        for (RuleTreeNodePO nodePO : nodePOList) {
+            if (nodePO.getTreeId() != null && nodePO.getRuleValue() != null) {
+                lockCountMap.put(nodePO.getTreeId(), Integer.valueOf(nodePO.getRuleValue()));
+            }
+        }
+        return lockCountMap;
+    }
+
     /** 从规则树、节点和连线三张表装配领域对象。 */
     private RuleTreeVO queryRuleTreeFromDatabase(String treeId) {
         // 1. 查询树根。树根不存在时返回 null，由领域服务给出包含奖品信息的异常。
@@ -377,13 +403,32 @@ public class StrategyRespository implements IStrategyRepository {
      */
     @Override
     public Boolean subtractionAwardStock(String cacheKey) {
+        return subtractionAwardStock(cacheKey, null);
+    }
+
+    /**
+     * 减少抽奖奖品库存，并按活动结束时间设置库存锁缓存的有效期。
+     *
+     * @param cacheKey    缓存key
+     * @param endDateTime 活动结束时间，可为空
+     * @return 是否成功
+     */
+    @Override
+    public Boolean subtractionAwardStock(String cacheKey, Date endDateTime) {
         long surplus = redisService.decr(cacheKey);
         if (surplus < 0) {
             redisService.setAtomicLong(cacheKey, 0);
             return false;
         }
         String lockKey = cacheKey + Constants.UNDERLINE + surplus;
-        Boolean lock = redisService.setNx(lockKey);
+        Boolean lock;
+        if (null != endDateTime) {
+            // 加锁有效期：活动结束时间 + 延迟1天，避免库存锁 key 永久堆积
+            long expireMillis = endDateTime.getTime() - System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1);
+            lock = redisService.setNx(lockKey, expireMillis, TimeUnit.MILLISECONDS);
+        } else {
+            lock = redisService.setNx(lockKey);
+        }
         if (!Boolean.TRUE.equals(lock)) {
             log.info("策略奖品库存防重锁获取失败 lockKey:{}", lockKey);
         }

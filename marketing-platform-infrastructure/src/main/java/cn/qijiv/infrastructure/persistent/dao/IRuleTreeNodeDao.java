@@ -2,6 +2,7 @@ package cn.qijiv.infrastructure.persistent.dao;
 
 import cn.qijiv.infrastructure.persistent.po.RuleTreeNodePO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -16,4 +17,12 @@ public interface IRuleTreeNodeDao {
      * @return 规则树节点列表
      */
     List<RuleTreeNodePO> queryRuleTreeNodeListByTreeId(String treeId);
+
+    /**
+     * 批量查询规则树中的次数解锁节点（rule_lock）。
+     *
+     * @param treeIds 规则树ID列表
+     * @return 次数解锁节点列表
+     */
+    List<RuleTreeNodePO> queryRuleLockNodeListByTreeIds(@Param("treeIds") List<String> treeIds);
 }

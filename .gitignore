@@ -37,4 +37,5 @@ build/
 ### Mac OS ###
 .DS_Store
 /data/
+/marketing-platform-app/data/
 /.idea/

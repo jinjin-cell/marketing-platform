@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 /**
  * 抽奖因子实体类
  *
@@ -21,4 +23,6 @@ public class RaffleFactorEntity {
    private String userId;
     /** 抽奖策略ID */
    private Long strategyId;
+    /** 活动结束时间，用于设置奖品库存锁缓存的有效期 */
+    private Date endDateTime;
 }

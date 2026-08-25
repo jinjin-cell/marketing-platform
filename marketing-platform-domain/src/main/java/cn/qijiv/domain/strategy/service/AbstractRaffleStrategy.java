@@ -11,6 +11,8 @@ import cn.qijiv.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Date;
+
 /**
  * 抽奖策略模板。
  *
@@ -80,7 +82,7 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
 
         // 第三步：只有普通概率抽奖结果才进入规则树，依次完成次数、库存和兜底判断。
         DefaultTreeFactory.StrategyAwardVO treeStrategyAwardVO = raffleLogicTree(
-                userId, strategyId, chainStrategyAwardVO.getAwardId());
+                userId, strategyId, chainStrategyAwardVO.getAwardId(), raffleFactorEntity.getEndDateTime());
         if (treeStrategyAwardVO == null || treeStrategyAwardVO.getAwardId() == null) {
             throw new IllegalStateException("抽奖规则树未返回有效结果，strategyId: " + strategyId);
         }
@@ -122,4 +124,17 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
     /** 执行抽奖后置规则树，由具体抽奖策略负责查询树配置并启动引擎。 */
     protected abstract DefaultTreeFactory.StrategyAwardVO raffleLogicTree(
             String userId, Long strategyId, Integer awardId);
+
+    /**
+     * 执行抽奖后置规则树，并把活动结束时间透传给库存扣减节点，
+     * 用于给奖品库存锁设置与活动结束时间对齐的缓存有效期。
+     *
+     * @param userId      用户ID
+     * @param strategyId  策略ID
+     * @param awardId     奖品ID
+     * @param endDateTime 活动结束时间，可为空
+     * @return 规则树过滤后的奖品结果
+     */
+    protected abstract DefaultTreeFactory.StrategyAwardVO raffleLogicTree(
+            String userId, Long strategyId, Integer awardId, Date endDateTime);
 }

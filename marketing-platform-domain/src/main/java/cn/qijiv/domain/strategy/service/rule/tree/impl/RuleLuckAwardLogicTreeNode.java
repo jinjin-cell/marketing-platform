@@ -7,6 +7,8 @@ import cn.qijiv.types.common.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 
 /** 规则树中的兜底奖励节点。 */
 @Slf4j
@@ -16,13 +18,14 @@ public class RuleLuckAwardLogicTreeNode implements ILogicTreeNode {
     /**
      * 执行兜底奖励逻辑：直接返回配置的兜底奖品并接管抽奖。
      *
-     * @param userId     用户ID
-     * @param strategyId 策略ID
-     * @param awardId    当前抽中的奖品ID
-     * @param ruleValue  兜底奖品配置，格式为 奖品ID[:奖品规则配置]
+     * @param userId      用户ID
+     * @param strategyId  策略ID
+     * @param awardId     当前抽中的奖品ID
+     * @param ruleValue   兜底奖品配置，格式为 奖品ID[:奖品规则配置]
+     * @param endDateTime 活动结束时间，本节点不使用
      * @return 节点执行结果
      */
-    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue) {
+    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue, Date endDateTime) {
     log.info("规则过滤-兜底奖品 userId:{} strategyId:{} awardId:{} ruleValue:{}", userId, strategyId, awardId, ruleValue);
     String[] split = ruleValue.split(Constants.COLON);
     if (split.length == 0) {

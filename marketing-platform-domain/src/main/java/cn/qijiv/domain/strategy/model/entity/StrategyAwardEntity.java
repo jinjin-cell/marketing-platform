@@ -54,6 +54,11 @@ public class StrategyAwardEntity {
     private BigDecimal awardRate;
 
     /**
+     * 规则模型，即奖品绑定的规则树ID
+     */
+    private String ruleModels;
+
+    /**
      * 排序
      */
     private Integer sort;

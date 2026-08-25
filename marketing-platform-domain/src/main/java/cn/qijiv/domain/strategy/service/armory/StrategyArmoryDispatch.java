@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -266,13 +267,14 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
     /**
      * 原子扣减奖品库存。
      *
-     * @param strategyId 策略ID
-     * @param awardId    奖品ID
+     * @param strategyId  策略ID
+     * @param awardId     奖品ID
+     * @param endDateTime 活动结束时间，用于设置库存锁缓存的有效期，可为空
      * @return true-扣减成功，false-库存不足或奖品不存在
      */
     @Override
-    public Boolean subtractionAwardStock(Long strategyId, Integer awardId) {
+    public Boolean subtractionAwardStock(Long strategyId, Integer awardId, Date endDateTime) {
          String cacheKey = Constants.RedisKey.STRATEGY_AWARD_COUNT_KEY + strategyId + Constants.UNDERLINE + awardId;
-         return repository.subtractionAwardStock(cacheKey);
+         return repository.subtractionAwardStock(cacheKey, endDateTime);
     }
 }

@@ -10,6 +10,7 @@ import cn.qijiv.domain.strategy.service.rule.tree.factory.engine.IDecisionTreeEn
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,7 @@ public class DecisionTreeEngine implements IDecisionTreeEngine {
     /** 执行规则树。 */
     @Override
     public DefaultTreeFactory.StrategyAwardVO process(
-            String userId, Long strategyId, Integer awardId) {
+            String userId, Long strategyId, Integer awardId, Date endDateTime) {
         if (StringUtils.isBlank(userId) || strategyId == null || awardId == null) {
             throw new IllegalArgumentException("规则树执行参数不能为空");
         }
@@ -76,7 +77,7 @@ public class DecisionTreeEngine implements IDecisionTreeEngine {
 
             // 节点只计算业务结果；如何跳转到下一节点由引擎统一处理。
             DefaultTreeFactory.TreeActionEntity action = logicTreeNode.logic(
-                    userId, strategyId, awardId, ruleTreeNode.getRuleValue());
+                    userId, strategyId, awardId, ruleTreeNode.getRuleValue(), endDateTime);
             if (action == null || action.getRuleLogicCheckType() == null) {
                 throw new IllegalStateException(
                         "规则树节点未返回有效结果，ruleKey: " + ruleTreeNode.getRuleKey());

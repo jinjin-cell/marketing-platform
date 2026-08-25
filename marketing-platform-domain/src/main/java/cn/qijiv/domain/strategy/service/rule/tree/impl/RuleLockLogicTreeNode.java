@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
+import java.util.Date;
 
 /** 规则树中的次数解锁节点。 */
 @Slf4j
@@ -19,14 +20,15 @@ public class RuleLockLogicTreeNode implements ILogicTreeNode {
     /**
      * 执行次数解锁判断：用户抽奖次数达到门槛则放行，否则规则接管。
      *
-     * @param userId     用户ID
-     * @param strategyId 策略ID
-     * @param awardId    当前抽中的奖品ID
-     * @param ruleValue  次数锁门槛配置值
+     * @param userId      用户ID
+     * @param strategyId  策略ID
+     * @param awardId     当前抽中的奖品ID
+     * @param ruleValue   次数锁门槛配置值
+     * @param endDateTime 活动结束时间，本节点不使用
      * @return 节点执行结果
      */
     @Override
-    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue) {
+    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue, Date endDateTime) {
     log.info("规则过滤-次数锁 userId:{} strategyId:{} awardId:{}", userId, strategyId, awardId);
     long raffleCount;
     try {

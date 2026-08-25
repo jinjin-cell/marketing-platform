@@ -3,6 +3,7 @@ package cn.qijiv.domain.activity.service.quota;
 import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
 import cn.qijiv.domain.activity.model.entity.ActivityCountEntity;
 import cn.qijiv.domain.activity.model.entity.ActivityEntity;
+import cn.qijiv.domain.activity.model.entity.ActivityAccountDayEntity;
 import cn.qijiv.domain.activity.model.entity.ActivityOrderEntity;
 import cn.qijiv.domain.activity.model.entity.ActivitySkuEntity;
 import cn.qijiv.domain.activity.model.entity.SkuRechargeEntity;
@@ -14,6 +15,7 @@ import cn.qijiv.domain.activity.service.quota.rule.factory.DefaultActivityChainF
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 /**
@@ -121,6 +123,22 @@ public class RaffleActivityAccountQuotaService extends AbstractRaffleActivityAcc
         activityRepository.clearActivitySkuStock(sku);
     }
 
-
+    /**
+     * 查询用户在某活动今日已参与的抽奖次数
+     *
+     * @param activityId 活动ID
+     * @param userId     用户ID
+     * @return 今日已参与次数
+     */
+    @Override
+    public Integer queryRaffleActivityAccountDayPartakeCount(Long activityId, String userId) {
+        ActivityAccountDayEntity dayEntity = activityRepository.queryActivityAccountDayByUserId(
+                userId, activityId, LocalDate.now().toString());
+        if (dayEntity == null) {
+            return 0;
+        }
+        // 总次数 - 剩余次数 = 今日已参与次数
+        return dayEntity.getDayCount() - dayEntity.getDayCountSurplus();
+    }
 
 }
