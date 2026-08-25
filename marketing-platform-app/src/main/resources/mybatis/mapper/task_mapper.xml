@@ -50,7 +50,7 @@
     <select id="queryNoSendMessageTaskList" resultMap="TaskMap">
         select id, user_id, topic, message_id, message, state, create_time, update_time
         from task
-        where state = 'fail' or (state = 'create' and now() - update_time > 6)
+        where state = 'fail' or (state = 'create' and TIMESTAMPDIFF(SECOND, update_time, NOW()) > 6)
         limit 10
     </select>
 

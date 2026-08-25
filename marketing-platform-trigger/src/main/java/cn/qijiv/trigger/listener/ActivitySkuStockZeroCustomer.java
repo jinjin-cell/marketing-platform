@@ -45,8 +45,10 @@ public class ActivitySkuStockZeroCustomer {
             Long sku = eventMessage.getData();
             // 更新库存
             skuStock.clearActivitySkuStock(sku);
-            // 清空队列 「此时就不需要延迟更新数据库记录了」
-            skuStock.clearQueueValue();
+            // 不再清空共享延迟队列：该队列被所有 sku 共用，整体 clear 会误删其它 sku 的待消费消息。
+            // 延迟任务 updateActivitySkuStock 的 SQL 已带 stock_count_surplus > 0 保护，
+            // 库存归零后残留的延迟消息消费时会被跳过，不会把数据库库存扣成负数。
+            // skuStock.clearQueueValue();
         } catch (Exception e) {
             log.error("监听活动sku库存消耗为0消息，消费失败 topic: {} message: {}", topic, message);
             throw e;

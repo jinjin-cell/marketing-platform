@@ -427,7 +427,8 @@ public class StrategyRespository implements IStrategyRepository {
             long expireMillis = endDateTime.getTime() - System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1);
             lock = redisService.setNx(lockKey, expireMillis, TimeUnit.MILLISECONDS);
         } else {
-            lock = redisService.setNx(lockKey);
+            // 无活动上下文（如 random_raffle）时兜底设置 1 天有效期，避免锁 key 永久堆积
+            lock = redisService.setNx(lockKey, TimeUnit.DAYS.toMillis(1), TimeUnit.MILLISECONDS);
         }
         if (!Boolean.TRUE.equals(lock)) {
             log.info("策略奖品库存防重锁获取失败 lockKey:{}", lockKey);
