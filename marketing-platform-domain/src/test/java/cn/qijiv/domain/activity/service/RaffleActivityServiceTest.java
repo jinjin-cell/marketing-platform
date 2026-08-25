@@ -126,6 +126,11 @@ public class RaffleActivityServiceTest {
         }
 
         @Override
+        public Integer queryRaffleActivityAccountDayPartakeCount(Long activityId, String userId) {
+            return 0;
+        }
+
+        @Override
         public ActivityAccountEntity queryActivityAccountByUserId(String userId, Long activityId) {
             return null;
         }

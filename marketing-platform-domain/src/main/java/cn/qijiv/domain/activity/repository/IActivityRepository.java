@@ -162,5 +162,14 @@ public interface IActivityRepository {
      * @return 活动SKU实体列表
      */
     List<ActivitySkuEntity> queryActivitySkuListByActivityId(Long activityId);
+
+    /**
+     * 根据活动ID和用户ID查询抽奖活动账户日实体的参与次数
+     *
+     * @param activityId 活动ID
+     * @param userId 用户ID
+     * @return 参与次数
+     */
+    Integer queryRaffleActivityAccountDayPartakeCount(Long activityId, String userId);
 }
 

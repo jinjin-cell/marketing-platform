@@ -25,6 +25,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -587,6 +588,21 @@ public class ActivityRepository implements IActivityRepository {
         return activitySkuEntities;
     }
 
+    /**
+     * 查询活动今日参与次数
+     *
+     * @param activityId 活动ID
+     * @param userId     用户ID
+     * @return 活动今日参与次数
+     */
+    @Override
+    public Integer queryRaffleActivityAccountDayPartakeCount(Long activityId, String userId) {
+        // 查询今日账户
+        ActivityAccountDayEntity activityAccountDayEntity = queryActivityAccountDayByUserId(userId, activityId, LocalDate.now().toString());
+        if (null == activityAccountDayEntity) return 0;
+        // 总次数 - 剩余次数 = 今日已参与次数
+        return activityAccountDayEntity.getDayCount() - activityAccountDayEntity.getDayCountSurplus();
+    }
 
 
 }
