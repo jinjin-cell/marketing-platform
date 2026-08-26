@@ -57,7 +57,8 @@ spring:
         prefetch: 1
     topic:
       activity_sku_stock_zero: activity_sku_stock_zero
-      send_award: send_award
+      send_award: send.award
+      send_rebate: send.rebate
   shardingsphere:
     datasource:
       names: ds0,ds1,ds2
@@ -126,6 +127,16 @@ spring:
               algorithm-class-name: cn.qijiv.infrastructure.persistent.db.TaskDBHintAlgorithm
         user_award_record:
           actual-data-nodes: ds$->{1..2}.user_award_record_00$->{0..3}
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+          table-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+        user_behavior_rebate_order:
+          actual-data-nodes: ds$->{1..2}.user_behavior_rebate_order_00$->{0..3}
           database-strategy:
             standard:
               sharding-column: user_id
