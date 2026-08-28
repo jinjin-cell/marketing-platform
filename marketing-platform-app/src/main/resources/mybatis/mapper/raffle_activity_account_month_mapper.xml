@@ -39,4 +39,14 @@
           AND month_count_surplus > 0
     </update>
 
+    <update id="addAccountQuota" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountMonthPO">
+        UPDATE raffle_activity_account_month
+        SET month_count = month_count + #{monthCount},
+            month_count_surplus = month_count_surplus + #{monthCountSurplus},
+            update_time = NOW()
+        WHERE user_id = #{userId}
+          AND activity_id = #{activityId}
+          AND month = #{month}
+    </update>
+
 </mapper>

@@ -19,4 +19,7 @@ public interface IRaffleActivityAccountDayDao {
 
     void insertActivityAccountDay(RaffleActivityAccountDayPO raffleActivityAccountDay);
 
+    /** 更新当前日期账户的总额度和剩余额度；不存在时不更新。 */
+    int addAccountQuota(RaffleActivityAccountDayPO raffleActivityAccountDay);
+
 }
