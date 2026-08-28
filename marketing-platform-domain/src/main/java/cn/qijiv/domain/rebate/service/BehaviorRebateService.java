@@ -64,6 +64,7 @@ public class BehaviorRebateService implements IBehaviorRebateService {
                     + Constants.UNDERLINE + rebateConfig.getRebateType()
                     + Constants.UNDERLINE + behaviorEntity.getOutBusinessNo();
 
+            // 创建返利订单
             BehaviorRebateOrderEntity rebateOrder = BehaviorRebateOrderEntity.builder()
                     .userId(behaviorEntity.getUserId())
                     .orderId(RandomStringUtils.randomNumeric(12))
@@ -75,6 +76,7 @@ public class BehaviorRebateService implements IBehaviorRebateService {
                     .build();
             orderIds.add(rebateOrder.getOrderId());
 
+            //MQ 消息对象
             SendRebateMessageEvent.RebateMessage rebateMessage = SendRebateMessageEvent.RebateMessage.builder()
                     .userId(behaviorEntity.getUserId())
                     .rebateDesc(rebateConfig.getRebateDesc())
@@ -85,6 +87,7 @@ public class BehaviorRebateService implements IBehaviorRebateService {
             BaseEvent.EventMessage<SendRebateMessageEvent.RebateMessage> eventMessage =
                     sendRebateMessageEvent.buildEventMessage(rebateMessage);
 
+            // 创建任务
             TaskEntity taskEntity = TaskEntity.builder()
                     .userId(behaviorEntity.getUserId())
                     .topic(sendRebateMessageEvent.topic())

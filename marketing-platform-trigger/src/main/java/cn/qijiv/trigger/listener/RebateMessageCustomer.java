@@ -42,6 +42,7 @@ public class RebateMessageCustomer {
             if (eventMessage == null || eventMessage.getData() == null) {
                 throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), "返利消息数据为空");
             }
+            // 1.1 转换数据
             SendRebateMessageEvent.RebateMessage rebateMessage = eventMessage.getData();
             if (!RebateTypeVO.SKU.getCode().equals(rebateMessage.getRebateType())) {
                 log.info("监听用户行为返利消息 - 非sku奖励暂时不处理 topic: {} message: {}", topic, message);
