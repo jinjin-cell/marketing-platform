@@ -10,7 +10,10 @@ import cn.qijiv.domain.rebate.model.valobj.TaskStateVO;
 import cn.qijiv.domain.rebate.repository.IBehaviorRebateRepository;
 import cn.qijiv.types.common.Constants;
 import cn.qijiv.types.event.BaseEvent;
+import cn.qijiv.types.enums.ResponseCode;
+import cn.qijiv.types.exception.AppException;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -39,6 +42,12 @@ public class BehaviorRebateService implements IBehaviorRebateService {
      */
     @Override
     public List<String> createOrder(BehaviorEntity behaviorEntity) {
+        if (behaviorEntity == null
+                || StringUtils.isBlank(behaviorEntity.getUserId())
+                || behaviorEntity.getBehaviorTypeVO() == null
+                || StringUtils.isBlank(behaviorEntity.getOutBusinessNo())) {
+            throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+        }
         // 查询行为返利配置
         List<DailyBehaviorRebateVO> rebateConfigs = behaviorRebateRepository
                 .queryDailyBehaviorRebateConfig(behaviorEntity.getBehaviorTypeVO());
@@ -55,6 +64,7 @@ public class BehaviorRebateService implements IBehaviorRebateService {
                     + Constants.UNDERLINE + rebateConfig.getRebateType()
                     + Constants.UNDERLINE + behaviorEntity.getOutBusinessNo();
 
+            // 创建返利订单
             BehaviorRebateOrderEntity rebateOrder = BehaviorRebateOrderEntity.builder()
                     .userId(behaviorEntity.getUserId())
                     .orderId(RandomStringUtils.randomNumeric(12))
@@ -66,6 +76,7 @@ public class BehaviorRebateService implements IBehaviorRebateService {
                     .build();
             orderIds.add(rebateOrder.getOrderId());
 
+            //MQ 消息对象
             SendRebateMessageEvent.RebateMessage rebateMessage = SendRebateMessageEvent.RebateMessage.builder()
                     .userId(behaviorEntity.getUserId())
                     .rebateDesc(rebateConfig.getRebateDesc())
@@ -76,6 +87,7 @@ public class BehaviorRebateService implements IBehaviorRebateService {
             BaseEvent.EventMessage<SendRebateMessageEvent.RebateMessage> eventMessage =
                     sendRebateMessageEvent.buildEventMessage(rebateMessage);
 
+            // 创建任务
             TaskEntity taskEntity = TaskEntity.builder()
                     .userId(behaviorEntity.getUserId())
                     .topic(sendRebateMessageEvent.topic())

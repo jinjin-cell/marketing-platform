@@ -19,5 +19,8 @@ public interface IRaffleActivityAccountMonthDao {
 
     void insertActivityAccountMonth(RaffleActivityAccountMonthPO raffleActivityAccountMonth);
 
+    /** 更新当前月份账户的总额度和剩余额度；不存在时不更新。 */
+    int addAccountQuota(RaffleActivityAccountMonthPO raffleActivityAccountMonth);
+
 
 }

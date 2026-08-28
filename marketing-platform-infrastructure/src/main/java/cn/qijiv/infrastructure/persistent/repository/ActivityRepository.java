@@ -230,6 +230,27 @@ public class ActivityRepository implements IActivityRepository {
                     if (0 == count) {
                         raffleActivityAccountDao.insert(raffleActivityAccount);
                     }
+                    // 3. 当前月、日账户已存在时同步增加额度；不存在则在首次抽奖时按总账户镜像懒创建。
+                    LocalDate today = LocalDate.now();
+                    // 兼容仅装配总账户 DAO 的轻量测试/迁移场景；Spring 正式运行时两个 DAO 均会注入。
+                    if (raffleActivityAccountMonthDao != null) {
+                        raffleActivityAccountMonthDao.addAccountQuota(RaffleActivityAccountMonthPO.builder()
+                                .userId(createQuotaOrderAggregate.getUserId())
+                                .activityId(createQuotaOrderAggregate.getActivityId())
+                                .month(today.toString().substring(0, 7))
+                                .monthCount(createQuotaOrderAggregate.getMonthCount())
+                                .monthCountSurplus(createQuotaOrderAggregate.getMonthCount())
+                                .build());
+                    }
+                    if (raffleActivityAccountDayDao != null) {
+                        raffleActivityAccountDayDao.addAccountQuota(RaffleActivityAccountDayPO.builder()
+                                .userId(createQuotaOrderAggregate.getUserId())
+                                .activityId(createQuotaOrderAggregate.getActivityId())
+                                .day(today.toString())
+                                .dayCount(createQuotaOrderAggregate.getDayCount())
+                                .dayCountSurplus(createQuotaOrderAggregate.getDayCount())
+                                .build());
+                    }
                     return 1;
                 } catch (DuplicateKeyException e) {
                     status.setRollbackOnly();
