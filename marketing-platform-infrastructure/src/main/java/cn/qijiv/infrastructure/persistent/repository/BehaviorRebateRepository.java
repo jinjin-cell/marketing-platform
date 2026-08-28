@@ -49,6 +49,12 @@ public class BehaviorRebateRepository implements IBehaviorRebateRepository {
     @Resource
     private EventPublisher eventPublisher;
 
+    /**
+     * 查询行为返利配置
+     *
+     * @param behaviorTypeVO 行为类型
+     * @return 行为返利配置列表
+     */
     @Override
     public List<DailyBehaviorRebateVO> queryDailyBehaviorRebateConfig(BehaviorTypeVO behaviorTypeVO) {
         List<DailyBehaviorRebatePO> dailyBehaviorRebates = dailyBehaviorRebateDao.queryDailyBehaviorRebateByBehaviorType(behaviorTypeVO.getCode());
@@ -64,12 +70,19 @@ public class BehaviorRebateRepository implements IBehaviorRebateRepository {
         return dailyBehaviorRebateVOS;
     }
 
+    /**
+     * 保存用户行为返利记录
+     *
+     * @param userId                 用户ID
+     * @param behaviorRebateAggregates 行为返利聚合对象列表
+     */
     @Override
     public void saveUserRebateRecord(String userId, List<BehaviorRebateAggregate> behaviorRebateAggregates) {
         try {
             dbRouter.doRouter(userId);
             transactionTemplate.execute(status -> {
                 try {
+                    // 插入用户行为返利订单表
                     for (BehaviorRebateAggregate behaviorRebateAggregate : behaviorRebateAggregates) {
                         BehaviorRebateOrderEntity behaviorRebateOrderEntity = behaviorRebateAggregate.getBehaviorRebateOrderEntity();
                         // 用户行为返利订单对象

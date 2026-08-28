@@ -31,6 +31,12 @@ public class BehaviorRebateService implements IBehaviorRebateService {
     @Resource
     private SendRebateMessageEvent sendRebateMessageEvent;
 
+    /**
+     * 创建返利订单
+     *
+     * @param behaviorEntity 行为实体
+     * @return 订单ID列表
+     */
     @Override
     public List<String> createOrder(BehaviorEntity behaviorEntity) {
         // 查询行为返利配置
@@ -40,8 +46,10 @@ public class BehaviorRebateService implements IBehaviorRebateService {
             return new ArrayList<>();
         }
 
+        //初始化订单号和聚合列表
         List<String> orderIds = new ArrayList<>(rebateConfigs.size());
         List<BehaviorRebateAggregate> aggregates = new ArrayList<>(rebateConfigs.size());
+        // 遍历返利配置，创建订单和任务
         for (DailyBehaviorRebateVO rebateConfig : rebateConfigs) {
             String bizId = behaviorEntity.getUserId()
                     + Constants.UNDERLINE + rebateConfig.getRebateType()
