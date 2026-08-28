@@ -81,6 +81,7 @@ public class BehaviorRebateServiceTest {
         assertEquals(orderIds.get(0), order.getOrderId());
         assertEquals("sign", order.getBehaviorType());
         assertEquals("sku", order.getRebateType());
+        assertEquals("2026-08-26", order.getOutBusinessNo());
         assertEquals("user001_sku_2026-08-26", order.getBizId());
 
         assertEquals("send.rebate", aggregate.getTaskEntity().getTopic());

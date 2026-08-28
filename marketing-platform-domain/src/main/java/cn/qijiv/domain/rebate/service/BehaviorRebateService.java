@@ -72,6 +72,7 @@ public class BehaviorRebateService implements IBehaviorRebateService {
                     .rebateDesc(rebateConfig.getRebateDesc())
                     .rebateType(rebateConfig.getRebateType())
                     .rebateConfig(rebateConfig.getRebateConfig())
+                    .outBusinessNo(behaviorEntity.getOutBusinessNo())
                     .bizId(bizId)
                     .build();
             orderIds.add(rebateOrder.getOrderId());
