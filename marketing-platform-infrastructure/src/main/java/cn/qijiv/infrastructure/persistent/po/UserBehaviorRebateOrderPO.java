@@ -27,7 +27,9 @@ public class UserBehaviorRebateOrderPO {
     private String rebateType;
     /** 返利配置【sku值，积分值】 */
     private String rebateConfig;
-    /** 业务ID - 拼接的唯一值 */
+    /** 业务防重ID - 外部透传，方便查询使用 */
+    private String outBusinessNo;
+    /** 业务ID - 拼接的唯一值。拼接 out_business_no + 自身枚举 */
     private String bizId;
     /** 创建时间 */
     private Date createTime;
