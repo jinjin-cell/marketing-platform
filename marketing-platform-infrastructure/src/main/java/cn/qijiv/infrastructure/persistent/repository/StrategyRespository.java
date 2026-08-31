@@ -437,7 +437,7 @@ public class StrategyRespository implements IStrategyRepository {
             lock = redisService.setNx(lockKey, TimeUnit.DAYS.toMillis(1), TimeUnit.MILLISECONDS);
         }
         if (!Boolean.TRUE.equals(lock)) {
-            log.info("策略奖品库存防重锁获取失败 lockKey:{}", lockKey);
+            log.info("策略奖品库存防重锁获取失败，锁键：{}", lockKey);
         }
         return lock;
     }
@@ -497,7 +497,7 @@ public class StrategyRespository implements IStrategyRepository {
     public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
         int affectedRows = strategyAwardDao.subtractionAwardStock(strategyId, awardId);
         if (affectedRows != 1) {
-            log.warn("数据库奖品库存扣减未生效 strategyId:{} awardId:{}", strategyId, awardId);
+            log.warn("数据库奖品库存扣减未生效，策略ID：{}，奖品ID：{}", strategyId, awardId);
             return;
         }
         String cacheKey = Constants.RedisKey.STRATEGY_AWARD_LIST_KEY + strategyId;

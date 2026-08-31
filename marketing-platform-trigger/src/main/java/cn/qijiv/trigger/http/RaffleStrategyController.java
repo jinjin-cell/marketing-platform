@@ -69,16 +69,16 @@ public class RaffleStrategyController implements IRaffleStrategyService {
     public Response<Boolean> strategyArmory(@RequestParam Long strategyId) {
         try {
             validateStrategyId(strategyId);
-            log.info("抽奖策略装配开始 strategyId:{}", strategyId);
+            log.info("抽奖策略装配开始，策略ID：{}", strategyId);
             Response<Boolean> response = success(strategyArmory.assembleLotteryStrategy(strategyId));
-            log.info("抽奖策略装配完成 strategyId:{} response:{}",
+            log.info("抽奖策略装配完成，策略ID：{}，响应结果：{}",
                     strategyId, JSON.toJSONString(response));
             return response;
         } catch (AppException e) {
-            log.warn("抽奖策略装配参数错误 strategyId:{} info:{}", strategyId, e.getInfo());
+            log.warn("抽奖策略装配参数错误，策略ID：{}，错误信息：{}", strategyId, e.getInfo());
             return failure(e);
         } catch (Exception e) {
-            log.error("抽奖策略装配失败 strategyId:{}", strategyId, e);
+            log.error("抽奖策略装配失败，策略ID：{}", strategyId, e);
             return systemFailure();
         }
     }
@@ -89,7 +89,7 @@ public class RaffleStrategyController implements IRaffleStrategyService {
     public Response<List<RaffleAwardListResponseDTO>> queryRaffleAwardList(
             @RequestBody RaffleAwardListRequestDTO request) {
         try {
-            log.info("查询抽奖奖品列表配置开始 userId:{} activityId:{}", request.getUserId(), request.getActivityId());
+            log.info("查询抽奖奖品列表配置开始，用户ID：{}，活动ID：{}", request.getUserId(), request.getActivityId());
             // 1. 参数校验
             if (StringUtils.isBlank(request.getUserId()) || null == request.getActivityId()) {
                 throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
@@ -124,14 +124,14 @@ public class RaffleStrategyController implements IRaffleStrategyService {
                     .info(ResponseCode.SUCCESS.getInfo())
                     .data(raffleAwardListResponseDTOS)
                     .build();
-            log.info("查询抽奖奖品列表配置完成 userId:{} activityId:{} response: {}", request.getUserId(), request.getActivityId(), JSON.toJSONString(response));
+            log.info("查询抽奖奖品列表配置完成，用户ID：{}，活动ID：{}，响应结果：{}", request.getUserId(), request.getActivityId(), JSON.toJSONString(response));
             // 返回结果
             return response;
         } catch (AppException e) {
-            log.warn("查询抽奖奖品列表参数错误 userId:{} activityId:{} info:{}", request.getUserId(), request.getActivityId(), e.getInfo());
+            log.warn("查询抽奖奖品列表参数错误，用户ID：{}，活动ID：{}，错误信息：{}", request.getUserId(), request.getActivityId(), e.getInfo());
             return failure(e);
         } catch (Exception e) {
-            log.error("查询抽奖奖品列表配置失败 userId:{} activityId:{}", request.getUserId(), request.getActivityId(), e);
+            log.error("查询抽奖奖品列表配置失败，用户ID：{}，活动ID：{}", request.getUserId(), request.getActivityId(), e);
             return Response.<List<RaffleAwardListResponseDTO>>builder()
                     .code(ResponseCode.UN_ERROR.getCode())
                     .info(ResponseCode.UN_ERROR.getInfo())
@@ -148,7 +148,7 @@ public class RaffleStrategyController implements IRaffleStrategyService {
 
         try {
             validateStrategyId(strategyId);
-            log.info("随机抽奖开始 strategyId:{}", strategyId);
+            log.info("随机抽奖开始，策略ID：{}", strategyId);
             RaffleAwardEntity raffleResult = raffleStrategy.performRaffle(
                     RaffleFactorEntity.builder()
                             .userId(SYSTEM_USER_ID)
@@ -162,14 +162,14 @@ public class RaffleStrategyController implements IRaffleStrategyService {
                     .awardId(raffleResult.getAwardId())
                     .awardIndex(raffleResult.getSort())
                     .build());
-            log.info("随机抽奖完成 strategyId:{} response:{}",
+            log.info("随机抽奖完成，策略ID：{}，响应结果：{}",
                     strategyId, JSON.toJSONString(response));
             return response;
         } catch (AppException e) {
-            log.warn("随机抽奖业务失败 strategyId:{} info:{}", strategyId, e.getInfo());
+            log.warn("随机抽奖业务失败，策略ID：{}，错误信息：{}", strategyId, e.getInfo());
             return failure(e);
         } catch (Exception e) {
-            log.error("随机抽奖失败 strategyId:{}", strategyId, e);
+            log.error("随机抽奖失败，策略ID：{}", strategyId, e);
             return systemFailure();
         }
     }
@@ -191,7 +191,7 @@ public class RaffleStrategyController implements IRaffleStrategyService {
         String userId = request == null ? null : request.getUserId();
         Long activityId = request == null ? null : request.getActivityId();
         try {
-            log.info("查询抽奖策略权重规则配置开始 userId:{} activityId:{}", userId, activityId);
+            log.info("查询抽奖策略权重规则配置开始，用户ID：{}，活动ID：{}", userId, activityId);
             // 1. 参数校验
             if (StringUtils.isBlank(userId) || activityId == null) {
                 throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
@@ -224,13 +224,13 @@ public class RaffleStrategyController implements IRaffleStrategyService {
                     .info(ResponseCode.SUCCESS.getInfo())
                     .data(raffleStrategyRuleWeightList)
                     .build();
-            log.info("查询抽奖策略权重规则配置完成 userId:{} activityId:{} response:{}", userId, activityId, JSON.toJSONString(response));
+            log.info("查询抽奖策略权重规则配置完成，用户ID：{}，活动ID：{}，响应结果：{}", userId, activityId, JSON.toJSONString(response));
             return response;
         } catch (AppException e) {
-            log.warn("查询抽奖策略权重规则参数错误 userId:{} activityId:{}", userId, activityId);
+            log.warn("查询抽奖策略权重规则参数错误，用户ID：{}，活动ID：{}", userId, activityId);
             return Response.<List<RaffleStrategyRuleWeightResponseDTO>>builder().code(e.getCode()).info(e.getInfo()).build();
         } catch (Exception e) {
-            log.error("查询抽奖策略权重规则配置失败 userId:{} activityId:{}", userId, activityId, e);
+            log.error("查询抽奖策略权重规则配置失败，用户ID：{}，活动ID：{}", userId, activityId, e);
             return Response.<List<RaffleStrategyRuleWeightResponseDTO>>builder()
                     .code(ResponseCode.UN_ERROR.getCode())
                     .info(ResponseCode.UN_ERROR.getInfo())

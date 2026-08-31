@@ -49,7 +49,7 @@ public class StrategyRuleEntity {
             return Collections.emptyMap();
         }
         if (StringUtils.isBlank(ruleValue)) {
-            throw new IllegalArgumentException("rule_weight ruleValue cannot be blank");
+            throw new IllegalArgumentException("rule_weight规则值不能为空");
         }
 
         // 多个权重档位以任意连续空白字符分隔。
@@ -59,7 +59,7 @@ public class StrategyRuleEntity {
             // 每一组格式固定为“权重值:奖品ID,奖品ID,...”。
             String[] parts = ruleValueGroup.split(Constants.COLON, 2);
             if (parts.length != 2 || StringUtils.isBlank(parts[0]) || StringUtils.isBlank(parts[1])) {
-                throw new IllegalArgumentException("rule_weight invalid input format: " + ruleValueGroup);
+                throw new IllegalArgumentException("rule_weight规则格式错误：" + ruleValueGroup);
             }
 
             // 冒号右侧转换为领域层使用的奖品ID集合。
@@ -71,10 +71,10 @@ public class StrategyRuleEntity {
             try {
                 weight = Long.parseLong(parts[0].trim());
             } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException("rule_weight weight must be numeric: " + ruleValueGroup, ex);
+                throw new IllegalArgumentException("rule_weight权重必须为数字：" + ruleValueGroup, ex);
             }
             if (weight < 0 || resultMap.keySet().stream().anyMatch(key -> key.startsWith(parts[0].trim() + Constants.COLON))) {
-                throw new IllegalArgumentException("rule_weight contains invalid or duplicate weight: " + ruleValueGroup);
+                throw new IllegalArgumentException("rule_weight包含非法或重复的权重：" + ruleValueGroup);
             }
             // 保留完整分组字符串，确保装配和调度拼接出的key完全一致。
             resultMap.put(ruleValueGroup, awardIds);

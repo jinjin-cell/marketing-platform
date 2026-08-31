@@ -33,7 +33,7 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
      */
     @Override
     public DefaultChainFactory.StrategyAwardVO logic(String userId, Long strategyId) {
-        log.info("抽奖责任链-权重开始 userId: {} strategyId: {} ruleModel: {}", userId, strategyId, ruleModel());
+        log.info("抽奖责任链-权重开始，用户ID：{}，策略ID：{}，规则模型：{}", userId, strategyId, ruleModel());
 
         StrategyRuleEntity rule = repository.queryStrategyRule(strategyId, ruleModel());
         String ruleValue = rule == null ? null : rule.getRuleValue();
@@ -41,7 +41,7 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
         // 1. 解析权重规则值 4000:102,103,104,105 拆解为；4000 -> 4000:102,103,104,105 便于比对判断
         Map<Long, String> analyticalValueGroup = getAnalyticalValue(ruleValue);
         if (null == analyticalValueGroup || analyticalValueGroup.isEmpty()) {
-            log.warn("抽奖责任链-权重告警【策略配置权重，但ruleValue未配置相应值】 userId: {} strategyId: {} ruleModel: {}", userId, strategyId, ruleModel());
+            log.warn("抽奖责任链-权重告警【策略配置权重，但规则值未配置相应内容】，用户ID：{}，策略ID：{}，规则模型：{}", userId, strategyId, ruleModel());
             return next().logic(userId, strategyId);
         }
 
@@ -57,7 +57,6 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
          *                 nextValue = analyticalSortedKeyValue;
          *             }
          *         }
-         * 星球伙伴 @慢慢来 ID 6267 提供
          * Long nextValue = analyticalSortedKeys.stream()
          *      .filter(key -> userScore >= key)
          *      .max(Comparator.naturalOrder())
@@ -74,7 +73,7 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
         // 4. 权重抽奖
         if (null != nextValue) {
             Integer awardId = strategyDispatch.getRandomAwardId(strategyId, analyticalValueGroup.get(nextValue));
-            log.info("抽奖责任链-权重接管 userId: {} strategyId: {} ruleModel: {} awardId: {}", userId, strategyId, ruleModel(), awardId);
+            log.info("抽奖责任链-权重接管，用户ID：{}，策略ID：{}，规则模型：{}，奖品ID：{}", userId, strategyId, ruleModel(), awardId);
             return DefaultChainFactory.StrategyAwardVO.builder()
                     .awardId(awardId)
                     .logicModel(ruleModel())
@@ -82,7 +81,7 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
         }
 
         // 5. 过滤其他责任链
-        log.info("抽奖责任链-权重放行 userId: {} strategyId: {} ruleModel: {}", userId, strategyId, ruleModel());
+        log.info("抽奖责任链-权重放行，用户ID：{}，策略ID：{}，规则模型：{}", userId, strategyId, ruleModel());
         return next().logic(userId, strategyId);
     }
 
@@ -101,16 +100,16 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
             // 分割字符串以获取键和值
             String[] parts = ruleValueKey.split(Constants.COLON, 2);
             if (parts.length != 2 || parts[1].trim().isEmpty()) {
-                throw new IllegalArgumentException("rule_weight rule_rule invalid input format" + ruleValueKey);
+                throw new IllegalArgumentException("rule_weight规则格式错误：" + ruleValueKey);
             }
             long weight;
             try {
                 weight = Long.parseLong(parts[0].trim());
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("rule_weight weight must be numeric: " + ruleValueKey, e);
+                throw new IllegalArgumentException("rule_weight权重必须为数字：" + ruleValueKey, e);
             }
             if (weight < 0 || ruleValueMap.containsKey(weight)) {
-                throw new IllegalArgumentException("rule_weight contains invalid or duplicate weight: " + ruleValueKey);
+                throw new IllegalArgumentException("rule_weight包含非法或重复的权重：" + ruleValueKey);
             }
             ruleValueMap.put(weight, weight + Constants.COLON + parts[1].trim());
         }
