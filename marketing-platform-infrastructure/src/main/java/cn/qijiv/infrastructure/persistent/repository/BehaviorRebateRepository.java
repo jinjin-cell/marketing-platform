@@ -137,4 +137,25 @@ public class BehaviorRebateRepository implements IBehaviorRebateRepository {
 
     }
 
+    @Override
+    public List<BehaviorRebateOrderEntity> queryOrderByOutBusinessNo(String userId, String outBusinessNo) {
+        dbRouter.doRouter(userId);
+        try {
+            UserBehaviorRebateOrderPO request = new UserBehaviorRebateOrderPO();
+            request.setUserId(userId);
+            request.setOutBusinessNo(outBusinessNo);
+            List<UserBehaviorRebateOrderPO> rows = userBehaviorRebateOrderDao.queryOrderByOutBusinessNo(request);
+            List<BehaviorRebateOrderEntity> result = new ArrayList<>();
+            if (rows == null) return result;
+            for (UserBehaviorRebateOrderPO row : rows) {
+                result.add(BehaviorRebateOrderEntity.builder().userId(row.getUserId()).orderId(row.getOrderId())
+                        .behaviorType(row.getBehaviorType()).rebateDesc(row.getRebateDesc()).rebateType(row.getRebateType())
+                        .rebateConfig(row.getRebateConfig()).outBusinessNo(row.getOutBusinessNo()).bizId(row.getBizId()).build());
+            }
+            return result;
+        } finally {
+            dbRouter.clear();
+        }
+    }
+
 }

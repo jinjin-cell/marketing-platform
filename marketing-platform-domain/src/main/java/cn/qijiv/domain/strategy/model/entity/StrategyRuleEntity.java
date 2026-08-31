@@ -67,6 +67,15 @@ public class StrategyRuleEntity {
             for (String value : parts[1].split(Constants.SPLIT)) {
                 awardIds.add(Integer.parseInt(value.trim()));
             }
+            long weight;
+            try {
+                weight = Long.parseLong(parts[0].trim());
+            } catch (NumberFormatException ex) {
+                throw new IllegalArgumentException("rule_weight weight must be numeric: " + ruleValueGroup, ex);
+            }
+            if (weight < 0 || resultMap.keySet().stream().anyMatch(key -> key.startsWith(parts[0].trim() + Constants.COLON))) {
+                throw new IllegalArgumentException("rule_weight contains invalid or duplicate weight: " + ruleValueGroup);
+            }
             // 保留完整分组字符串，确保装配和调度拼接出的key完全一致。
             resultMap.put(ruleValueGroup, awardIds);
         }

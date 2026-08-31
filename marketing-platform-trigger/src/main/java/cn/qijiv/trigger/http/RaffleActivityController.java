@@ -3,13 +3,18 @@ package cn.qijiv.trigger.http;
 import cn.qijiv.api.IRaffleActivityService;
 import cn.qijiv.api.dto.ActivityDrawRequestDTO;
 import cn.qijiv.api.dto.ActivityDrawResponseDTO;
+import cn.qijiv.api.dto.UserActivityAccountRequestDTO;
+import cn.qijiv.api.dto.UserActivityAccountResponseDTO;
+import cn.qijiv.domain.activity.model.entity.ActivityAccountEntity;
 import cn.qijiv.domain.activity.model.entity.UserRaffleOrderEntity;
+import cn.qijiv.domain.activity.service.IRaffleActivityAccountQuotaService;
 import cn.qijiv.domain.activity.service.IRaffleActivityPartakeService;
 import cn.qijiv.domain.activity.service.armory.IActivityArmory;
 import cn.qijiv.domain.award.model.entity.UserAwardRecordEntity;
 import cn.qijiv.domain.award.model.valobj.AwardStateVO;
 import cn.qijiv.domain.award.service.IAwardService;
 import cn.qijiv.domain.rebate.model.entity.BehaviorEntity;
+import cn.qijiv.domain.rebate.model.entity.BehaviorRebateOrderEntity;
 import cn.qijiv.domain.rebate.model.valobj.BehaviorTypeVO;
 import cn.qijiv.domain.rebate.service.IBehaviorRebateService;
 import cn.qijiv.domain.strategy.model.entity.RaffleAwardEntity;
@@ -38,6 +43,8 @@ public class RaffleActivityController implements IRaffleActivityService {
 
     @Resource
     private IRaffleActivityPartakeService raffleActivityPartakeService;
+    @Resource
+    private IRaffleActivityAccountQuotaService raffleActivityAccountQuotaService;
     @Resource
     private IRaffleStrategy raffleStrategy;
     @Resource
@@ -214,6 +221,94 @@ public class RaffleActivityController implements IRaffleActivityService {
                     .build();
         }
     }
+
+    /**
+     * 判断是否签到接口
+     * <p>
+     * curl -X POST http://localhost:8091/api/v1/raffle/activity/is_calendar_sign_rebate -d "userId=xiaofuge" -H "Content-Type: application/x-www-form-urlencoded"
+     */
+    @RequestMapping(value = "is_calendar_sign_rebate", method = RequestMethod.POST)
+    @Override
+    public Response<Boolean> isCalendarSignRebate(@RequestParam String userId) {
+        try {
+            log.info("查询用户是否完成日历签到返利开始 userId:{}", userId);
+            if (StringUtils.isBlank(userId)) {
+                throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+            }
+            String outBusinessNo = LocalDate.now().format(DATE_FORMAT_DAY);
+            List<BehaviorRebateOrderEntity> behaviorRebateOrderEntities = behaviorRebateService.queryOrderByOutBusinessNo(userId, outBusinessNo);
+            log.info("查询用户是否完成日历签到返利完成 userId:{} orders.size:{}", userId, behaviorRebateOrderEntities.size());
+            return Response.<Boolean>builder()
+                    .code(ResponseCode.SUCCESS.getCode())
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    .data(!behaviorRebateOrderEntities.isEmpty()) // 只要不为空，则表示已经做了签到
+                    .build();
+        } catch (Exception e) {
+            log.error("查询用户是否完成日历签到返利失败 userId:{}", userId, e);
+            return Response.<Boolean>builder()
+                    .code(ResponseCode.UN_ERROR.getCode())
+                    .info(ResponseCode.UN_ERROR.getInfo())
+                    .data(false)
+                    .build();
+        }
+    }
+
+    /**
+     * 查询账户额度
+     * <p>
+     * curl --request POST \
+     * --url http://localhost:8091/api/v1/raffle/activity/query_user_activity_account \
+     * --header 'content-type: application/json' \
+     * --data '{
+     * "userId":"xiaofuge",
+     * "activityId": 100301
+     * }'
+     */
+    @RequestMapping(value = "query_user_activity_account", method = RequestMethod.POST)
+    @Override
+    public Response<UserActivityAccountResponseDTO> queryUserActivityAccount(@RequestBody UserActivityAccountRequestDTO request) {
+        String userId = request == null ? null : request.getUserId();
+        Long activityId = request == null ? null : request.getActivityId();
+        try {
+            log.info("查询用户活动账户开始 userId:{} activityId:{}", userId, activityId);
+            // 1. 参数校验
+            if (StringUtils.isBlank(userId) || activityId == null) {
+                throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+            }
+            ActivityAccountEntity activityAccountEntity = raffleActivityAccountQuotaService.queryActivityAccountEntity(activityId, userId);
+            if (activityAccountEntity == null) {
+                // 未充值过额度的用户也返回稳定结构，前端无需额外处理 null。
+                activityAccountEntity = ActivityAccountEntity.builder()
+                        .totalCount(0).totalCountSurplus(0).dayCount(0).dayCountSurplus(0)
+                        .monthCount(0).monthCountSurplus(0).build();
+            }
+            UserActivityAccountResponseDTO userActivityAccountResponseDTO = UserActivityAccountResponseDTO.builder()
+                    .totalCount(activityAccountEntity.getTotalCount())
+                    .totalCountSurplus(activityAccountEntity.getTotalCountSurplus())
+                    .dayCount(activityAccountEntity.getDayCount())
+                    .dayCountSurplus(activityAccountEntity.getDayCountSurplus())
+                    .monthCount(activityAccountEntity.getMonthCount())
+                    .monthCountSurplus(activityAccountEntity.getMonthCountSurplus())
+                    .build();
+            log.info("查询用户活动账户完成 userId:{} activityId:{} dto:{}", userId, activityId, JSON.toJSONString(userActivityAccountResponseDTO));
+            return Response.<UserActivityAccountResponseDTO>builder()
+                    .code(ResponseCode.SUCCESS.getCode())
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    .data(userActivityAccountResponseDTO)
+                    .build();
+        } catch (AppException e) {
+            log.warn("查询用户活动账户参数错误 userId:{} activityId:{}", userId, activityId);
+            return Response.<UserActivityAccountResponseDTO>builder().code(e.getCode()).info(e.getInfo()).build();
+        } catch (Exception e) {
+            log.error("查询用户活动账户失败 userId:{} activityId:{}", userId, activityId, e);
+            return Response.<UserActivityAccountResponseDTO>builder()
+                    .code(ResponseCode.UN_ERROR.getCode())
+                    .info(ResponseCode.UN_ERROR.getInfo())
+                    .build();
+        }
+    }
+
+
 
 
 }

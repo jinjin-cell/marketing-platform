@@ -108,4 +108,10 @@ public class BehaviorRebateService implements IBehaviorRebateService {
         return orderIds;
     }
 
+    @Override
+    public List<BehaviorRebateOrderEntity> queryOrderByOutBusinessNo(String userId, String outBusinessNo) {
+        if (StringUtils.isBlank(userId) || StringUtils.isBlank(outBusinessNo)) return new ArrayList<>();
+        return behaviorRebateRepository.queryOrderByOutBusinessNo(userId, outBusinessNo);
+    }
+
 }

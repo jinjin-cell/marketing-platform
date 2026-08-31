@@ -1,5 +1,6 @@
 package cn.qijiv.domain.activity.service;
 
+import cn.qijiv.domain.activity.model.entity.ActivityAccountEntity;
 import cn.qijiv.domain.activity.model.entity.SkuRechargeEntity;
 
 
@@ -28,5 +29,22 @@ public interface IRaffleActivityAccountQuotaService {
      */
     Integer queryRaffleActivityAccountDayPartakeCount(Long activityId, String userId);
 
+    /**
+     * 查询用户在某活动的账户额度
+     *
+     * @param activityId 活动ID
+     * @param userId     用户ID
+     * @return 活动账户额度
+     */
+    ActivityAccountEntity queryActivityAccountEntity(Long activityId, String userId);
+
+    /**
+     * 查询用户在某活动已参与的抽奖次数
+     *
+     * @param activityId 活动ID
+     * @param userId     用户ID
+     * @return 已参与次数
+     */
+    Integer queryRaffleActivityAccountPartakeCount(Long activityId, String userId);
 }
 

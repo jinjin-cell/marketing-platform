@@ -13,6 +13,8 @@ import cn.qijiv.domain.strategy.model.valobj.RuleTreeNodeVO;
 import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
 import cn.qijiv.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 import cn.qijiv.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
+import cn.qijiv.domain.strategy.model.valobj.RuleWeightVO;
+import cn.qijiv.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -56,6 +58,10 @@ public class StrategyRespository implements IStrategyRepository {
     /** 抽奖活动用户日次数 DAO */
     @Resource
     private IRaffleActivityAccountDayDao raffleActivityAccountDayDao;
+
+    /** 活动总账户 DAO，用于权重规则比较累计抽奖次数。 */
+    @Resource
+    private IRaffleActivityAccountDao raffleActivityAccountDao;
 
     /** 策略奖品 DAO */
     @Resource
@@ -530,6 +536,37 @@ public class StrategyRespository implements IStrategyRepository {
         if (null == raffleActivityAccountDay) return 0;
         // 总次数 - 剩余次数 = 今日已参与次数
         return raffleActivityAccountDay.getDayCount() - raffleActivityAccountDay.getDayCountSurplus();
+    }
+
+    @Override
+    public Integer queryActivityAccountTotalUseCount(String userId, Long strategyId) {
+        Long activityId = raffleActivityDao.queryActivityIdByStrategyId(strategyId);
+        if (activityId == null) return 0;
+        RaffleActivityAccountPO request = new RaffleActivityAccountPO();
+        request.setUserId(userId);
+        request.setActivityId(activityId);
+        RaffleActivityAccountPO account = raffleActivityAccountDao.queryActivityAccountByUserId(request);
+        if (account == null || account.getTotalCount() == null || account.getTotalCountSurplus() == null) return 0;
+        return Math.max(0, account.getTotalCount() - account.getTotalCountSurplus());
+    }
+
+    @Override
+    public List<RuleWeightVO> queryAwardRuleWeight(Long strategyId) {
+        if (strategyId == null) return Collections.emptyList();
+        StrategyRulePO rule = strategyRuleDao.queryStrategyRule(strategyId, DefaultChainFactory.RULE_WEIGHT);
+        if (rule == null || rule.getRuleValue() == null || rule.getRuleValue().trim().isEmpty()) return Collections.emptyList();
+        Map<String, List<Integer>> groups = StrategyRuleEntity.builder().ruleModel(DefaultChainFactory.RULE_WEIGHT).ruleValue(rule.getRuleValue()).build().getRuleWeightValues();
+        List<RuleWeightVO> result = new ArrayList<>();
+        for (Map.Entry<String, List<Integer>> group : groups.entrySet()) {
+            List<RuleWeightVO.Award> awards = new ArrayList<>();
+            for (Integer awardId : group.getValue()) {
+                StrategyAwardEntity entity = queryStrategyAwardEntity(strategyId, awardId);
+                if (entity != null) awards.add(RuleWeightVO.Award.builder().awardId(awardId).awardTitle(entity.getAwardTitle()).build());
+            }
+            result.add(RuleWeightVO.builder().ruleValue(group.getKey()).weight(Integer.valueOf(group.getKey().split(Constants.COLON, 2)[0].trim())).awardIds(group.getValue()).awardList(awards).build());
+        }
+        result.sort((a, b) -> Integer.compare(a.getWeight(), b.getWeight()));
+        return result;
     }
 
 
