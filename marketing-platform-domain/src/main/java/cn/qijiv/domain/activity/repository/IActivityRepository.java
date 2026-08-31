@@ -171,5 +171,11 @@ public interface IActivityRepository {
      * @return 参与次数
      */
     Integer queryRaffleActivityAccountDayPartakeCount(Long activityId, String userId);
+
+    /** 查询用户在活动下的总额度账户；不存在时返回 null。 */
+    ActivityAccountEntity queryActivityAccountEntity(Long activityId, String userId);
+
+    /** 查询用户在活动下已使用的总抽奖次数。 */
+    Integer queryRaffleActivityAccountPartakeCount(Long activityId, String userId);
 }
 

@@ -1,6 +1,7 @@
 package cn.qijiv.domain.rebate.service;
 
 import cn.qijiv.domain.rebate.model.entity.BehaviorEntity;
+import cn.qijiv.domain.rebate.model.entity.BehaviorRebateOrderEntity;
 
 import java.util.List;
 
@@ -20,4 +21,12 @@ public interface IBehaviorRebateService {
      */
     List<String> createOrder(BehaviorEntity behaviorEntity);
 
+    /**
+     * 根据外部业务单号查询返利订单
+     *
+     * @param userId         用户ID
+     * @param outBusinessNo  外部业务单号
+     * @return 返利订单列表
+     */
+    List<BehaviorRebateOrderEntity> queryOrderByOutBusinessNo(String userId, String outBusinessNo);
 }

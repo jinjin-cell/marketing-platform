@@ -3,6 +3,7 @@ package cn.qijiv.infrastructure.persistent.dao;
 import cn.qijiv.infrastructure.persistent.db.annotation.DBRouterStrategy;
 import cn.qijiv.infrastructure.persistent.po.UserBehaviorRebateOrderPO;
 import org.apache.ibatis.annotations.Mapper;
+import java.util.List;
 
 /**
  * 用户行为返利订单数据访问层
@@ -20,5 +21,8 @@ public interface IUserBehaviorRebateOrderDao {
      * @param userBehaviorRebateOrder 用户行为返利订单
      */
     void insert(UserBehaviorRebateOrderPO userBehaviorRebateOrder);
+
+    @cn.qijiv.infrastructure.persistent.db.annotation.DBRouter
+    List<UserBehaviorRebateOrderPO> queryOrderByOutBusinessNo(UserBehaviorRebateOrderPO request);
 
 }

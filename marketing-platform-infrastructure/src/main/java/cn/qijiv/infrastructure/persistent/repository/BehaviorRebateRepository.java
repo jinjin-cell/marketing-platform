@@ -110,7 +110,7 @@ public class BehaviorRebateRepository implements IBehaviorRebateRepository {
                     return 1;
                 } catch (DuplicateKeyException e) {
                     status.setRollbackOnly();
-                    log.error("写入返利记录，唯一索引冲突 userId: {}", userId, e);
+                    log.error("写入返利记录，唯一索引冲突，用户ID：{}", userId, e);
                     throw new AppException(ResponseCode.INDEX_DUP.getCode(), e);
                 }
             });
@@ -126,7 +126,7 @@ public class BehaviorRebateRepository implements IBehaviorRebateRepository {
                     // 更新数据库记录，task 任务表
                     taskDao.updateTaskSendMessageCompleted(task);
                 } catch (Exception e) {
-                    log.error("写入返利记录，发送MQ消息失败 userId: {} topic: {}",
+                    log.error("写入返利记录，发送MQ消息失败，用户ID：{}，消息主题：{}",
                             userId, taskEntity.getTopic(), e);
                     taskDao.updateTaskSendMessageFail(task);
                 }
@@ -135,6 +135,27 @@ public class BehaviorRebateRepository implements IBehaviorRebateRepository {
             dbRouter.clear();
         }
 
+    }
+
+    @Override
+    public List<BehaviorRebateOrderEntity> queryOrderByOutBusinessNo(String userId, String outBusinessNo) {
+        dbRouter.doRouter(userId);
+        try {
+            UserBehaviorRebateOrderPO request = new UserBehaviorRebateOrderPO();
+            request.setUserId(userId);
+            request.setOutBusinessNo(outBusinessNo);
+            List<UserBehaviorRebateOrderPO> rows = userBehaviorRebateOrderDao.queryOrderByOutBusinessNo(request);
+            List<BehaviorRebateOrderEntity> result = new ArrayList<>();
+            if (rows == null) return result;
+            for (UserBehaviorRebateOrderPO row : rows) {
+                result.add(BehaviorRebateOrderEntity.builder().userId(row.getUserId()).orderId(row.getOrderId())
+                        .behaviorType(row.getBehaviorType()).rebateDesc(row.getRebateDesc()).rebateType(row.getRebateType())
+                        .rebateConfig(row.getRebateConfig()).outBusinessNo(row.getOutBusinessNo()).bizId(row.getBizId()).build());
+            }
+            return result;
+        } finally {
+            dbRouter.clear();
+        }
     }
 
 }

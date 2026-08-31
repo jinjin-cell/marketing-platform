@@ -625,5 +625,20 @@ public class ActivityRepository implements IActivityRepository {
         return activityAccountDayEntity.getDayCount() - activityAccountDayEntity.getDayCountSurplus();
     }
 
+    @Override
+    public ActivityAccountEntity queryActivityAccountEntity(Long activityId, String userId) {
+        return queryActivityAccountByUserId(userId, activityId);
+    }
+
+    @Override
+    public Integer queryRaffleActivityAccountPartakeCount(Long activityId, String userId) {
+        ActivityAccountEntity account = queryActivityAccountByUserId(userId, activityId);
+        if (account == null || account.getTotalCount() == null || account.getTotalCountSurplus() == null) {
+            return 0;
+        }
+        // 权重规则比较的是活动维度累计使用次数，而不是当天次数。
+        return Math.max(0, account.getTotalCount() - account.getTotalCountSurplus());
+    }
+
 
 }
