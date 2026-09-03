@@ -11,7 +11,7 @@
  Target Server Version : 80032 (8.0.32)
  File Encoding         : 65001
 
- Date: 28/08/2026 23:42:41
+ Date: 03/09/2026 13:38:39
 */
 
 SET NAMES utf8mb4;
@@ -35,12 +35,16 @@ CREATE TABLE `raffle_activity_account`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_user_id_activity_id`(`user_id` ASC, `activity_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动账户表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动账户表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of raffle_activity_account
 -- ----------------------------
 INSERT INTO `raffle_activity_account` VALUES (2, 'xiaofuge', 100301, 4, 3, 4, 3, 4, 3, '2024-03-23 12:40:56', '2024-03-23 13:16:40');
+INSERT INTO `raffle_activity_account` VALUES (3, 'xiaofuge1', 100301, 10, 9, 10, 9, 10, 9, '2024-05-03 16:01:44', '2024-05-04 12:51:32');
+INSERT INTO `raffle_activity_account` VALUES (4, 'xiaofuge2', 100301, 20, 5, 20, 5, 20, 5, '2024-05-04 12:52:58', '2024-05-04 13:57:32');
+INSERT INTO `raffle_activity_account` VALUES (5, 'user001', 100301, 100, 96, 100, 96, 100, 96, '2024-05-24 22:30:54', '2024-05-24 22:34:37');
+INSERT INTO `raffle_activity_account` VALUES (6, 'user002', 100301, 100, 100, 100, 100, 100, 100, '2024-05-24 22:30:54', '2024-05-24 22:30:54');
 
 -- ----------------------------
 -- Table structure for raffle_activity_account_day
@@ -57,11 +61,14 @@ CREATE TABLE `raffle_activity_account_day`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_user_id_activity_id_day`(`user_id` ASC, `activity_id` ASC, `day` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动账户表-日次数' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动账户表-日次数' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of raffle_activity_account_day
 -- ----------------------------
+INSERT INTO `raffle_activity_account_day` VALUES (1, 'xiaofuge1', 100301, '2024-05-04', 10, 9, '2024-05-04 12:51:32', '2024-05-04 12:51:32');
+INSERT INTO `raffle_activity_account_day` VALUES (2, 'xiaofuge2', 100301, '2024-05-04', 20, 5, '2024-05-04 12:53:01', '2024-05-04 13:57:32');
+INSERT INTO `raffle_activity_account_day` VALUES (3, 'user001', 100301, '2024-05-24', 100, 96, '2024-05-24 22:31:47', '2024-05-24 22:34:37');
 
 -- ----------------------------
 -- Table structure for raffle_activity_account_month
@@ -78,11 +85,14 @@ CREATE TABLE `raffle_activity_account_month`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_user_id_activity_id_month`(`user_id` ASC, `activity_id` ASC, `month` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动账户表-月次数' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动账户表-月次数' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of raffle_activity_account_month
 -- ----------------------------
+INSERT INTO `raffle_activity_account_month` VALUES (1, 'xiaofuge1', 100301, '2024-05', 10, 9, '2024-05-04 12:51:32', '2024-05-04 12:51:32');
+INSERT INTO `raffle_activity_account_month` VALUES (2, 'xiaofuge2', 100301, '2024-05', 20, 5, '2024-05-04 12:53:01', '2024-05-04 13:57:32');
+INSERT INTO `raffle_activity_account_month` VALUES (3, 'user001', 100301, '2024-05', 100, 96, '2024-05-24 22:31:47', '2024-05-24 22:34:37');
 
 -- ----------------------------
 -- Table structure for raffle_activity_order_000
@@ -108,11 +118,13 @@ CREATE TABLE `raffle_activity_order_000`  (
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   UNIQUE INDEX `uq_out_business_no`(`out_business_no` ASC) USING BTREE,
   INDEX `idx_user_id_activity_id`(`user_id` ASC, `activity_id` ASC, `state` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动单' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of raffle_activity_order_000
 -- ----------------------------
+INSERT INTO `raffle_activity_order_000` VALUES (1, 'xiaofuge1', 9011, 100301, '测试活动', 100006, '831917125310', '2024-05-03 08:01:44', 10, 10, 10, 'completed', 'xiaofuge1_sku_20240503', '2024-05-03 16:01:44', '2024-05-03 16:01:44');
+INSERT INTO `raffle_activity_order_000` VALUES (2, 'user001', 9011, 100301, '测试活动', 100006, '923549663927', '2024-05-24 14:30:55', 100, 100, 100, 'completed', 'user001_sku_20240524', '2024-05-24 22:30:54', '2024-05-24 22:30:54');
 
 -- ----------------------------
 -- Table structure for raffle_activity_order_001
@@ -138,12 +150,13 @@ CREATE TABLE `raffle_activity_order_001`  (
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   UNIQUE INDEX `uq_out_business_no`(`out_business_no` ASC) USING BTREE,
   INDEX `idx_user_id_activity_id`(`user_id` ASC, `activity_id` ASC, `state` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动单' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of raffle_activity_order_001
 -- ----------------------------
 INSERT INTO `raffle_activity_order_001` VALUES (3, 'xiaofuge', 9011, 100301, '测试活动', 100006, '383240888158', '2024-03-23 04:38:23', 1, 1, 1, 'completed', '700091009111', '2024-03-23 12:38:23', '2024-03-23 12:38:23');
+INSERT INTO `raffle_activity_order_001` VALUES (4, 'user002', 9011, 100301, '测试活动', 100006, '165083654323', '2024-05-24 14:30:55', 100, 100, 100, 'completed', 'user002_sku_20240524', '2024-05-24 22:30:54', '2024-05-24 22:30:54');
 
 -- ----------------------------
 -- Table structure for raffle_activity_order_002
@@ -169,7 +182,7 @@ CREATE TABLE `raffle_activity_order_002`  (
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   UNIQUE INDEX `uq_out_business_no`(`out_business_no` ASC) USING BTREE,
   INDEX `idx_user_id_activity_id`(`user_id` ASC, `activity_id` ASC, `state` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动单' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of raffle_activity_order_002
@@ -199,11 +212,12 @@ CREATE TABLE `raffle_activity_order_003`  (
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   UNIQUE INDEX `uq_out_business_no`(`out_business_no` ASC) USING BTREE,
   INDEX `idx_user_id_activity_id`(`user_id` ASC, `activity_id` ASC, `state` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动单' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of raffle_activity_order_003
 -- ----------------------------
+INSERT INTO `raffle_activity_order_003` VALUES (2, 'xiaofuge2', 9011, 100301, '测试活动', 100006, '942458887115', '2024-05-04 05:07:53', 10, 10, 10, 'completed', 'xiaofuge2_sku_20240504', '2024-05-04 13:07:53', '2024-05-04 13:07:53');
 
 -- ----------------------------
 -- Table structure for task
@@ -213,7 +227,7 @@ CREATE TABLE `task`  (
   `id` int UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `user_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '用户ID',
   `topic` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '消息主题',
-  `message_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '消息编号',
+  `message_id` varchar(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '消息编号',
   `message` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '消息主体',
   `state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'create' COMMENT '任务状态；create-创建、completed-完成、fail-失败',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -222,46 +236,41 @@ CREATE TABLE `task`  (
   UNIQUE INDEX `uq_message_id`(`message_id` ASC) USING BTREE,
   INDEX `idx_state`(`state` ASC) USING BTREE,
   INDEX `idx_create_time`(`update_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 36 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '任务表，发送MQ' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '任务表，发送MQ' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of task
 -- ----------------------------
-INSERT INTO `task` VALUES (1, 'xiaofuge', 'send_award', '23913710462', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"23913710462\",\"timestamp\":1712374909975}', 'completed', '2024-04-06 11:41:50', '2024-04-06 12:14:50');
-INSERT INTO `task` VALUES (2, 'xiaofuge', 'send_award', '33004806135', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"33004806135\",\"timestamp\":1712375273609}', 'completed', '2024-04-06 11:47:54', '2024-04-06 12:14:50');
-INSERT INTO `task` VALUES (3, 'xiaofuge', 'send_award', '61315401992', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"61315401992\",\"timestamp\":1712377009778}', 'completed', '2024-04-06 12:16:50', '2024-04-06 12:16:50');
-INSERT INTO `task` VALUES (4, 'xiaofuge', 'send_award', '74920280321', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"74920280321\",\"timestamp\":1712377010878}', 'completed', '2024-04-06 12:16:50', '2024-04-06 12:16:50');
-INSERT INTO `task` VALUES (5, 'xiaofuge', 'send_award', '71692388884', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"71692388884\",\"timestamp\":1712377011390}', 'completed', '2024-04-06 12:16:51', '2024-04-06 12:16:51');
-INSERT INTO `task` VALUES (6, 'xiaofuge', 'send_award', '11524874230', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"11524874230\",\"timestamp\":1712377011913}', 'completed', '2024-04-06 12:16:51', '2024-04-06 12:16:51');
-INSERT INTO `task` VALUES (7, 'xiaofuge', 'send_award', '39972412889', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"39972412889\",\"timestamp\":1712377012434}', 'completed', '2024-04-06 12:16:52', '2024-04-06 12:16:52');
-INSERT INTO `task` VALUES (8, 'xiaofuge', 'send_award', '79019640497', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"79019640497\",\"timestamp\":1712377012955}', 'completed', '2024-04-06 12:16:52', '2024-04-06 12:16:52');
-INSERT INTO `task` VALUES (9, 'xiaofuge', 'send_award', '97077031398', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"97077031398\",\"timestamp\":1712377013498}', 'completed', '2024-04-06 12:16:53', '2024-04-06 12:16:53');
-INSERT INTO `task` VALUES (10, 'xiaofuge', 'send_award', '08720582836', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"08720582836\",\"timestamp\":1712377014017}', 'completed', '2024-04-06 12:16:54', '2024-04-06 12:16:54');
-INSERT INTO `task` VALUES (11, 'xiaofuge', 'send_award', '60787815183', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"60787815183\",\"timestamp\":1712377014529}', 'completed', '2024-04-06 12:16:54', '2024-04-06 12:16:54');
-INSERT INTO `task` VALUES (12, 'xiaofuge', 'send_award', '97145040946', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"97145040946\",\"timestamp\":1712377015040}', 'completed', '2024-04-06 12:16:55', '2024-04-06 12:16:55');
-INSERT INTO `task` VALUES (13, 'xiaofuge', 'send_award', '40165031868', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"40165031868\",\"timestamp\":1712377015553}', 'completed', '2024-04-06 12:16:55', '2024-04-06 12:16:55');
-INSERT INTO `task` VALUES (14, 'xiaofuge', 'send_award', '31142176572', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"31142176572\",\"timestamp\":1712377016066}', 'completed', '2024-04-06 12:16:56', '2024-04-06 12:16:56');
-INSERT INTO `task` VALUES (15, 'xiaofuge', 'send_award', '54723488249', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"54723488249\",\"timestamp\":1712377016577}', 'completed', '2024-04-06 12:16:56', '2024-04-06 12:16:56');
-INSERT INTO `task` VALUES (16, 'xiaofuge', 'send_award', '94553316274', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"94553316274\",\"timestamp\":1712377017090}', 'completed', '2024-04-06 12:16:57', '2024-04-06 16:07:00');
-INSERT INTO `task` VALUES (17, 'xiaofuge', 'send_award', '47638237311', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"47638237311\",\"timestamp\":1712377017601}', 'completed', '2024-04-06 12:16:57', '2024-04-06 16:07:00');
-INSERT INTO `task` VALUES (18, 'xiaofuge', 'send_award', '08472548108', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"08472548108\",\"timestamp\":1712377018112}', 'completed', '2024-04-06 12:16:58', '2024-04-06 16:07:00');
-INSERT INTO `task` VALUES (19, 'xiaofuge', 'send_award', '01704262897', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"01704262897\",\"timestamp\":1712391038041}', 'completed', '2024-04-06 16:10:38', '2024-04-06 16:10:38');
-INSERT INTO `task` VALUES (20, 'xiaofuge', 'send_award', '96818112357', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"96818112357\",\"timestamp\":1712391039234}', 'completed', '2024-04-06 16:10:39', '2024-04-06 16:10:39');
-INSERT INTO `task` VALUES (21, 'xiaofuge', 'send_award', '39815817631', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"39815817631\",\"timestamp\":1712391039751}', 'completed', '2024-04-06 16:10:39', '2024-04-06 16:10:39');
-INSERT INTO `task` VALUES (22, 'xiaofuge', 'send_award', '44228382875', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"44228382875\",\"timestamp\":1712391040268}', 'completed', '2024-04-06 16:10:40', '2024-04-06 16:10:40');
-INSERT INTO `task` VALUES (23, 'xiaofuge', 'send_award', '61240314870', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"61240314870\",\"timestamp\":1712391040784}', 'completed', '2024-04-06 16:10:40', '2024-04-06 16:10:40');
-INSERT INTO `task` VALUES (24, 'xiaofuge', 'send_award', '30911821347', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"30911821347\",\"timestamp\":1712391041333}', 'completed', '2024-04-06 16:10:41', '2024-04-06 16:10:41');
-INSERT INTO `task` VALUES (25, 'xiaofuge', 'send_award', '41575602711', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"41575602711\",\"timestamp\":1712391041849}', 'completed', '2024-04-06 16:10:41', '2024-04-06 16:10:41');
-INSERT INTO `task` VALUES (26, 'xiaofuge', 'send_award', '72379603310', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"72379603310\",\"timestamp\":1712391042361}', 'completed', '2024-04-06 16:10:42', '2024-04-06 16:10:42');
-INSERT INTO `task` VALUES (27, 'xiaofuge', 'send_award', '51671684313', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"51671684313\",\"timestamp\":1712391042875}', 'completed', '2024-04-06 16:10:42', '2024-04-06 16:10:42');
-INSERT INTO `task` VALUES (28, 'xiaofuge', 'send_award', '11840468669', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"11840468669\",\"timestamp\":1712391043390}', 'completed', '2024-04-06 16:10:43', '2024-04-06 16:10:43');
-INSERT INTO `task` VALUES (29, 'xiaofuge', 'send_award', '18467905170', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"18467905170\",\"timestamp\":1712391043908}', 'completed', '2024-04-06 16:10:43', '2024-04-06 16:10:43');
-INSERT INTO `task` VALUES (30, 'xiaofuge', 'send_award', '33233781451', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"33233781451\",\"timestamp\":1712391044424}', 'completed', '2024-04-06 16:10:44', '2024-04-06 16:10:44');
-INSERT INTO `task` VALUES (31, 'xiaofuge', 'send_award', '09679212052', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"09679212052\",\"timestamp\":1712391044938}', 'completed', '2024-04-06 16:10:44', '2024-04-06 16:10:44');
-INSERT INTO `task` VALUES (32, 'xiaofuge', 'send_award', '96862889309', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"96862889309\",\"timestamp\":1712391045450}', 'completed', '2024-04-06 16:10:45', '2024-04-06 16:10:45');
-INSERT INTO `task` VALUES (33, 'xiaofuge', 'send_award', '69912628282', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"69912628282\",\"timestamp\":1712391045962}', 'completed', '2024-04-06 16:10:45', '2024-04-06 16:10:45');
-INSERT INTO `task` VALUES (34, 'xiaofuge', 'send_award', '26021447219', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"26021447219\",\"timestamp\":1712391046477}', 'completed', '2024-04-06 16:10:46', '2026-08-19 18:32:42');
-INSERT INTO `task` VALUES (35, 'xiaofuge', 'send_award', '29510804265', '{\"data\":{\"awardId\":101,\"awardTitle\":\"OpenAI 增加使用次数\",\"userId\":\"xiaofuge\"},\"id\":\"29510804265\",\"timestamp\":1712391047005}', 'completed', '2024-04-06 16:10:47', '2026-08-19 18:32:42');
+INSERT INTO `task` VALUES (1, 'xiaofuge1', 'send_rebate', '54825531405', '{\"data\":{\"bizId\":\"xiaofuge1_sku_20240503\",\"rebateConfig\":\"9011\",\"rebateType\":\"sku\",\"userId\":\"xiaofuge1\"},\"id\":\"54825531405\",\"timestamp\":1714723302543}', 'completed', '2024-05-03 16:01:43', '2024-05-03 16:01:43');
+INSERT INTO `task` VALUES (2, 'xiaofuge1', 'send_rebate', '43189560552', '{\"data\":{\"bizId\":\"xiaofuge1_integral_20240503\",\"rebateConfig\":\"10\",\"rebateType\":\"integral\",\"userId\":\"xiaofuge1\"},\"id\":\"43189560552\",\"timestamp\":1714723302551}', 'completed', '2024-05-03 16:01:43', '2024-05-03 16:01:43');
+INSERT INTO `task` VALUES (3, 'xiaofuge1', 'send_award', '68594836687', '{\"data\":{\"awardId\":104,\"awardTitle\":\"小米台灯\",\"userId\":\"xiaofuge1\"},\"id\":\"68594836687\",\"timestamp\":1714798292665}', 'completed', '2024-05-04 12:51:32', '2024-05-04 12:51:32');
+INSERT INTO `task` VALUES (4, 'xiaofuge2', 'send_rebate', '99573670989', '{\"data\":{\"bizId\":\"xiaofuge2_sku_20240504\",\"rebateConfig\":\"9011\",\"rebateType\":\"sku\",\"userId\":\"xiaofuge2\"},\"id\":\"99573670989\",\"timestamp\":1714798377892}', 'completed', '2024-05-04 12:52:57', '2024-05-04 12:52:57');
+INSERT INTO `task` VALUES (5, 'xiaofuge2', 'send_rebate', '86991437226', '{\"data\":{\"bizId\":\"xiaofuge2_integral_20240504\",\"rebateConfig\":\"10\",\"rebateType\":\"integral\",\"userId\":\"xiaofuge2\"},\"id\":\"86991437226\",\"timestamp\":1714798377895}', 'completed', '2024-05-04 12:52:57', '2024-05-04 12:52:57');
+INSERT INTO `task` VALUES (6, 'xiaofuge2', 'send_award', '81688408328', '{\"data\":{\"awardId\":102,\"awardTitle\":\"OpenAI会员卡\",\"userId\":\"xiaofuge2\"},\"id\":\"81688408328\",\"timestamp\":1714798382103}', 'completed', '2024-05-04 12:53:02', '2024-05-04 12:53:02');
+INSERT INTO `task` VALUES (7, 'xiaofuge2', 'send_award', '42907626790', '{\"data\":{\"awardId\":104,\"awardTitle\":\"小米台灯\",\"userId\":\"xiaofuge2\"},\"id\":\"42907626790\",\"timestamp\":1714798722679}', 'completed', '2024-05-04 12:58:42', '2024-05-04 12:58:42');
+INSERT INTO `task` VALUES (8, 'xiaofuge2', 'send_award', '85155176747', '{\"data\":{\"awardId\":102,\"awardTitle\":\"OpenAI会员卡\",\"userId\":\"xiaofuge2\"},\"id\":\"85155176747\",\"timestamp\":1714798808373}', 'completed', '2024-05-04 13:00:08', '2024-05-04 13:00:08');
+INSERT INTO `task` VALUES (9, 'xiaofuge2', 'send_award', '76843118145', '{\"data\":{\"awardId\":101,\"awardTitle\":\"随机积分\",\"userId\":\"xiaofuge2\"},\"id\":\"76843118145\",\"timestamp\":1714799138341}', 'completed', '2024-05-04 13:05:38', '2024-05-04 13:05:38');
+INSERT INTO `task` VALUES (10, 'xiaofuge2', 'send_award', '60195171213', '{\"data\":{\"awardId\":101,\"awardTitle\":\"随机积分\",\"userId\":\"xiaofuge2\"},\"id\":\"60195171213\",\"timestamp\":1714799145979}', 'completed', '2024-05-04 13:05:45', '2024-05-04 13:05:45');
+INSERT INTO `task` VALUES (11, 'xiaofuge2', 'send_award', '94121994871', '{\"data\":{\"awardId\":106,\"awardTitle\":\"轻奢办公椅\",\"userId\":\"xiaofuge2\"},\"id\":\"94121994871\",\"timestamp\":1714799152785}', 'completed', '2024-05-04 13:05:52', '2024-05-04 13:05:52');
+INSERT INTO `task` VALUES (12, 'xiaofuge2', 'send_award', '84058820142', '{\"data\":{\"awardId\":108,\"awardTitle\":\"暴走玩偶\",\"userId\":\"xiaofuge2\"},\"id\":\"84058820142\",\"timestamp\":1714799159912}', 'completed', '2024-05-04 13:05:59', '2024-05-04 13:05:59');
+INSERT INTO `task` VALUES (13, 'xiaofuge2', 'send_award', '43171330176', '{\"data\":{\"awardId\":107,\"awardTitle\":\"小霸王游戏机\",\"userId\":\"xiaofuge2\"},\"id\":\"43171330176\",\"timestamp\":1714799166780}', 'completed', '2024-05-04 13:06:06', '2024-05-04 13:06:06');
+INSERT INTO `task` VALUES (14, 'xiaofuge2', 'send_award', '84240245488', '{\"data\":{\"awardId\":108,\"awardTitle\":\"暴走玩偶\",\"userId\":\"xiaofuge2\"},\"id\":\"84240245488\",\"timestamp\":1714799177736}', 'completed', '2024-05-04 13:06:17', '2024-05-04 13:06:17');
+INSERT INTO `task` VALUES (15, 'xiaofuge2', 'send_award', '95184575016', '{\"data\":{\"awardId\":103,\"awardTitle\":\"支付优惠券\",\"userId\":\"xiaofuge2\"},\"id\":\"95184575016\",\"timestamp\":1714799184841}', 'completed', '2024-05-04 13:06:24', '2024-05-04 13:06:24');
+INSERT INTO `task` VALUES (16, 'xiaofuge2', 'send_rebate', '18731063175', '{\"data\":{\"bizId\":\"xiaofuge2_sku_20240504\",\"rebateConfig\":\"9011\",\"rebateType\":\"sku\",\"userId\":\"xiaofuge2\"},\"id\":\"18731063175\",\"timestamp\":1714799273317}', 'completed', '2024-05-04 13:07:53', '2024-05-04 13:07:53');
+INSERT INTO `task` VALUES (17, 'xiaofuge2', 'send_rebate', '55910936496', '{\"data\":{\"bizId\":\"xiaofuge2_integral_20240504\",\"rebateConfig\":\"10\",\"rebateType\":\"integral\",\"userId\":\"xiaofuge2\"},\"id\":\"55910936496\",\"timestamp\":1714799273318}', 'completed', '2024-05-04 13:07:53', '2024-05-04 13:07:53');
+INSERT INTO `task` VALUES (18, 'xiaofuge2', 'send_award', '62395221004', '{\"data\":{\"awardId\":103,\"awardTitle\":\"支付优惠券\",\"userId\":\"xiaofuge2\"},\"id\":\"62395221004\",\"timestamp\":1714799286429}', 'completed', '2024-05-04 13:08:06', '2024-05-04 13:08:06');
+INSERT INTO `task` VALUES (19, 'xiaofuge2', 'send_award', '82372459539', '{\"data\":{\"awardId\":103,\"awardTitle\":\"支付优惠券\",\"userId\":\"xiaofuge2\"},\"id\":\"82372459539\",\"timestamp\":1714802223761}', 'completed', '2024-05-04 13:57:03', '2024-05-04 13:57:03');
+INSERT INTO `task` VALUES (20, 'xiaofuge2', 'send_award', '56572252891', '{\"data\":{\"awardId\":103,\"awardTitle\":\"支付优惠券\",\"userId\":\"xiaofuge2\"},\"id\":\"56572252891\",\"timestamp\":1714802231616}', 'completed', '2024-05-04 13:57:11', '2024-05-04 13:57:11');
+INSERT INTO `task` VALUES (21, 'xiaofuge2', 'send_award', '40606839519', '{\"data\":{\"awardId\":103,\"awardTitle\":\"支付优惠券\",\"userId\":\"xiaofuge2\"},\"id\":\"40606839519\",\"timestamp\":1714802240195}', 'completed', '2024-05-04 13:57:20', '2024-05-04 13:57:20');
+INSERT INTO `task` VALUES (22, 'xiaofuge2', 'send_award', '99508680162', '{\"data\":{\"awardId\":102,\"awardTitle\":\"OpenAI会员卡\",\"userId\":\"xiaofuge2\"},\"id\":\"99508680162\",\"timestamp\":1714802252287}', 'completed', '2024-05-04 13:57:32', '2024-05-04 13:57:32');
+INSERT INTO `task` VALUES (23, 'user001', 'send_rebate', '73773124323', '{\"data\":{\"bizId\":\"user001_sku_20240524\",\"rebateConfig\":\"9011\",\"rebateType\":\"sku\",\"userId\":\"user001\"},\"id\":\"73773124323\",\"timestamp\":1716560709722}', 'completed', '2024-05-24 22:25:09', '2024-05-24 22:25:10');
+INSERT INTO `task` VALUES (24, 'user001', 'send_rebate', '02391103632', '{\"data\":{\"bizId\":\"user001_integral_20240524\",\"rebateConfig\":\"10\",\"rebateType\":\"integral\",\"userId\":\"user001\"},\"id\":\"02391103632\",\"timestamp\":1716560709725}', 'completed', '2024-05-24 22:25:09', '2024-05-24 22:25:10');
+INSERT INTO `task` VALUES (25, 'user002', 'send_rebate', '49594929112', '{\"data\":{\"bizId\":\"user002_sku_20240524\",\"rebateConfig\":\"9011\",\"rebateType\":\"sku\",\"userId\":\"user002\"},\"id\":\"49594929112\",\"timestamp\":1716560951288}', 'completed', '2024-05-24 22:29:11', '2024-05-24 22:29:11');
+INSERT INTO `task` VALUES (26, 'user002', 'send_rebate', '57121773264', '{\"data\":{\"bizId\":\"user002_integral_20240524\",\"rebateConfig\":\"10\",\"rebateType\":\"integral\",\"userId\":\"user002\"},\"id\":\"57121773264\",\"timestamp\":1716560951292}', 'completed', '2024-05-24 22:29:11', '2024-05-24 22:29:11');
+INSERT INTO `task` VALUES (27, 'user001', 'send_award', '97971125221', '{\"data\":{\"awardConfig\":\"0.01,1\",\"awardId\":101,\"awardTitle\":\"随机积分\",\"orderId\":\"391668886086\",\"userId\":\"user001\"},\"id\":\"97971125221\",\"timestamp\":1716561114657}', 'completed', '2024-05-24 22:31:55', '2024-05-24 22:31:55');
+INSERT INTO `task` VALUES (28, 'user001', 'send_award', '89552334625', '{\"data\":{\"awardConfig\":\"0.01,1\",\"awardId\":101,\"awardTitle\":\"随机积分\",\"orderId\":\"179191128326\",\"userId\":\"user001\"},\"id\":\"89552334625\",\"timestamp\":1716561182606}', 'completed', '2024-05-24 22:33:02', '2024-05-24 22:33:02');
+INSERT INTO `task` VALUES (29, 'user001', 'send_award', '12743392424', '{\"data\":{\"awardConfig\":\"0.01,1\",\"awardId\":101,\"awardTitle\":\"随机积分\",\"orderId\":\"320625987421\",\"userId\":\"user001\"},\"id\":\"12743392424\",\"timestamp\":1716561244275}', 'completed', '2024-05-24 22:34:04', '2024-05-24 22:34:04');
+INSERT INTO `task` VALUES (30, 'user001', 'send_award', '50175032521', '{\"data\":{\"awardConfig\":\"0.01,1\",\"awardId\":101,\"awardTitle\":\"随机积分\",\"orderId\":\"290879207548\",\"userId\":\"user001\"},\"id\":\"50175032521\",\"timestamp\":1716561277990}', 'completed', '2024-05-24 22:34:38', '2024-05-24 22:34:38');
 
 -- ----------------------------
 -- Table structure for user_award_record_000
@@ -284,11 +293,16 @@ CREATE TABLE `user_award_record_000`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_activity_id`(`activity_id` ASC) USING BTREE,
   INDEX `idx_award_id`(`strategy_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户中奖记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户中奖记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_award_record_000
 -- ----------------------------
+INSERT INTO `user_award_record_000` VALUES (1, 'xiaofuge1', 100301, 100006, '386938913572', 104, '小米台灯', '2024-05-04 04:51:33', 'create', '2024-05-04 12:51:32', '2024-05-04 12:51:32');
+INSERT INTO `user_award_record_000` VALUES (2, 'user001', 100301, 100006, '391668886086', 101, '随机积分', '2024-05-24 14:31:47', 'create', '2024-05-24 22:31:55', '2024-05-24 22:31:55');
+INSERT INTO `user_award_record_000` VALUES (3, 'user001', 100301, 100006, '179191128326', 101, '随机积分', '2024-05-24 14:33:03', 'create', '2024-05-24 22:33:02', '2024-05-24 22:33:02');
+INSERT INTO `user_award_record_000` VALUES (4, 'user001', 100301, 100006, '320625987421', 101, '随机积分', '2024-05-24 14:34:02', 'completed', '2024-05-24 22:34:04', '2024-05-24 22:34:19');
+INSERT INTO `user_award_record_000` VALUES (5, 'user001', 100301, 100006, '290879207548', 101, '随机积分', '2024-05-24 14:34:38', 'completed', '2024-05-24 22:34:38', '2024-05-24 22:34:38');
 
 -- ----------------------------
 -- Table structure for user_award_record_001
@@ -311,7 +325,7 @@ CREATE TABLE `user_award_record_001`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_activity_id`(`activity_id` ASC) USING BTREE,
   INDEX `idx_award_id`(`strategy_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户中奖记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户中奖记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_award_record_001
@@ -338,7 +352,7 @@ CREATE TABLE `user_award_record_002`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_activity_id`(`activity_id` ASC) USING BTREE,
   INDEX `idx_award_id`(`strategy_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户中奖记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户中奖记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_award_record_002
@@ -365,11 +379,26 @@ CREATE TABLE `user_award_record_003`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_activity_id`(`activity_id` ASC) USING BTREE,
   INDEX `idx_award_id`(`strategy_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户中奖记录表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户中奖记录表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_award_record_003
 -- ----------------------------
+INSERT INTO `user_award_record_003` VALUES (1, 'xiaofuge2', 100301, 100006, '809920093949', 102, 'OpenAI会员卡', '2024-05-04 04:53:02', 'create', '2024-05-04 12:53:02', '2024-05-04 12:53:02');
+INSERT INTO `user_award_record_003` VALUES (2, 'xiaofuge2', 100301, 100006, '613575974630', 104, '小米台灯', '2024-05-04 04:58:43', 'create', '2024-05-04 12:58:42', '2024-05-04 12:58:42');
+INSERT INTO `user_award_record_003` VALUES (3, 'xiaofuge2', 100301, 100006, '632802870481', 102, 'OpenAI会员卡', '2024-05-04 05:00:08', 'create', '2024-05-04 13:00:08', '2024-05-04 13:00:08');
+INSERT INTO `user_award_record_003` VALUES (4, 'xiaofuge2', 100301, 100006, '972433161890', 101, '随机积分', '2024-05-04 05:05:38', 'create', '2024-05-04 13:05:38', '2024-05-04 13:05:38');
+INSERT INTO `user_award_record_003` VALUES (5, 'xiaofuge2', 100301, 100006, '877507315775', 101, '随机积分', '2024-05-04 05:05:46', 'create', '2024-05-04 13:05:45', '2024-05-04 13:05:45');
+INSERT INTO `user_award_record_003` VALUES (6, 'xiaofuge2', 100301, 100006, '517301751417', 106, '轻奢办公椅', '2024-05-04 05:05:53', 'create', '2024-05-04 13:05:52', '2024-05-04 13:05:52');
+INSERT INTO `user_award_record_003` VALUES (7, 'xiaofuge2', 100301, 100006, '261932434171', 108, '暴走玩偶', '2024-05-04 05:06:00', 'create', '2024-05-04 13:05:59', '2024-05-04 13:05:59');
+INSERT INTO `user_award_record_003` VALUES (8, 'xiaofuge2', 100301, 100006, '700573379547', 107, '小霸王游戏机', '2024-05-04 05:06:07', 'create', '2024-05-04 13:06:06', '2024-05-04 13:06:06');
+INSERT INTO `user_award_record_003` VALUES (9, 'xiaofuge2', 100301, 100006, '105697168349', 108, '暴走玩偶', '2024-05-04 05:06:18', 'create', '2024-05-04 13:06:17', '2024-05-04 13:06:17');
+INSERT INTO `user_award_record_003` VALUES (10, 'xiaofuge2', 100301, 100006, '959233180689', 103, '支付优惠券', '2024-05-04 05:06:25', 'create', '2024-05-04 13:06:24', '2024-05-04 13:06:24');
+INSERT INTO `user_award_record_003` VALUES (11, 'xiaofuge2', 100301, 100006, '958431976534', 103, '支付优惠券', '2024-05-04 05:08:06', 'create', '2024-05-04 13:08:06', '2024-05-04 13:08:06');
+INSERT INTO `user_award_record_003` VALUES (12, 'xiaofuge2', 100301, 100006, '014341440837', 103, '支付优惠券', '2024-05-04 05:57:04', 'create', '2024-05-04 13:57:03', '2024-05-04 13:57:03');
+INSERT INTO `user_award_record_003` VALUES (13, 'xiaofuge2', 100301, 100006, '104619821752', 103, '支付优惠券', '2024-05-04 05:57:12', 'create', '2024-05-04 13:57:11', '2024-05-04 13:57:11');
+INSERT INTO `user_award_record_003` VALUES (14, 'xiaofuge2', 100301, 100006, '932807566378', 103, '支付优惠券', '2024-05-04 05:57:20', 'create', '2024-05-04 13:57:20', '2024-05-04 13:57:20');
+INSERT INTO `user_award_record_003` VALUES (15, 'xiaofuge2', 100301, 100006, '623497872684', 102, 'OpenAI会员卡', '2024-05-04 05:57:32', 'create', '2024-05-04 13:57:32', '2024-05-04 13:57:32');
 
 -- ----------------------------
 -- Table structure for user_behavior_rebate_order_000
@@ -391,13 +420,15 @@ CREATE TABLE `user_behavior_rebate_order_000`  (
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   UNIQUE INDEX `uq_biz_id`(`biz_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户行为返利流水订单表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户行为返利流水订单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_behavior_rebate_order_000
 -- ----------------------------
 INSERT INTO `user_behavior_rebate_order_000` VALUES (5, 'xiaofuge1', '883971522401', 'sign', '签到返利-sku额度', 'sku', '9011', '20240503', 'xiaofuge1_sku_20240503', '2024-05-03 16:01:42', '2024-05-03 16:01:42');
 INSERT INTO `user_behavior_rebate_order_000` VALUES (6, 'xiaofuge1', '995944930386', 'sign', '签到返利-积分', 'integral', '10', '20240503', 'xiaofuge1_integral_20240503', '2024-05-03 16:01:43', '2024-05-03 16:01:43');
+INSERT INTO `user_behavior_rebate_order_000` VALUES (7, 'user001', '153309768984', 'sign', '签到返利-sku额度', 'sku', '9011', '20240524', 'user001_sku_20240524', '2024-05-24 22:25:09', '2024-05-24 22:25:09');
+INSERT INTO `user_behavior_rebate_order_000` VALUES (8, 'user001', '922397055482', 'sign', '签到返利-积分', 'integral', '10', '20240524', 'user001_integral_20240524', '2024-05-24 22:25:09', '2024-05-24 22:25:09');
 
 -- ----------------------------
 -- Table structure for user_behavior_rebate_order_001
@@ -419,11 +450,13 @@ CREATE TABLE `user_behavior_rebate_order_001`  (
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   UNIQUE INDEX `uq_biz_id`(`biz_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户行为返利流水订单表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户行为返利流水订单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_behavior_rebate_order_001
 -- ----------------------------
+INSERT INTO `user_behavior_rebate_order_001` VALUES (1, 'user002', '791847185524', 'sign', '签到返利-sku额度', 'sku', '9011', '20240524', 'user002_sku_20240524', '2024-05-24 22:29:11', '2024-05-24 22:29:11');
+INSERT INTO `user_behavior_rebate_order_001` VALUES (2, 'user002', '119018837248', 'sign', '签到返利-积分', 'integral', '10', '20240524', 'user002_integral_20240524', '2024-05-24 22:29:11', '2024-05-24 22:29:11');
 
 -- ----------------------------
 -- Table structure for user_behavior_rebate_order_002
@@ -471,11 +504,33 @@ CREATE TABLE `user_behavior_rebate_order_003`  (
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   UNIQUE INDEX `uq_biz_id`(`biz_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户行为返利流水订单表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户行为返利流水订单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_behavior_rebate_order_003
 -- ----------------------------
+INSERT INTO `user_behavior_rebate_order_003` VALUES (7, 'xiaofuge2', '298513989210', 'sign', '签到返利-sku额度', 'sku', '9011', '20240504', 'xiaofuge2_sku_20240504', '2024-05-04 13:07:53', '2024-05-04 13:07:53');
+INSERT INTO `user_behavior_rebate_order_003` VALUES (8, 'xiaofuge2', '352651244433', 'sign', '签到返利-积分', 'integral', '10', '20240504', 'xiaofuge2_integral_20240504', '2024-05-04 13:07:53', '2024-05-04 13:07:53');
+
+-- ----------------------------
+-- Table structure for user_credit_account
+-- ----------------------------
+DROP TABLE IF EXISTS `user_credit_account`;
+CREATE TABLE `user_credit_account`  (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `user_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '用户ID',
+  `total_amount` decimal(10, 2) NOT NULL COMMENT '总积分，显示总账户值，记得一个人获得的总积分',
+  `available_amount` decimal(10, 2) NOT NULL COMMENT '可用积分，每次扣减的值',
+  `account_status` varchar(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '账户状态【open - 可用，close - 冻结】',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户积分账户' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of user_credit_account
+-- ----------------------------
+INSERT INTO `user_credit_account` VALUES (2, 'user001', 0.71, 0.71, 'open', '2024-05-24 22:34:19', '2024-05-24 22:34:38');
 
 -- ----------------------------
 -- Table structure for user_raffle_order_000
@@ -489,17 +544,22 @@ CREATE TABLE `user_raffle_order_000`  (
   `strategy_id` bigint NOT NULL COMMENT '抽奖策略ID',
   `order_id` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '订单ID',
   `order_time` datetime NOT NULL COMMENT '下单时间',
-  `order_state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'create' COMMENT '订单状态；create-创建、used-已使用、cancle-已作废',
+  `order_state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'create' COMMENT '订单状态；create-创建、used-已使用、cancel-已作废',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   INDEX `idx_user_id_activity_id`(`user_id` ASC, `activity_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户抽奖订单表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户抽奖订单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_raffle_order_000
 -- ----------------------------
+INSERT INTO `user_raffle_order_000` VALUES (1, 'xiaofuge1', 100301, '测试活动', 100006, '386938913572', '2024-05-04 04:51:32', 'used', '2024-05-04 12:51:32', '2024-05-04 12:51:32');
+INSERT INTO `user_raffle_order_000` VALUES (2, 'user001', 100301, '测试活动', 100006, '391668886086', '2024-05-24 14:31:46', 'used', '2024-05-24 22:31:47', '2024-05-24 22:31:55');
+INSERT INTO `user_raffle_order_000` VALUES (3, 'user001', 100301, '测试活动', 100006, '179191128326', '2024-05-24 14:33:02', 'used', '2024-05-24 22:33:02', '2024-05-24 22:33:02');
+INSERT INTO `user_raffle_order_000` VALUES (4, 'user001', 100301, '测试活动', 100006, '320625987421', '2024-05-24 14:34:01', 'used', '2024-05-24 22:34:01', '2024-05-24 22:34:04');
+INSERT INTO `user_raffle_order_000` VALUES (5, 'user001', 100301, '测试活动', 100006, '290879207548', '2024-05-24 14:34:37', 'used', '2024-05-24 22:34:37', '2024-05-24 22:34:38');
 
 -- ----------------------------
 -- Table structure for user_raffle_order_001
@@ -513,13 +573,13 @@ CREATE TABLE `user_raffle_order_001`  (
   `strategy_id` bigint NOT NULL COMMENT '抽奖策略ID',
   `order_id` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '订单ID',
   `order_time` datetime NOT NULL COMMENT '下单时间',
-  `order_state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'create' COMMENT '订单状态；create-创建、used-已使用、cancle-已作废',
+  `order_state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'create' COMMENT '订单状态；create-创建、used-已使用、cancel-已作废',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   INDEX `idx_user_id_activity_id`(`user_id` ASC, `activity_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户抽奖订单表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户抽奖订单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_raffle_order_001
@@ -537,13 +597,13 @@ CREATE TABLE `user_raffle_order_002`  (
   `strategy_id` bigint NOT NULL COMMENT '抽奖策略ID',
   `order_id` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '订单ID',
   `order_time` datetime NOT NULL COMMENT '下单时间',
-  `order_state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'create' COMMENT '订单状态；create-创建、used-已使用、cancle-已作废',
+  `order_state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'create' COMMENT '订单状态；create-创建、used-已使用、cancel-已作废',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   INDEX `idx_user_id_activity_id`(`user_id` ASC, `activity_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户抽奖订单表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户抽奖订单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_raffle_order_002
@@ -561,16 +621,31 @@ CREATE TABLE `user_raffle_order_003`  (
   `strategy_id` bigint NOT NULL COMMENT '抽奖策略ID',
   `order_id` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '订单ID',
   `order_time` datetime NOT NULL COMMENT '下单时间',
-  `order_state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'create' COMMENT '订单状态；create-创建、used-已使用、cancle-已作废',
+  `order_state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'create' COMMENT '订单状态；create-创建、used-已使用、cancel-已作废',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   INDEX `idx_user_id_activity_id`(`user_id` ASC, `activity_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户抽奖订单表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户抽奖订单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_raffle_order_003
 -- ----------------------------
+INSERT INTO `user_raffle_order_003` VALUES (1, 'xiaofuge2', 100301, '测试活动', 100006, '809920093949', '2024-05-04 04:53:02', 'used', '2024-05-04 12:53:02', '2024-05-04 12:53:02');
+INSERT INTO `user_raffle_order_003` VALUES (2, 'xiaofuge2', 100301, '测试活动', 100006, '613575974630', '2024-05-04 04:58:43', 'used', '2024-05-04 12:58:42', '2024-05-04 12:58:42');
+INSERT INTO `user_raffle_order_003` VALUES (3, 'xiaofuge2', 100301, '测试活动', 100006, '632802870481', '2024-05-04 05:00:08', 'used', '2024-05-04 13:00:08', '2024-05-04 13:00:08');
+INSERT INTO `user_raffle_order_003` VALUES (4, 'xiaofuge2', 100301, '测试活动', 100006, '972433161890', '2024-05-04 05:04:33', 'used', '2024-05-04 13:04:32', '2024-05-04 13:05:38');
+INSERT INTO `user_raffle_order_003` VALUES (5, 'xiaofuge2', 100301, '测试活动', 100006, '877507315775', '2024-05-04 05:05:46', 'used', '2024-05-04 13:05:45', '2024-05-04 13:05:45');
+INSERT INTO `user_raffle_order_003` VALUES (6, 'xiaofuge2', 100301, '测试活动', 100006, '517301751417', '2024-05-04 05:05:53', 'used', '2024-05-04 13:05:52', '2024-05-04 13:05:52');
+INSERT INTO `user_raffle_order_003` VALUES (7, 'xiaofuge2', 100301, '测试活动', 100006, '261932434171', '2024-05-04 05:06:00', 'used', '2024-05-04 13:05:59', '2024-05-04 13:05:59');
+INSERT INTO `user_raffle_order_003` VALUES (8, 'xiaofuge2', 100301, '测试活动', 100006, '700573379547', '2024-05-04 05:06:07', 'used', '2024-05-04 13:06:06', '2024-05-04 13:06:06');
+INSERT INTO `user_raffle_order_003` VALUES (9, 'xiaofuge2', 100301, '测试活动', 100006, '105697168349', '2024-05-04 05:06:18', 'used', '2024-05-04 13:06:17', '2024-05-04 13:06:17');
+INSERT INTO `user_raffle_order_003` VALUES (10, 'xiaofuge2', 100301, '测试活动', 100006, '959233180689', '2024-05-04 05:06:25', 'used', '2024-05-04 13:06:24', '2024-05-04 13:06:24');
+INSERT INTO `user_raffle_order_003` VALUES (11, 'xiaofuge2', 100301, '测试活动', 100006, '958431976534', '2024-05-04 05:08:06', 'used', '2024-05-04 13:08:06', '2024-05-04 13:08:06');
+INSERT INTO `user_raffle_order_003` VALUES (12, 'xiaofuge2', 100301, '测试活动', 100006, '014341440837', '2024-05-04 05:57:04', 'used', '2024-05-04 13:57:03', '2024-05-04 13:57:03');
+INSERT INTO `user_raffle_order_003` VALUES (13, 'xiaofuge2', 100301, '测试活动', 100006, '104619821752', '2024-05-04 05:57:12', 'used', '2024-05-04 13:57:11', '2024-05-04 13:57:11');
+INSERT INTO `user_raffle_order_003` VALUES (14, 'xiaofuge2', 100301, '测试活动', 100006, '932807566378', '2024-05-04 05:57:20', 'used', '2024-05-04 13:57:20', '2024-05-04 13:57:20');
+INSERT INTO `user_raffle_order_003` VALUES (15, 'xiaofuge2', 100301, '测试活动', 100006, '623497872684', '2024-05-04 05:57:32', 'used', '2024-05-04 13:57:32', '2024-05-04 13:57:32');
 
 SET FOREIGN_KEY_CHECKS = 1;
