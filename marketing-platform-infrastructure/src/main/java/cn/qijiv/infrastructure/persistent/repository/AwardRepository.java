@@ -14,6 +14,8 @@ import cn.qijiv.infrastructure.persistent.po.TaskPO;
 import cn.qijiv.infrastructure.persistent.po.UserAwardRecordPO;
 import cn.qijiv.infrastructure.persistent.po.UserCreditAccountPO;
 import cn.qijiv.infrastructure.persistent.po.UserRaffleOrderPO;
+import cn.qijiv.infrastructure.persistent.redis.IRedisService;
+import cn.qijiv.types.common.Constants;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import com.alibaba.fastjson.JSON;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -33,6 +36,9 @@ import javax.annotation.Resource;
 @Slf4j
 @Component
 public class AwardRepository implements IAwardRepository {
+
+    /** 奖品配置/奖品Key 缓存过期时间（分钟）。奖品配置相对稳定，变更后最长 30 分钟刷新。 */
+    private static final long AWARD_CACHE_TTL_MINUTES = 30L;
 
     @Resource
     private IAwardDao awardDao;
@@ -50,6 +56,8 @@ public class AwardRepository implements IAwardRepository {
     private TransactionTemplate transactionTemplate;
     @Resource
     private EventPublisher eventPublisher;
+    @Resource
+    private IRedisService redisService;
 
     @Override
     public void saveUserAwardRecord(UserAwardRecordAggregate userAwardRecordAggregate) {
@@ -120,7 +128,18 @@ public class AwardRepository implements IAwardRepository {
 
     @Override
     public String queryAwardConfig(Integer awardId) {
-        return awardDao.queryAwardConfigByAwardId(awardId);
+        String cacheKey = Constants.RedisKey.AWARD_CONFIG_KEY + awardId;
+        String cachedValue = redisService.getValue(cacheKey);
+        if (null != cachedValue) {
+            return cachedValue;
+        }
+
+        String value = awardDao.queryAwardConfigByAwardId(awardId);
+        // 仅缓存正常结果，避免空值缓存穿透
+        if (null != value) {
+            redisService.setValue(cacheKey, value, AWARD_CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+        }
+        return value;
     }
 
     @Override
@@ -172,7 +191,18 @@ public class AwardRepository implements IAwardRepository {
 
     @Override
     public String queryAwardKey(Integer awardId) {
-        return awardDao.queryAwardKeyByAwardId(awardId);
+        String cacheKey = Constants.RedisKey.AWARD_KEY + awardId;
+        String cachedValue = redisService.getValue(cacheKey);
+        if (null != cachedValue) {
+            return cachedValue;
+        }
+
+        String value = awardDao.queryAwardKeyByAwardId(awardId);
+        // 仅缓存正常结果，避免空值缓存穿透
+        if (null != value) {
+            redisService.setValue(cacheKey, value, AWARD_CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+        }
+        return value;
     }
 
 }
