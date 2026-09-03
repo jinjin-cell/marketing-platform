@@ -66,6 +66,12 @@ public class Constants {
     /** 活动 SKU 库存清理缓存 Key 前缀，后接 SKU ID */
     public static String ACTIVITY_SKU_COUNT_CLEAR_KEY = "activity_sku_count_clear_key_";
 
+    /** 奖品配置缓存 Key 前缀，后接奖品 ID */
+    public static String AWARD_CONFIG_KEY = "big_market_award_config_key_";
+
+    /** 奖品 Key 缓存前缀，后接奖品 ID */
+    public static String AWARD_KEY = "big_market_award_key_";
+
 
 }
 
