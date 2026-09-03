@@ -117,6 +117,11 @@ public class BehaviorRebateServiceTest {
             savedUserId = userId;
             savedAggregates = behaviorRebateAggregates;
         }
+
+        @Override
+        public List<BehaviorRebateOrderEntity> queryOrderByOutBusinessNo(String userId, String outBusinessNo) {
+            return Collections.emptyList();
+        }
     }
 
 }

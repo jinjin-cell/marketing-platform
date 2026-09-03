@@ -149,6 +149,16 @@ public class RaffleActivityServiceTest {
         public List<ActivitySkuEntity> queryActivitySkuListByActivityId(Long activityId) {
             return Collections.emptyList();
         }
+
+        @Override
+        public ActivityAccountEntity queryActivityAccountEntity(Long activityId, String userId) {
+            return null;
+        }
+
+        @Override
+        public Integer queryRaffleActivityAccountPartakeCount(Long activityId, String userId) {
+            return 0;
+        }
     }
 
     /**
