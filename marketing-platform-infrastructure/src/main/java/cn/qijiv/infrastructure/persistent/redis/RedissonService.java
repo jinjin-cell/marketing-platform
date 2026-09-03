@@ -4,6 +4,7 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RBlockingQueue;
 import org.redisson.api.RDelayedQueue;
 import org.redisson.api.RList;
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.LongCodec;
 import org.springframework.stereotype.Service;
@@ -267,6 +268,17 @@ public class RedissonService implements IRedisService {
     @Override
     public Boolean setNx(String key, long expired, TimeUnit timeUnit) {
         return redissonClient.getBucket(key).setIfAbsent("lock", Duration.ofMillis(timeUnit.toMillis(expired)));
+    }
+
+    /**
+     * 获取分布式可重入锁
+     *
+     * @param lockKey 锁键
+     * @return 分布式锁
+     */
+    @Override
+    public RLock getLock(String lockKey) {
+        return redissonClient.getLock(lockKey);
     }
 
 }

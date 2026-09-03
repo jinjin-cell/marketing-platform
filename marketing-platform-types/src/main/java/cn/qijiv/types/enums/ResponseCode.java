@@ -38,6 +38,8 @@ public enum ResponseCode {
     ACCOUNT_DAY_QUOTA_ERROR("ERR_BIZ_008","账户日额度不足"),
     /** 用户抽奖单已使用过，不可重复抽奖 */
     ACTIVITY_ORDER_ERROR("ERR_BIZ_009", "用户抽奖单已使用过，不可重复抽奖"),
+    /** 活动账户操作加锁超时 */
+    ACCOUNT_LOCK_TIMEOUT("ERR_BIZ_010", "活动账户操作加锁超时，请稍后重试"),
     ;
 
 

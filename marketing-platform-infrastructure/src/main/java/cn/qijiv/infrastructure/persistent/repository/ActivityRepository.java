@@ -1,8 +1,8 @@
 package cn.qijiv.infrastructure.persistent.repository;
 
+import cn.qijiv.domain.activity.event.ActivitySkuStockZeroMessageEvent;
 import cn.qijiv.domain.activity.model.aggregate.CreatePartakeOrderAggregate;
 import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
-import cn.qijiv.domain.activity.event.ActivitySkuStockZeroMessageEvent;
 import cn.qijiv.domain.activity.model.entity.*;
 import cn.qijiv.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 import cn.qijiv.domain.activity.model.valobj.ActivityStateVO;
@@ -18,20 +18,19 @@ import cn.qijiv.types.common.Constants;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
-
 import org.redisson.api.RBlockingQueue;
 import org.redisson.api.RDelayedQueue;
+import org.redisson.api.RLock;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Resource;
 
 /**
  * 抽奖活动仓储实现类
@@ -185,7 +184,26 @@ public class ActivityRepository implements IActivityRepository {
      */
     @Override
     public void doSaveOrder(CreateQuotaOrderAggregate createQuotaOrderAggregate) {
+        // 以 用户+活动 作为锁粒度，串行化同一用户同一活动的并发额度充值，避免“查询→更新”间隙导致重复创建账户或额度错乱
+        String lockKey = Constants.RedisKey.ACTIVITY_ACCOUNT_LOCK
+                + createQuotaOrderAggregate.getUserId()
+                + Constants.UNDERLINE
+                + createQuotaOrderAggregate.getActivityId();
+        RLock lock = redisService.getLock(lockKey);
+        boolean locked = false;
         try {
+            // 至多等待 3 秒获取锁；拿不到说明同用户请求正在处理，直接失败让调用方重试，而不是并发写入
+            try {
+                locked = lock.tryLock(3, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("活动账户操作加锁被中断 userId: {} activityId: {}", createQuotaOrderAggregate.getUserId(), createQuotaOrderAggregate.getActivityId(), e);
+                throw new AppException(ResponseCode.ACCOUNT_LOCK_TIMEOUT.getCode(), ResponseCode.ACCOUNT_LOCK_TIMEOUT.getInfo());
+            }
+            if (!locked) {
+                log.warn("活动账户操作加锁超时 userId: {} activityId: {}", createQuotaOrderAggregate.getUserId(), createQuotaOrderAggregate.getActivityId());
+                throw new AppException(ResponseCode.ACCOUNT_LOCK_TIMEOUT.getCode(), ResponseCode.ACCOUNT_LOCK_TIMEOUT.getInfo());
+            }
             // 订单对象
             ActivityOrderEntity activityOrderEntity = createQuotaOrderAggregate.getActivityOrderEntity();
             RaffleActivityOrderPO raffleActivityOrder = new RaffleActivityOrderPO();
@@ -224,11 +242,12 @@ public class ActivityRepository implements IActivityRepository {
                 try {
                     // 1. 写入订单
                     raffleActivityOrderDao.insert(raffleActivityOrder);
-                    // 2. 更新账户
-                    int count = raffleActivityAccountDao.updateAccountQuota(raffleActivityAccount);
-                    // 3. 创建账户 - 更新为0，则账户不存在，创新新账户。
-                    if (0 == count) {
+                    // 2. 更新账户 - 先查询账户是否存在，存在则累加额度，不存在则创建，避免“查询→写入”间隙导致两个请求同时插入引发唯一索引冲突
+                    RaffleActivityAccountPO raffleActivityAccountRes = raffleActivityAccountDao.queryActivityAccountByUserId(raffleActivityAccount);
+                    if (null == raffleActivityAccountRes) {
                         raffleActivityAccountDao.insert(raffleActivityAccount);
+                    } else {
+                        raffleActivityAccountDao.updateAccountQuota(raffleActivityAccount);
                     }
                     // 3. 当前月、日账户已存在时同步增加额度；不存在则在首次抽奖时按总账户镜像懒创建。
                     LocalDate today = LocalDate.now();
@@ -260,6 +279,9 @@ public class ActivityRepository implements IActivityRepository {
             });
         } finally {
             dbRouter.clear();
+            if (locked) {
+                lock.unlock();
+            }
         }
     }
 
