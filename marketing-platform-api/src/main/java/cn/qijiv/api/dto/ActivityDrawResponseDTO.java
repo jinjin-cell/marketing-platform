@@ -23,6 +23,8 @@ public class ActivityDrawResponseDTO {
     private String awardTitle;
     // 排序编号【策略奖品配置的奖品顺序编号】
     private Integer awardIndex;
+    // 奖品配置信息（透传，如积分奖品范围 1,100）
+    private String awardConfig;
 
 }
 

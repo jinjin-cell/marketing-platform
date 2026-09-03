@@ -77,7 +77,7 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
             throw new IllegalStateException("抽奖责任链未返回有效结果，strategyId: " + strategyId);
         }
         if (!DefaultChainFactory.DEFAULT_CHAIN.equals(chainStrategyAwardVO.getLogicModel())) {
-            return buildRaffleAwardEntity(strategyId, chainStrategyAwardVO.getAwardId(), null);
+            return buildRaffleAwardEntity(strategyId, chainStrategyAwardVO.getAwardId(), chainStrategyAwardVO.getAwardRuleValue());
         }
 
         // 第三步：只有普通概率抽奖结果才进入规则树，依次完成次数、库存和兜底判断。

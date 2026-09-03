@@ -1,5 +1,6 @@
 package cn.qijiv.domain.award.service;
 
+import cn.qijiv.domain.award.model.entity.DistributeAwardEntity;
 import cn.qijiv.domain.award.model.entity.UserAwardRecordEntity;
 
 /**
@@ -17,6 +18,12 @@ public interface IAwardService {
      * @param userAwardRecordEntity 用户中奖记录实体
      */
     void saveUserAwardRecord(UserAwardRecordEntity userAwardRecordEntity);
+
+    /**
+     * 配送发货奖品
+     */
+    void distributeAward(DistributeAwardEntity distributeAwardEntity);
+
 
 }
 

@@ -13,6 +13,8 @@ public class Constants {
     public final static String SPACE = " ";
     /** 下划线分隔符 */
     public final static String UNDERLINE = "_";
+    /** 黑名单积分随机奖励范围 */
+    public final static String CREDIT_BLACKLIST_RANGE = "0.01,1";
 
     /**
      * Redis Key 常量类

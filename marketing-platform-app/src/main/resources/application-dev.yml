@@ -145,6 +145,12 @@ spring:
             standard:
               sharding-column: user_id
               precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+        user_credit_account:
+          actual-data-nodes: ds$->{1..2}.user_credit_account
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
     props:
       sql:
         show: false

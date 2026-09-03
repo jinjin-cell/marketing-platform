@@ -137,5 +137,7 @@ public class DefaultChainFactory {
         private Integer awardId;
         /** 最终返回奖品的责任链节点名称。 */
         private String logicModel;
+        /** 奖品规则配置（透传给发奖服务，仅部分节点返回，如黑名单积分范围 0.01,1）。 */
+        private String awardRuleValue;
     }
 }

@@ -66,11 +66,12 @@ public class BackListLogicChain extends AbstractLogicChain {
         for (String blackUserId : ruleValueParts[1].split(Constants.SPLIT)) {
             if (userId.equals(blackUserId.trim())) {
                 validateAward(strategyId, awardId);
-                log.info("抽奖责任链-黑名单接管 userId:{} strategyId:{} awardId:{}",
-                        userId, strategyId, awardId);
+                log.info("抽奖责任链-黑名单接管 userId:{} strategyId:{} awardId:{} awardRuleValue:{}",
+                        userId, strategyId, awardId, Constants.CREDIT_BLACKLIST_RANGE);
                 return DefaultChainFactory.StrategyAwardVO.builder()
                         .awardId(awardId)
                         .logicModel(ruleModel())
+                        .awardRuleValue(Constants.CREDIT_BLACKLIST_RANGE)
                         .build();
             }
         }

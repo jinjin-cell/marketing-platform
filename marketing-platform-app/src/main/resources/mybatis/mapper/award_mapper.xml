@@ -17,4 +17,16 @@
         FROM award
     </select>
 
+    <select id="queryAwardConfigByAwardId" resultType="java.lang.String">
+        SELECT award_config
+        FROM award
+        WHERE award_id = #{awardId}
+    </select>
+
+    <select id="queryAwardKeyByAwardId" resultType="java.lang.String">
+        SELECT award_key
+        FROM award
+        WHERE award_id = #{awardId}
+    </select>
+
 </mapper>

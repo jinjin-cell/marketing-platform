@@ -40,4 +40,13 @@
           AND order_id = #{orderId}
     </update>
 
+    <update id="updateAwardRecordCompletedState" parameterType="cn.qijiv.infrastructure.persistent.po.UserAwardRecordPO">
+        UPDATE user_award_record
+        SET award_state = #{awardState},
+            update_time = NOW()
+        WHERE user_id = #{userId}
+          AND order_id = #{orderId}
+          AND award_state = 'create'
+    </update>
+
 </mapper>

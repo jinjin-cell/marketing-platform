@@ -36,6 +36,8 @@ public class UserAwardRecordEntity {
     private Date awardTime;
     /** 奖品状态；create-创建、completed-发奖完成 */
     private AwardStateVO awardState;
+    /** 奖品配置信息（透传给发奖服务，如积分奖品范围 1,100） */
+    private String awardConfig;
 
 }
 
