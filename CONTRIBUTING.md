@@ -23,30 +23,48 @@
 - merge commit 会保留两个父节点，合并点清晰，cherry-pick / revert 边界明确。
 - 直线历史难以看出需求的聚合与边界，代码评审和 bug 定位都更费劲。
 
-## 提交工作流（每个功能 / 每个完整改动）
+## 提交工作流（每个功能 / 每个完整改动，以 master 为中心）
 
-**① 开一个短生命周期的子分支**（从当前正在开发的功能分支切出，不要直接动 `master`）：
+**① 从 master 新建一个功能分支**：
 
 ```powershell
-git checkout -b feat/<功能名> <当前功能分支>
+git checkout -b feat/<功能名> master
 ```
 
-**② 在子分支上提交**（中文 message，见下方命名规范）：
+**② 在功能分支上写完业务并提交**（中文 message，见下方命名规范）：
 
 ```powershell
 git add -A
 git commit -m "feat: 描述这个改动"
 ```
 
-**③ 切回主功能分支，用 `--no-ff` 合并回来**（关键：`--no-ff` 强制产生 merge commit，而不是 fast-forward）：
+**③ 把功能分支推送到远程**：
 
 ```powershell
-git checkout <当前功能分支>
+git push -u origin feat/<功能名>
+```
+
+**④ 切换到 master 并拉到最新**：
+
+```powershell
+git checkout master
+git pull
+```
+
+**⑤ 在本地把功能分支合并进 master**（关键：`--no-ff` 强制产生 merge commit，而不是 fast-forward）：
+
+```powershell
 git merge --no-ff feat/<功能名> -m "merge: 合并 <功能名>"
 ```
 
-> `--no-ff` 是保证「永远出现分叉」的关键。即使子分支可以直接 fast-forward，
-> 也要用它保留分支拓扑。
+**⑥ 推送 master 到远程**：
+
+```powershell
+git push origin master
+```
+
+> `--no-ff` 是保证「永远出现分叉」的关键。即使功能分支可以直接 fast-forward，
+> 也要用它保留分支拓扑，让合并点在图上呈现 `|\ /|` 的分叉形状。
 
 ## Commit Message 规范
 
@@ -71,13 +89,15 @@ git merge --no-ff feat/<功能名> -m "merge: 合并 <功能名>"
 - ❌ 用 `git rebase` / `git pull --rebase` 把提交「捋平」成直线；确有需要时请先与团队确认。
 - ❌ 合并时用默认 fast-forward（不带 `--no-ff`），导致分叉丢失。
 - ❌ 直接在 `master` 上做开发提交。
+- ❌ 合并前不 `git pull` 就直接 `git push`，可能导致远程被驳回或覆盖他人提交。
 
 ## 对于 AI 代理（本仓库的协作约定）
 
 当代理（如 DeepSeek Harness）替你落地代码并提交时，遵循本文工作流：
 
-1. 针对每个完整功能/改动，先 `git checkout -b feat/<功能名> <当前分支>`。
-2. 在子分支上按规范提交中文 message。
-3. 用 `git merge --no-ff feat/<功能名> -m "merge: 合并 <功能名>"` 合并回当前开发分支。
+1. 针对每个完整功能/改动，先从 master 切分支：`git checkout -b feat/<功能名> master`。
+2. 在功能分支上按规范提交中文 message，并 `git push -u origin feat/<功能名>`。
+3. `git checkout master` 后先 `git pull`，再用 `git merge --no-ff feat/<功能名> -m "merge: 合并 <功能名>"` 合并。
+4. 最后 `git push origin master`。
 
-单个琐碎改动是否需要单独成支，代理会先确认；不擅自改动 `master` / git 配置 / 提交历史。
+单个琐碎改动是否需要单独成支，代理会先确认；不擅自改动 `master` / git 配置 / 提交历史；若 `master` 本地落后于远程，不直接强推。
