@@ -134,6 +134,12 @@ public class CreditRepository implements ICreditRepository {
         }
     }
 
+    /**
+     * 校验用户积分账户
+     *
+     * @param creditAccount 积分账户
+     * @param adjustAmount  调整金额
+     */
     private void validateCreditAccount(UserCreditAccountPO creditAccount, BigDecimal adjustAmount) {
         if (!AccountStatusVO.open.getCode().equals(creditAccount.getAccountStatus())) {
             throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());

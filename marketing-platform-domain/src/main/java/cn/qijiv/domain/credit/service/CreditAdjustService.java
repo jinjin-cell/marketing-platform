@@ -56,6 +56,10 @@ public class CreditAdjustService implements ICreditAdjustService {
         return orderId;
     }
 
+    /**
+     * 校验交易参数
+     * @param tradeEntity 交易实体
+     */
     private void validateTrade(TradeEntity tradeEntity) {
         if (null == tradeEntity
                 || StringUtils.isBlank(tradeEntity.getUserId())
