@@ -5,8 +5,11 @@ import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
 import cn.qijiv.domain.activity.model.entity.*;
 import cn.qijiv.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 import cn.qijiv.domain.activity.model.valobj.ActivityStateVO;
+import cn.qijiv.domain.activity.model.valobj.OrderStateVO;
+import cn.qijiv.domain.activity.model.valobj.OrderTradeTypeVO;
 import cn.qijiv.domain.activity.repository.IActivityRepository;
 import cn.qijiv.domain.activity.service.quota.RaffleActivityAccountQuotaService;
+import cn.qijiv.domain.activity.service.quota.policy.ITradePolicy;
 import cn.qijiv.domain.activity.service.quota.rule.IActionChain;
 import cn.qijiv.domain.activity.service.quota.rule.factory.DefaultActivityChainFactory;
 import cn.qijiv.types.enums.ResponseCode;
@@ -16,6 +19,7 @@ import lombok.Setter;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -50,7 +54,7 @@ public class RaffleActivityServiceTest {
         @Getter
         private CreateQuotaOrderAggregate savedAggregate;
         @Setter
-        private String existingOrderId;
+        private ActivityOrderEntity existingOrder;
         private ActivitySkuStockKeyVO queuedStock;
         private Long updatedStockSku;
         private Long clearedStockSku;
@@ -72,13 +76,25 @@ public class RaffleActivityServiceTest {
         }
 
         @Override
-        public String queryOrderIdByOutBusinessNo(String userId, String outBusinessNo) {
-            return existingOrderId;
+        public ActivityOrderEntity queryActivityOrderByOutBusinessNo(String userId, String outBusinessNo) {
+            return existingOrder;
         }
 
         @Override
         public void doSaveOrder(CreateQuotaOrderAggregate createQuotaOrderAggregate) {
             this.savedAggregate = createQuotaOrderAggregate;
+        }
+
+        @Override
+        public void updateOrder(DeliveryOrderEntity deliveryOrderEntity) {
+        }
+
+        @Override
+        public void doSaveNoPayOrder(CreateQuotaOrderAggregate createQuotaOrderAggregate) {
+        }
+
+        @Override
+        public void doSaveCreditPayOrder(CreateQuotaOrderAggregate createQuotaOrderAggregate) {
         }
 
         @Override
@@ -182,6 +198,23 @@ public class RaffleActivityServiceTest {
         }
     }
 
+    /**
+     * ITradePolicy 的手动桩，将交易委托给 stub 仓储保存订单，模拟返利免支付策略。
+     */
+    private static class StubTradePolicy implements ITradePolicy {
+
+        private final IActivityRepository repository;
+
+        StubTradePolicy(IActivityRepository repository) {
+            this.repository = repository;
+        }
+
+        @Override
+        public void trade(CreateQuotaOrderAggregate createQuotaOrderAggregate) {
+            repository.doSaveOrder(createQuotaOrderAggregate);
+        }
+    }
+
     private StubActivityRepository stubRepo;
 
     /** 构造 stub 仓储与责任链工厂，初始化被测服务。 */
@@ -194,7 +227,11 @@ public class RaffleActivityServiceTest {
         chainGroup.put(DefaultActivityChainFactory.ActionModel.activity_base_action.getCode(), stubChain);
         chainGroup.put(DefaultActivityChainFactory.ActionModel.activity_sku_stock_action.getCode(), stubChain);
         DefaultActivityChainFactory chainFactory = new DefaultActivityChainFactory(chainGroup);
-        raffleActivityService = new RaffleActivityAccountQuotaService(stubRepo, chainFactory);
+        // 构造交易策略组：SkuRechargeEntity 默认 rebate_no_pay_trade，对应桩策略
+        HashMap<String, ITradePolicy> tradePolicyGroup = new HashMap<>();
+        tradePolicyGroup.put(OrderTradeTypeVO.rebate_no_pay_trade.getCode(), new StubTradePolicy(stubRepo));
+        tradePolicyGroup.put(OrderTradeTypeVO.credit_pay_trade.getCode(), new StubTradePolicy(stubRepo));
+        raffleActivityService = new RaffleActivityAccountQuotaService(stubRepo, chainFactory, tradePolicyGroup);
     }
 
     /** 验证正常创建 SKU 充值订单时返回非空订单 ID。 */
@@ -207,6 +244,7 @@ public class RaffleActivityServiceTest {
                 .activityCountId(30001L)
                 .stockCount(100)
                 .stockCountSurplus(50)
+                .productAmount(new BigDecimal("12.50"))
                 .build();
         stubRepo.setSkuEntity(skuEntity);
 
@@ -241,6 +279,7 @@ public class RaffleActivityServiceTest {
 
         // 5. 验证返回的订单ID
         assertNotNull(orderId);
+        assertEquals(new BigDecimal("12.50"), stubRepo.getSavedAggregate().getActivityOrderEntity().getPayAmount());
     }
 
     /** 验证传入空请求时抛出非法参数异常。 */
@@ -258,7 +297,10 @@ public class RaffleActivityServiceTest {
     /** 验证业务单号已存在时直接返回原订单，不再重复创建。 */
     @Test
     public void test_createSkuRechargeOrder_existingBusinessNo_returnsOriginalOrder() {
-        stubRepo.setExistingOrderId("123456789012");
+        stubRepo.setExistingOrder(ActivityOrderEntity.builder()
+                .orderId("123456789012")
+                .state(OrderStateVO.completed)
+                .build());
         SkuRechargeEntity skuRechargeEntity = new SkuRechargeEntity();
         skuRechargeEntity.setUserId("user001");
         skuRechargeEntity.setSku(10001L);
@@ -269,6 +311,33 @@ public class RaffleActivityServiceTest {
         assertEquals("123456789012", orderId);
         assertNull(stubRepo.queriedSku);
         assertNull(stubRepo.getSavedAggregate());
+    }
+
+    /** 验证待支付订单重试时复用原订单并重新执行支付，不再扣减 SKU 库存。 */
+    @Test
+    public void test_createSkuRechargeOrder_waitingOrder_retriesPaymentWithoutStockDeduction() {
+        ActivityOrderEntity existingOrder = ActivityOrderEntity.builder()
+                .userId("user001")
+                .sku(10001L)
+                .activityId(20001L)
+                .orderId("123456789012")
+                .outBusinessNo("biz_waiting")
+                .payAmount(new BigDecimal("12.50"))
+                .state(OrderStateVO.wait_pay)
+                .build();
+        stubRepo.setExistingOrder(existingOrder);
+        SkuRechargeEntity skuRechargeEntity = new SkuRechargeEntity();
+        skuRechargeEntity.setUserId("user001");
+        skuRechargeEntity.setSku(10001L);
+        skuRechargeEntity.setOutBusinessNo("biz_waiting");
+        skuRechargeEntity.setOrderTradeType(OrderTradeTypeVO.credit_pay_trade);
+
+        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
+
+        assertEquals("123456789012", orderId);
+        assertNotNull(stubRepo.getSavedAggregate());
+        assertSame(existingOrder, stubRepo.getSavedAggregate().getActivityOrderEntity());
+        assertNull(stubRepo.queriedSku);
     }
 
     /** 验证使用不同 SKU 时仍能正常创建订单。 */

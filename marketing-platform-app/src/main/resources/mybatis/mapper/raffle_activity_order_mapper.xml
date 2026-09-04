@@ -15,6 +15,7 @@
         <result column="total_count" property="totalCount"/>
         <result column="day_count" property="dayCount"/>
         <result column="month_count" property="monthCount"/>
+        <result column="pay_amount" property="payAmount"/>
         <result column="state" property="state"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
@@ -22,15 +23,15 @@
 
     <insert id="insert" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO">
         INSERT INTO raffle_activity_order
-            (user_id, sku, activity_id, activity_name, strategy_id, order_id, out_business_no, order_time,
+            (user_id, sku, activity_id, activity_name, strategy_id, order_id, out_business_no, order_time, pay_amount,
              total_count, day_count, month_count, state)
         VALUES
             (#{userId}, #{sku}, #{activityId}, #{activityName}, #{strategyId}, #{orderId}, #{outBusinessNo}, #{orderTime},
-             #{totalCount}, #{dayCount}, #{monthCount}, #{state})
+             #{payAmount},#{totalCount}, #{dayCount}, #{monthCount}, #{state})
     </insert>
 
     <select id="queryRaffleActivityOrderByUserId" resultMap="RaffleActivityOrderMap">
-        SELECT id, user_id, sku, activity_id, activity_name, strategy_id, order_id, out_business_no, order_time,
+        SELECT id, user_id, sku, activity_id, activity_name, strategy_id, order_id, out_business_no, order_time,pay_amount,
                total_count, day_count, month_count, state, create_time, update_time
         FROM raffle_activity_order
         WHERE user_id = #{userId}
@@ -38,7 +39,8 @@
     </select>
 
     <select id="queryByOutBusinessNo" resultMap="RaffleActivityOrderMap">
-        SELECT user_id, order_id, out_business_no
+        SELECT user_id, sku, activity_id, activity_name, strategy_id, order_id, out_business_no, order_time, pay_amount,
+               total_count, day_count, month_count, state
         FROM raffle_activity_order
         WHERE user_id = #{userId}
           AND out_business_no = #{outBusinessNo}
@@ -50,5 +52,23 @@
         SELECT user_id, out_business_no
         FROM raffle_activity_order
     </select>
+
+    <select id="queryRaffleActivityOrder" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO" resultMap="RaffleActivityOrderMap">
+        SELECT id, user_id, sku, activity_id, activity_name, strategy_id, order_id, out_business_no, order_time, pay_amount,
+               total_count, day_count, month_count, state
+        FROM raffle_activity_order
+        WHERE user_id = #{userId}
+          AND out_business_no = #{outBusinessNo}
+        LIMIT 1
+    </select>
+
+    <update id="updateOrderCompleted" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO">
+        UPDATE raffle_activity_order
+        SET state = 'completed',
+            update_time = NOW()
+        WHERE user_id = #{userId}
+          AND out_business_no = #{outBusinessNo}
+          AND state = 'wait_pay'
+    </update>
 
 </mapper>

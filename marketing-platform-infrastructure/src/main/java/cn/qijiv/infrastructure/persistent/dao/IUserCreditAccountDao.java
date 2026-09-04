@@ -38,4 +38,5 @@ public interface IUserCreditAccountDao {
      * @return 影响行数
      */
     int updateAddAmount(UserCreditAccountPO userCreditAccountReq);
+
 }

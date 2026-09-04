@@ -11,7 +11,7 @@
  Target Server Version : 80032 (8.0.32)
  File Encoding         : 65001
 
- Date: 03/09/2026 21:20:01
+ Date: 04/09/2026 16:26:52
 */
 
 SET NAMES utf8mb4;
@@ -40,7 +40,7 @@ CREATE TABLE `raffle_activity_account`  (
 -- ----------------------------
 -- Records of raffle_activity_account
 -- ----------------------------
-INSERT INTO `raffle_activity_account` VALUES (3, 'xiaofuge', 100301, 160, 61, 160, 99, 160, 99, '2024-03-23 16:38:57', '2024-05-30 08:02:18');
+INSERT INTO `raffle_activity_account` VALUES (3, 'xiaofuge', 100301, 660, 561, 660, 599, 660, 599, '2024-03-23 16:38:57', '2024-06-09 10:45:11');
 INSERT INTO `raffle_activity_account` VALUES (4, '12345', 100301, 10, 10, 10, 10, 10, 10, '2024-05-01 15:28:50', '2024-05-01 15:28:50');
 INSERT INTO `raffle_activity_account` VALUES (5, 'liergou', 100301, 20, 6, 20, 6, 20, 6, '2024-05-04 15:30:21', '2024-05-04 15:34:10');
 INSERT INTO `raffle_activity_account` VALUES (6, 'liergou2', 100301, 100, 86, 100, 86, 100, 86, '2024-05-04 15:35:52', '2024-05-04 15:37:37');
@@ -119,6 +119,7 @@ CREATE TABLE `raffle_activity_order_000`  (
   `total_count` int NOT NULL COMMENT '总次数',
   `day_count` int NOT NULL COMMENT '日次数',
   `month_count` int NOT NULL COMMENT '月次数',
+  `pay_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '支付金额【积分】',
   `state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'complete' COMMENT '订单状态（complete）',
   `out_business_no` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '业务仿重ID - 外部透传的，确保幂等',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -149,6 +150,7 @@ CREATE TABLE `raffle_activity_order_001`  (
   `total_count` int NOT NULL COMMENT '总次数',
   `day_count` int NOT NULL COMMENT '日次数',
   `month_count` int NOT NULL COMMENT '月次数',
+  `pay_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '支付金额【积分】',
   `state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'complete' COMMENT '订单状态（complete）',
   `out_business_no` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '业务仿重ID - 外部透传的，确保幂等',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -157,26 +159,34 @@ CREATE TABLE `raffle_activity_order_001`  (
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   UNIQUE INDEX `uq_out_business_no`(`out_business_no` ASC) USING BTREE,
   INDEX `idx_user_id_activity_id`(`user_id` ASC, `activity_id` ASC, `state` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4248 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动单' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4256 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '抽奖活动单' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of raffle_activity_order_001
 -- ----------------------------
-INSERT INTO `raffle_activity_order_001` VALUES (71, 'xiaofuge', 9011, 100301, '测试活动', 100006, '761345538871', '2024-04-21 10:40:25', 1, 1, 1, 'completed', '073735003829', '2024-04-21 18:40:25', '2024-04-21 18:40:25');
-INSERT INTO `raffle_activity_order_001` VALUES (72, 'xiaofuge', 9011, 100301, '测试活动', 100006, '837744050164', '2024-04-21 10:40:25', 1, 1, 1, 'completed', '613036507854', '2024-04-21 18:40:25', '2024-04-21 18:40:25');
-INSERT INTO `raffle_activity_order_001` VALUES (73, 'xiaofuge', 9011, 100301, '测试活动', 100006, '766742523760', '2024-04-21 10:40:25', 1, 1, 1, 'completed', '649099837249', '2024-04-21 18:40:25', '2024-04-21 18:40:25');
-INSERT INTO `raffle_activity_order_001` VALUES (74, 'xiaofuge', 9011, 100301, '测试活动', 100006, '856474163547', '2024-04-21 10:40:25', 1, 1, 1, 'completed', '652903372986', '2024-04-21 18:40:25', '2024-04-21 18:40:25');
-INSERT INTO `raffle_activity_order_001` VALUES (75, 'xiaofuge', 9011, 100301, '测试活动', 100006, '668775949799', '2024-04-21 10:40:25', 1, 1, 1, 'completed', '097066347980', '2024-04-21 18:40:25', '2024-04-21 18:40:25');
-INSERT INTO `raffle_activity_order_001` VALUES (76, 'xiaofuge', 9011, 100301, '测试活动', 100006, '164452591012', '2024-05-01 06:44:26', 10, 10, 10, 'completed', 'xiaofuge_sku_2024042903', '2024-05-01 14:44:26', '2024-05-01 14:44:26');
-INSERT INTO `raffle_activity_order_001` VALUES (77, 'xiaofuge', 9011, 100301, '测试活动', 100006, '492597085813', '2024-05-01 06:51:45', 10, 10, 10, 'completed', 'xiaofuge_sku_2024042904', '2024-05-01 14:51:45', '2024-05-01 14:51:45');
-INSERT INTO `raffle_activity_order_001` VALUES (78, 'xiaofuge', 9011, 100301, '测试活动', 100006, '031706643902', '2024-05-01 06:54:36', 10, 10, 10, 'completed', 'xiaofuge_sku_2024042905', '2024-05-01 14:54:36', '2024-05-01 14:54:36');
-INSERT INTO `raffle_activity_order_001` VALUES (79, 'xiaofuge', 9011, 100301, '测试活动', 100006, '460855930969', '2024-05-01 07:00:12', 10, 10, 10, 'completed', 'xiaofuge_sku_2024042906', '2024-05-01 15:00:12', '2024-05-01 15:00:12');
-INSERT INTO `raffle_activity_order_001` VALUES (1096, 'xiaofuge', 9011, 100301, '测试活动', 100006, '364757830401', '2024-05-01 09:14:43', 10, 10, 10, 'completed', 'xiaofuge_sku_20240501', '2024-05-01 17:14:43', '2024-05-01 17:14:43');
-INSERT INTO `raffle_activity_order_001` VALUES (1097, 'xiaofuge', 9011, 100301, '测试活动', 100006, '157026402583', '2024-05-01 09:39:40', 10, 10, 10, 'completed', 'xiaofuge_sku_20240420', '2024-05-01 17:39:40', '2024-05-01 17:39:40');
-INSERT INTO `raffle_activity_order_001` VALUES (1098, 'xiaofuge', 9011, 100301, '测试活动', 100006, '481116019750', '2024-05-01 09:41:53', 10, 10, 10, 'completed', 'xiaofuge_sku_20240401', '2024-05-01 17:41:53', '2024-05-01 17:41:53');
-INSERT INTO `raffle_activity_order_001` VALUES (1099, 'xiaofuge', 9011, 100301, '测试活动', 100006, '639151059221', '2024-05-01 09:45:10', 10, 10, 10, 'completed', 'xiaofuge_sku_20240402', '2024-05-01 17:45:10', '2024-05-01 17:45:10');
-INSERT INTO `raffle_activity_order_001` VALUES (4234, 'xiaofuge', 9011, 100301, '测试活动', 100006, '129360973197', '2024-05-03 05:28:43', 10, 10, 10, 'completed', 'xiaofuge_sku_20240503', '2024-05-03 13:28:42', '2024-05-03 13:28:42');
-INSERT INTO `raffle_activity_order_001` VALUES (4247, 'liergou', 9011, 100301, '测试活动', 100006, '151494600661', '2024-05-04 07:32:26', 10, 10, 10, 'completed', 'liergou_sku_20240504', '2024-05-04 15:32:25', '2024-05-04 15:32:25');
+INSERT INTO `raffle_activity_order_001` VALUES (71, 'xiaofuge', 9011, 100301, '测试活动', 100006, '761345538871', '2024-04-21 10:40:25', 1, 1, 1, NULL, 'completed', '073735003829', '2024-04-21 18:40:25', '2024-04-21 18:40:25');
+INSERT INTO `raffle_activity_order_001` VALUES (72, 'xiaofuge', 9011, 100301, '测试活动', 100006, '837744050164', '2024-04-21 10:40:25', 1, 1, 1, NULL, 'completed', '613036507854', '2024-04-21 18:40:25', '2024-04-21 18:40:25');
+INSERT INTO `raffle_activity_order_001` VALUES (73, 'xiaofuge', 9011, 100301, '测试活动', 100006, '766742523760', '2024-04-21 10:40:25', 1, 1, 1, NULL, 'completed', '649099837249', '2024-04-21 18:40:25', '2024-04-21 18:40:25');
+INSERT INTO `raffle_activity_order_001` VALUES (74, 'xiaofuge', 9011, 100301, '测试活动', 100006, '856474163547', '2024-04-21 10:40:25', 1, 1, 1, NULL, 'completed', '652903372986', '2024-04-21 18:40:25', '2024-04-21 18:40:25');
+INSERT INTO `raffle_activity_order_001` VALUES (75, 'xiaofuge', 9011, 100301, '测试活动', 100006, '668775949799', '2024-04-21 10:40:25', 1, 1, 1, NULL, 'completed', '097066347980', '2024-04-21 18:40:25', '2024-04-21 18:40:25');
+INSERT INTO `raffle_activity_order_001` VALUES (76, 'xiaofuge', 9011, 100301, '测试活动', 100006, '164452591012', '2024-05-01 06:44:26', 10, 10, 10, NULL, 'completed', 'xiaofuge_sku_2024042903', '2024-05-01 14:44:26', '2024-05-01 14:44:26');
+INSERT INTO `raffle_activity_order_001` VALUES (77, 'xiaofuge', 9011, 100301, '测试活动', 100006, '492597085813', '2024-05-01 06:51:45', 10, 10, 10, NULL, 'completed', 'xiaofuge_sku_2024042904', '2024-05-01 14:51:45', '2024-05-01 14:51:45');
+INSERT INTO `raffle_activity_order_001` VALUES (78, 'xiaofuge', 9011, 100301, '测试活动', 100006, '031706643902', '2024-05-01 06:54:36', 10, 10, 10, NULL, 'completed', 'xiaofuge_sku_2024042905', '2024-05-01 14:54:36', '2024-05-01 14:54:36');
+INSERT INTO `raffle_activity_order_001` VALUES (79, 'xiaofuge', 9011, 100301, '测试活动', 100006, '460855930969', '2024-05-01 07:00:12', 10, 10, 10, NULL, 'completed', 'xiaofuge_sku_2024042906', '2024-05-01 15:00:12', '2024-05-01 15:00:12');
+INSERT INTO `raffle_activity_order_001` VALUES (1096, 'xiaofuge', 9011, 100301, '测试活动', 100006, '364757830401', '2024-05-01 09:14:43', 10, 10, 10, NULL, 'completed', 'xiaofuge_sku_20240501', '2024-05-01 17:14:43', '2024-05-01 17:14:43');
+INSERT INTO `raffle_activity_order_001` VALUES (1097, 'xiaofuge', 9011, 100301, '测试活动', 100006, '157026402583', '2024-05-01 09:39:40', 10, 10, 10, NULL, 'completed', 'xiaofuge_sku_20240420', '2024-05-01 17:39:40', '2024-05-01 17:39:40');
+INSERT INTO `raffle_activity_order_001` VALUES (1098, 'xiaofuge', 9011, 100301, '测试活动', 100006, '481116019750', '2024-05-01 09:41:53', 10, 10, 10, NULL, 'completed', 'xiaofuge_sku_20240401', '2024-05-01 17:41:53', '2024-05-01 17:41:53');
+INSERT INTO `raffle_activity_order_001` VALUES (1099, 'xiaofuge', 9011, 100301, '测试活动', 100006, '639151059221', '2024-05-01 09:45:10', 10, 10, 10, NULL, 'completed', 'xiaofuge_sku_20240402', '2024-05-01 17:45:10', '2024-05-01 17:45:10');
+INSERT INTO `raffle_activity_order_001` VALUES (4234, 'xiaofuge', 9011, 100301, '测试活动', 100006, '129360973197', '2024-05-03 05:28:43', 10, 10, 10, NULL, 'completed', 'xiaofuge_sku_20240503', '2024-05-03 13:28:42', '2024-05-03 13:28:42');
+INSERT INTO `raffle_activity_order_001` VALUES (4247, 'liergou', 9011, 100301, '测试活动', 100006, '151494600661', '2024-05-04 07:32:26', 10, 10, 10, NULL, 'completed', 'liergou_sku_20240504', '2024-05-04 15:32:25', '2024-05-04 15:32:25');
+INSERT INTO `raffle_activity_order_001` VALUES (4248, 'xiaofuge', 9011, 100301, '测试活动', 100006, '398083697802', '2024-06-08 10:38:59', 100, 100, 100, 1.68, 'wait_pay', '70009240608001', '2024-06-08 18:38:59', '2024-06-08 18:38:59');
+INSERT INTO `raffle_activity_order_001` VALUES (4249, 'xiaofuge', 9011, 100301, '测试活动', 100006, '356030049461', '2024-06-08 10:54:33', 100, 100, 100, 1.68, 'wait_pay', '70009240608002', '2024-06-08 18:54:32', '2024-06-08 18:54:32');
+INSERT INTO `raffle_activity_order_001` VALUES (4250, 'xiaofuge', 9011, 100301, '测试活动', 100006, '605318523315', '2024-06-08 10:55:50', 100, 100, 100, 1.68, 'completed', '70009240608003', '2024-06-08 18:55:49', '2024-06-08 20:29:30');
+INSERT INTO `raffle_activity_order_001` VALUES (4251, 'xiaofuge', 9011, 100301, '测试活动', 100006, '127654026777', '2024-06-08 10:56:28', 100, 100, 100, 0.00, 'completed', '70009240608004', '2024-06-08 18:56:27', '2024-06-08 18:56:27');
+INSERT INTO `raffle_activity_order_001` VALUES (4252, 'xiaofuge', 9011, 100301, '测试活动', 100006, '932526349433', '2024-06-08 12:33:09', 100, 100, 100, 1.68, 'completed', '70009240608007', '2024-06-08 20:33:09', '2024-06-08 20:34:13');
+INSERT INTO `raffle_activity_order_001` VALUES (4253, 'xiaofuge', 9011, 100301, '测试活动', 100006, '073017788455', '2024-06-09 01:07:48', 100, 100, 100, 1.68, 'completed', '70009240609001', '2024-06-09 09:07:47', '2024-06-09 09:11:24');
+INSERT INTO `raffle_activity_order_001` VALUES (4254, 'xiaofuge', 9011, 100301, '测试活动', 100006, '590031092982', '2024-06-09 02:33:49', 100, 100, 100, NULL, 'wait_pay', '70009240610001', '2024-06-09 10:33:48', '2024-06-09 10:33:48');
+INSERT INTO `raffle_activity_order_001` VALUES (4255, 'xiaofuge', 9011, 100301, '测试活动', 100006, '732573213062', '2024-06-09 02:43:18', 100, 100, 100, 1.68, 'completed', '70009240610002', '2024-06-09 10:43:18', '2024-06-09 10:45:11');
 
 -- ----------------------------
 -- Table structure for raffle_activity_order_002
@@ -194,6 +204,7 @@ CREATE TABLE `raffle_activity_order_002`  (
   `total_count` int NOT NULL COMMENT '总次数',
   `day_count` int NOT NULL COMMENT '日次数',
   `month_count` int NOT NULL COMMENT '月次数',
+  `pay_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '支付金额【积分】',
   `state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'complete' COMMENT '订单状态（complete）',
   `out_business_no` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '业务仿重ID - 外部透传的，确保幂等',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -207,8 +218,8 @@ CREATE TABLE `raffle_activity_order_002`  (
 -- ----------------------------
 -- Records of raffle_activity_order_002
 -- ----------------------------
-INSERT INTO `raffle_activity_order_002` VALUES (1, 'liergou2', 9011, 100301, '测试活动', 100006, '987026967898', '2024-05-04 07:35:53', 100, 100, 100, 'completed', 'liergou2_sku_20240504', '2024-05-04 15:35:52', '2024-05-04 15:35:52');
-INSERT INTO `raffle_activity_order_002` VALUES (2, 'user003', 9011, 100301, '测试活动', 100006, '700446814309', '2024-05-25 02:52:20', 100, 100, 100, 'completed', 'user003_sku_20240525', '2024-05-25 10:52:19', '2024-05-25 10:52:19');
+INSERT INTO `raffle_activity_order_002` VALUES (1, 'liergou2', 9011, 100301, '测试活动', 100006, '987026967898', '2024-05-04 07:35:53', 100, 100, 100, NULL, 'completed', 'liergou2_sku_20240504', '2024-05-04 15:35:52', '2024-05-04 15:35:52');
+INSERT INTO `raffle_activity_order_002` VALUES (2, 'user003', 9011, 100301, '测试活动', 100006, '700446814309', '2024-05-25 02:52:20', 100, 100, 100, NULL, 'completed', 'user003_sku_20240525', '2024-05-25 10:52:19', '2024-05-25 10:52:19');
 
 -- ----------------------------
 -- Table structure for raffle_activity_order_003
@@ -226,6 +237,7 @@ CREATE TABLE `raffle_activity_order_003`  (
   `total_count` int NOT NULL COMMENT '总次数',
   `day_count` int NOT NULL COMMENT '日次数',
   `month_count` int NOT NULL COMMENT '月次数',
+  `pay_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '支付金额【积分】',
   `state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'complete' COMMENT '订单状态（complete）',
   `out_business_no` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '业务仿重ID - 外部透传的，确保幂等',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -257,7 +269,7 @@ CREATE TABLE `task`  (
   UNIQUE INDEX `uq_message_id`(`message_id` ASC) USING BTREE,
   INDEX `idx_state`(`state` ASC) USING BTREE,
   INDEX `idx_create_time`(`update_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 245 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '任务表，发送MQ' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 250 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '任务表，发送MQ' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of task
@@ -506,6 +518,11 @@ INSERT INTO `task` VALUES (241, 'xiaofuge', 'send_rebate', '74711058753', '{\"da
 INSERT INTO `task` VALUES (242, 'xiaofuge', 'send_rebate', '11611351139', '{\"data\":{\"bizId\":\"xiaofuge_integral_20240601004\",\"rebateConfig\":\"10\",\"rebateType\":\"integral\",\"userId\":\"xiaofuge\"},\"id\":\"11611351139\",\"timestamp\":1717210470349}', 'completed', '2024-06-01 10:54:30', '2024-06-01 10:55:17');
 INSERT INTO `task` VALUES (243, 'xiaofuge', 'send_rebate', '53202882014', '{\"data\":{\"bizId\":\"xiaofuge_integral_20240601005\",\"rebateConfig\":\"10\",\"rebateType\":\"integral\",\"userId\":\"xiaofuge\"},\"id\":\"53202882014\",\"timestamp\":1717210629229}', 'completed', '2024-06-01 10:57:09', '2024-06-01 10:57:09');
 INSERT INTO `task` VALUES (244, 'xiaofuge', 'send_rebate', '61165550239', '{\"data\":{\"bizId\":\"xiaofuge_integral_20240601006\",\"rebateConfig\":\"10\",\"rebateType\":\"integral\",\"userId\":\"xiaofuge\"},\"id\":\"61165550239\",\"timestamp\":1717210827931}', 'completed', '2024-06-01 11:00:28', '2024-06-01 11:00:31');
+INSERT INTO `task` VALUES (245, 'xiaofuge', 'send_rebate', '67030345130', '{\"data\":{\"bizId\":\"xiaofuge_integral_20240601101\",\"rebateConfig\":\"10\",\"rebateType\":\"integral\",\"userId\":\"xiaofuge\"},\"id\":\"67030345130\",\"timestamp\":1717221767862}', 'completed', '2024-06-01 14:02:48', '2024-06-01 14:02:48');
+INSERT INTO `task` VALUES (246, 'xiaofuge', 'credit_adjust_success', '42778910768', '{\"data\":{\"amount\":-1.68,\"orderId\":\"313070417337\",\"outBusinessNo\":\"70009240608003\",\"userId\":\"xiaofuge\"},\"id\":\"42778910768\",\"timestamp\":1717849623150}', 'completed', '2024-06-08 20:27:03', '2024-06-08 20:27:15');
+INSERT INTO `task` VALUES (247, 'xiaofuge', 'credit_adjust_success', '53121094706', '{\"data\":{\"amount\":-1.68,\"orderId\":\"956437348272\",\"outBusinessNo\":\"70009240608007\",\"userId\":\"xiaofuge\"},\"id\":\"53121094706\",\"timestamp\":1717850053164}', 'completed', '2024-06-08 20:34:13', '2024-06-08 20:34:13');
+INSERT INTO `task` VALUES (248, 'xiaofuge', 'credit_adjust_success', '04087257219', '{\"data\":{\"amount\":-1.68,\"orderId\":\"825697847616\",\"outBusinessNo\":\"70009240609001\",\"userId\":\"xiaofuge\"},\"id\":\"04087257219\",\"timestamp\":1717895483369}', 'completed', '2024-06-09 09:11:23', '2024-06-09 09:11:24');
+INSERT INTO `task` VALUES (249, 'xiaofuge', 'credit_adjust_success', '50806088557', '{\"data\":{\"amount\":-1.68,\"orderId\":\"528225981137\",\"outBusinessNo\":\"70009240610002\",\"userId\":\"xiaofuge\"},\"id\":\"50806088557\",\"timestamp\":1717901110572}', 'completed', '2024-06-09 10:45:11', '2024-06-09 10:45:11');
 
 -- ----------------------------
 -- Table structure for user_award_record_000
@@ -834,7 +851,7 @@ CREATE TABLE `user_behavior_rebate_order_001`  (
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   UNIQUE INDEX `uq_biz_id`(`biz_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 42 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户行为返利流水订单表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 44 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户行为返利流水订单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_behavior_rebate_order_001
@@ -849,6 +866,7 @@ INSERT INTO `user_behavior_rebate_order_001` VALUES (38, 'xiaofuge', '7357710876
 INSERT INTO `user_behavior_rebate_order_001` VALUES (39, 'xiaofuge', '890916856671', 'sign', '签到返利-积分', 'integral', '10', '20240601004', 'xiaofuge_integral_20240601004', '2024-06-01 10:54:30', '2024-06-01 10:54:30');
 INSERT INTO `user_behavior_rebate_order_001` VALUES (40, 'xiaofuge', '881155696490', 'sign', '签到返利-积分', 'integral', '10', '20240601005', 'xiaofuge_integral_20240601005', '2024-06-01 10:57:09', '2024-06-01 10:57:09');
 INSERT INTO `user_behavior_rebate_order_001` VALUES (41, 'xiaofuge', '213871507610', 'sign', '签到返利-积分', 'integral', '10', '20240601006', 'xiaofuge_integral_20240601006', '2024-06-01 11:00:27', '2024-06-01 11:00:27');
+INSERT INTO `user_behavior_rebate_order_001` VALUES (43, 'xiaofuge', '031074415283', 'sign', '签到返利-积分', 'integral', '10', '20240601101', 'xiaofuge_integral_20240601101', '2024-06-01 14:02:47', '2024-06-01 14:02:47');
 
 -- ----------------------------
 -- Table structure for user_behavior_rebate_order_002
@@ -924,7 +942,7 @@ CREATE TABLE `user_credit_account`  (
 -- ----------------------------
 -- Records of user_credit_account
 -- ----------------------------
-INSERT INTO `user_credit_account` VALUES (1, 'xiaofuge', 62.19, 62.19, 'open', '2024-05-24 22:11:59', '2024-06-01 11:00:45');
+INSERT INTO `user_credit_account` VALUES (1, 'xiaofuge', 85.85, 85.85, 'open', '2024-05-24 22:11:59', '2024-06-09 10:45:11');
 INSERT INTO `user_credit_account` VALUES (2, 'user003', 0.96, 0.96, 'open', '2024-05-25 10:53:20', '2024-05-25 10:54:31');
 
 -- ----------------------------
@@ -969,7 +987,7 @@ CREATE TABLE `user_credit_order_001`  (
   UNIQUE INDEX `uq_order_id`(`order_id` ASC) USING BTREE,
   UNIQUE INDEX `uq_out_business_no`(`out_business_no` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户积分订单记录' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户积分订单记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_credit_order_001
@@ -977,6 +995,15 @@ CREATE TABLE `user_credit_order_001`  (
 INSERT INTO `user_credit_order_001` VALUES (1, 'xiaofuge', '950333991038', '行为返利', 'forward', 10.19, '10000990990', '2024-06-01 10:31:16', '2024-06-01 10:31:16');
 INSERT INTO `user_credit_order_001` VALUES (4, 'xiaofuge', '957646101468', '行为返利', 'forward', -10.19, '10000990991', '2024-06-01 10:33:26', '2024-06-01 10:33:26');
 INSERT INTO `user_credit_order_001` VALUES (5, 'xiaofuge', '105601831431', '行为返利', 'forward', 10.00, 'xiaofuge_integral_20240601006', '2024-06-01 11:00:45', '2024-06-01 11:00:45');
+INSERT INTO `user_credit_order_001` VALUES (6, 'xiaofuge', '120781019441', '行为返利', 'forward', 10.19, '100009900001', '2024-06-01 13:57:22', '2024-06-01 13:57:22');
+INSERT INTO `user_credit_order_001` VALUES (7, 'xiaofuge', '626373070354', '行为返利', 'reverse', -10.19, '100009900002', '2024-06-01 13:58:23', '2024-06-01 13:58:23');
+INSERT INTO `user_credit_order_001` VALUES (8, 'xiaofuge', '726664203611', '行为返利', 'forward', 10.00, 'xiaofuge_integral_20240601101', '2024-06-01 14:02:48', '2024-06-01 14:02:48');
+INSERT INTO `user_credit_order_001` VALUES (9, 'xiaofuge', '337035866234', '行为返利', 'forward', 10.19, '100009909911', '2024-06-01 14:27:20', '2024-06-01 14:27:20');
+INSERT INTO `user_credit_order_001` VALUES (11, 'xiaofuge', '904262714981', '行为返利', 'forward', 10.19, '12406039900002', '2024-06-03 07:28:02', '2024-06-03 07:28:02');
+INSERT INTO `user_credit_order_001` VALUES (12, 'xiaofuge', '313070417337', '兑换抽奖', 'reverse', -1.68, '70009240608003', '2024-06-08 20:27:03', '2024-06-08 20:27:03');
+INSERT INTO `user_credit_order_001` VALUES (15, 'xiaofuge', '956437348272', '兑换抽奖', 'reverse', -1.68, '70009240608007', '2024-06-08 20:34:13', '2024-06-08 20:34:13');
+INSERT INTO `user_credit_order_001` VALUES (16, 'xiaofuge', '825697847616', '兑换抽奖', 'reverse', -1.68, '70009240609001', '2024-06-09 09:11:23', '2024-06-09 09:11:23');
+INSERT INTO `user_credit_order_001` VALUES (17, 'xiaofuge', '528225981137', '兑换抽奖', 'reverse', -1.68, '70009240610002', '2024-06-09 10:45:11', '2024-06-09 10:45:11');
 
 -- ----------------------------
 -- Table structure for user_credit_order_002

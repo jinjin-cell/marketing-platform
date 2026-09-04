@@ -1,21 +1,17 @@
 package cn.qijiv.domain.activity.service.quota;
 
 import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
-import cn.qijiv.domain.activity.model.entity.ActivityCountEntity;
-import cn.qijiv.domain.activity.model.entity.ActivityAccountEntity;
-import cn.qijiv.domain.activity.model.entity.ActivityEntity;
-import cn.qijiv.domain.activity.model.entity.ActivityOrderEntity;
-import cn.qijiv.domain.activity.model.entity.ActivitySkuEntity;
-import cn.qijiv.domain.activity.model.entity.SkuRechargeEntity;
+import cn.qijiv.domain.activity.model.entity.*;
 import cn.qijiv.domain.activity.model.valobj.ActivitySkuStockKeyVO;
-import cn.qijiv.domain.activity.model.valobj.OrderStateVO;
 import cn.qijiv.domain.activity.repository.IActivityRepository;
 import cn.qijiv.domain.activity.service.IRaffleActivitySkuStockService;
+import cn.qijiv.domain.activity.service.quota.policy.ITradePolicy;
 import cn.qijiv.domain.activity.service.quota.rule.factory.DefaultActivityChainFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * 抽奖活动服务
@@ -25,14 +21,16 @@ import java.util.Date;
 @Service
 public class RaffleActivityAccountQuotaService extends AbstractRaffleActivityAccountQuota implements IRaffleActivitySkuStockService {
 
+
     /**
      * 构造方法注入活动仓库与责任链工厂
      *
-     * @param activityRepository 活动仓库
+     * @param activityRepository          活动仓库
      * @param defaultActivityChainFactory 默认活动责任链工厂
+     * @param tradePolicyGroup
      */
-    public RaffleActivityAccountQuotaService(IActivityRepository activityRepository, DefaultActivityChainFactory defaultActivityChainFactory) {
-        super(activityRepository, defaultActivityChainFactory);
+    public RaffleActivityAccountQuotaService(IActivityRepository activityRepository, DefaultActivityChainFactory defaultActivityChainFactory, Map<String, ITradePolicy> tradePolicyGroup) {
+        super(activityRepository, defaultActivityChainFactory, tradePolicyGroup);
     }
 
     /**
@@ -59,7 +57,7 @@ public class RaffleActivityAccountQuotaService extends AbstractRaffleActivityAcc
         activityOrderEntity.setTotalCount(activityCountEntity.getTotalCount());
         activityOrderEntity.setDayCount(activityCountEntity.getDayCount());
         activityOrderEntity.setMonthCount(activityCountEntity.getMonthCount());
-        activityOrderEntity.setState(OrderStateVO.completed);
+        activityOrderEntity.setPayAmount(activitySkuEntity.getProductAmount());
         activityOrderEntity.setOutBusinessNo(skuRechargeEntity.getOutBusinessNo());
 
         // 构建聚合对象
@@ -73,15 +71,6 @@ public class RaffleActivityAccountQuotaService extends AbstractRaffleActivityAcc
                 .build();
     }
 
-    /**
-     * 保存活动充值订单
-     *
-     * @param createQuotaOrderAggregate 创建充值订单聚合对象
-     */
-    @Override
-    protected void doSaveOrder(CreateQuotaOrderAggregate createQuotaOrderAggregate) {
-        activityRepository.doSaveOrder(createQuotaOrderAggregate);
-    }
 
     /**
      * 获取活动SKU库存消耗队列值
@@ -120,6 +109,17 @@ public class RaffleActivityAccountQuotaService extends AbstractRaffleActivityAcc
     @Override
     public void clearActivitySkuStock(Long sku) {
         activityRepository.clearActivitySkuStock(sku);
+    }
+
+
+    /**
+     * 更新订单
+     *
+     * @param deliveryOrderEntity 订单实体对象
+     */
+    @Override
+    public void updateOrder(DeliveryOrderEntity deliveryOrderEntity) {
+        activityRepository.updateOrder(deliveryOrderEntity);
     }
 
     /**

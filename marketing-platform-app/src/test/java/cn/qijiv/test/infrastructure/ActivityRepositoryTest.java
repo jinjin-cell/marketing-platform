@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import static org.junit.Assert.*;
@@ -58,9 +59,9 @@ public class ActivityRepositoryTest {
 
         // 插入测试数据
         jdbcTemplate.update(
-                "INSERT INTO raffle_activity_sku (sku, activity_id, activity_count_id, stock_count, stock_count_surplus, create_time, update_time) " +
-                "VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
-                TEST_SKU, TEST_ACTIVITY_ID, TEST_COUNT_ID, 200, 80
+                "INSERT INTO raffle_activity_sku (sku, activity_id, activity_count_id, stock_count, stock_count_surplus, product_amount, create_time, update_time) " +
+                "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())",
+                TEST_SKU, TEST_ACTIVITY_ID, TEST_COUNT_ID, 200, 80, new BigDecimal("12.50")
         );
         jdbcTemplate.update(
                 "INSERT INTO raffle_activity (activity_id, activity_name, activity_desc, begin_date_time, end_date_time, strategy_id, state, create_time, update_time) " +
@@ -103,6 +104,7 @@ public class ActivityRepositoryTest {
         assertEquals(TEST_COUNT_ID, entity.getActivityCountId());
         assertEquals(Integer.valueOf(200), entity.getStockCount());
         assertEquals(Integer.valueOf(80), entity.getStockCountSurplus());
+        assertEquals(0, new BigDecimal("12.50").compareTo(entity.getProductAmount()));
 
         log.info("查询SKU结果：{}", entity);
     }

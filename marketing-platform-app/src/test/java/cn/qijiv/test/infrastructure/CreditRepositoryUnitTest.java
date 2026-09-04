@@ -3,18 +3,25 @@ package cn.qijiv.test.infrastructure;
 import cn.qijiv.domain.credit.model.aggregate.TradeAggregate;
 import cn.qijiv.domain.credit.model.entity.CreditAccountEntity;
 import cn.qijiv.domain.credit.model.entity.CreditOrderEntity;
+import cn.qijiv.domain.credit.model.entity.TaskEntity;
+import cn.qijiv.domain.credit.event.CreditAdjustSuccessMessageEvent;
 import cn.qijiv.domain.credit.model.valobj.TradeNameVO;
 import cn.qijiv.domain.credit.model.valobj.TradeTypeVO;
+import cn.qijiv.domain.award.model.valobj.TaskStateVO;
+import cn.qijiv.infrastructure.event.EventPublisher;
+import cn.qijiv.infrastructure.persistent.dao.ITaskDao;
 import cn.qijiv.infrastructure.persistent.dao.IUserCreditAccountDao;
 import cn.qijiv.infrastructure.persistent.dao.IUserCreditOrderDao;
 import cn.qijiv.infrastructure.persistent.db.IDBRouterStrategy;
 import cn.qijiv.infrastructure.persistent.po.UserCreditAccountPO;
 import cn.qijiv.infrastructure.persistent.po.UserCreditOrderPO;
+import cn.qijiv.infrastructure.persistent.po.TaskPO;
 import cn.qijiv.infrastructure.persistent.redis.IRedisService;
 import cn.qijiv.infrastructure.persistent.repository.CreditRepository;
 import cn.qijiv.types.common.Constants;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
+import cn.qijiv.types.event.BaseEvent;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +43,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,12 +60,18 @@ public class CreditRepositoryUnitTest {
     /** Mock 的积分订单 DAO。 */
     @Mock
     private IUserCreditOrderDao userCreditOrderDao;
+    /** Mock 的任务 DAO，用于验证可靠消息记录。 */
+    @Mock
+    private ITaskDao taskDao;
     /** Mock 的分库路由策略。 */
     @Mock
     private IDBRouterStrategy dbRouter;
     /** Mock 的事务模板。 */
     @Mock
     private TransactionTemplate transactionTemplate;
+    /** Mock 的事件发布器，用于隔离 RabbitMQ。 */
+    @Mock
+    private EventPublisher eventPublisher;
     /** Mock 的事务状态。 */
     @Mock
     private TransactionStatus transactionStatus;
@@ -109,12 +123,40 @@ public class CreditRepositoryUnitTest {
 
         ArgumentCaptor<UserCreditOrderPO> orderCaptor = ArgumentCaptor.forClass(UserCreditOrderPO.class);
         verify(userCreditOrderDao).insert(orderCaptor.capture());
+        verify(taskDao).insert(any(TaskPO.class));
+        verify(eventPublisher).publish("credit_adjust_success", aggregate.getTaskEntity().getMessage());
+        verify(taskDao).updateTaskSendMessageCompleted(any(TaskPO.class));
         assertEquals("123456789012", orderCaptor.getValue().getOrderId());
         assertEquals("行为返利", orderCaptor.getValue().getTradeName());
         assertEquals("forward", orderCaptor.getValue().getTradeType());
         assertEquals(new BigDecimal("10.00"), orderCaptor.getValue().getTradeAmount());
         verify(dbRouter).clear();
         verify(creditLock).unlock();
+    }
+
+    /** 数据库事务失败时必须向上抛错，且不能发布积分成功消息。 */
+    @Test
+    public void saveTradeOrder_databaseFailure_doesNotPublishSuccessMessage() {
+        mockLockSuccess();
+        UserCreditAccountPO account = new UserCreditAccountPO();
+        account.setAccountStatus("open");
+        account.setAvailableAmount(new BigDecimal("100.00"));
+        when(userCreditAccountDao.queryUserCreditAccountByUserId(any(UserCreditAccountPO.class))).thenReturn(account);
+        when(userCreditAccountDao.updateAddAmount(any(UserCreditAccountPO.class))).thenReturn(1);
+        doThrow(new RuntimeException("database unavailable"))
+                .when(userCreditOrderDao).insert(any(UserCreditOrderPO.class));
+
+        try {
+            creditRepository.saveUserCreditTradeOrder(createTradeAggregate());
+            fail("事务失败必须向调用方抛出异常");
+        } catch (RuntimeException e) {
+            assertEquals("database unavailable", e.getMessage());
+        }
+
+        verify(transactionStatus).setRollbackOnly();
+        verify(eventPublisher, never()).publish(anyString(), any(BaseEvent.EventMessage.class));
+        verify(taskDao, never()).updateTaskSendMessageCompleted(any(TaskPO.class));
+        verify(taskDao, never()).updateTaskSendMessageFail(any(TaskPO.class));
     }
 
     /** 验证账户不存在时插入账户（状态 open），再插入订单。 */
@@ -254,10 +296,32 @@ public class CreditRepositoryUnitTest {
                 .tradeAmount(amount)
                 .outBusinessNo("business001")
                 .build();
+        CreditAdjustSuccessMessageEvent.CreditAdjustSuccessMessage message =
+                CreditAdjustSuccessMessageEvent.CreditAdjustSuccessMessage.builder()
+                        .userId("user001")
+                        .orderId("123456789012")
+                        .amount(amount)
+                        .tradeName(TradeNameVO.REBATE.getCode())
+                        .tradeType(TradeTypeVO.FORWARD.getCode())
+                        .outBusinessNo("business001")
+                        .build();
+        BaseEvent.EventMessage<CreditAdjustSuccessMessageEvent.CreditAdjustSuccessMessage> eventMessage =
+                BaseEvent.EventMessage.<CreditAdjustSuccessMessageEvent.CreditAdjustSuccessMessage>builder()
+                        .id("message001")
+                        .data(message)
+                        .build();
+        TaskEntity taskEntity = TaskEntity.builder()
+                .userId("user001")
+                .topic("credit_adjust_success")
+                .messageId("message001")
+                .message(eventMessage)
+                .state(TaskStateVO.create)
+                .build();
         return TradeAggregate.builder()
                 .userId("user001")
                 .creditAccountEntity(creditAccountEntity)
                 .creditOrderEntity(creditOrderEntity)
+                .taskEntity(taskEntity)
                 .build();
     }
 }

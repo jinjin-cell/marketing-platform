@@ -44,13 +44,13 @@ public interface IActivityRepository {
     ActivityCountEntity queryRaffleActivityCountByActivityCountId(Long activityCountId);
 
     /**
-     * 根据外部业务单号查询订单ID
+     * 根据外部业务单号查询活动订单
      *
      * @param userId 用户ID
      * @param outBusinessNo 外部业务单号
-     * @return 订单ID
+     * @return 活动订单；不存在时返回 null
      */
-    String queryOrderIdByOutBusinessNo(String userId, String outBusinessNo);
+    ActivityOrderEntity queryActivityOrderByOutBusinessNo(String userId, String outBusinessNo);
 
     /**
      * 保存活动充值订单
@@ -177,5 +177,15 @@ public interface IActivityRepository {
 
     /** 查询用户在活动下已使用的总抽奖次数。 */
     Integer queryRaffleActivityAccountPartakeCount(Long activityId, String userId);
+
+    /** 保存未支付订单。 */
+    void doSaveNoPayOrder(CreateQuotaOrderAggregate createQuotaOrderAggregate);
+
+    /** 保存信用支付订单。 */
+    void doSaveCreditPayOrder(CreateQuotaOrderAggregate createQuotaOrderAggregate);
+
+    /** 更新订单。 */
+    void updateOrder(DeliveryOrderEntity deliveryOrderEntity);
+
 }
 

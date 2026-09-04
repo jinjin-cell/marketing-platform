@@ -47,4 +47,19 @@ public interface IRaffleActivityOrderDao {
      */
     List<RaffleActivityOrderPO> queryAllBusinessKeys();
 
+    /**
+     * 根据活动订单查询活动订单。
+     *
+     * @param raffleActivityOrderReq 活动订单信息
+     * @return 活动订单；不存在时返回null
+     */
+    RaffleActivityOrderPO queryRaffleActivityOrder(RaffleActivityOrderPO raffleActivityOrderReq);
+
+    /**
+     * 更新订单状态为完成。
+     *
+     * @param raffleActivityOrderReq 活动订单信息
+     * @return 影响行数
+     */
+    int updateOrderCompleted(RaffleActivityOrderPO raffleActivityOrderReq);
 }

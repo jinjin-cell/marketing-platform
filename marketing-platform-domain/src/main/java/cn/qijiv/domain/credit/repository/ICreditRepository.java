@@ -10,10 +10,10 @@ import cn.qijiv.domain.credit.model.aggregate.TradeAggregate;
 public interface ICreditRepository {
 
     /**
-     * 保存用户积分交易（增减账户积分并落积分订单），按业务号幂等
+     * 保存用户积分交易，按外部业务号保证幂等。
      *
      * @param tradeAggregate 积分交易聚合
-     * @return 生效的积分订单号；业务号已存在时返回原订单号
+     * @return 生效的积分订单号；重复请求返回原订单号
      */
     String saveUserCreditTradeOrder(TradeAggregate tradeAggregate);
 

@@ -3,10 +3,13 @@ package cn.qijiv.trigger.http;
 import cn.qijiv.api.IRaffleActivityService;
 import cn.qijiv.api.dto.ActivityDrawRequestDTO;
 import cn.qijiv.api.dto.ActivityDrawResponseDTO;
+import cn.qijiv.api.dto.CreditPayExchangeRequestDTO;
 import cn.qijiv.api.dto.UserActivityAccountRequestDTO;
 import cn.qijiv.api.dto.UserActivityAccountResponseDTO;
 import cn.qijiv.domain.activity.model.entity.ActivityAccountEntity;
 import cn.qijiv.domain.activity.model.entity.UserRaffleOrderEntity;
+import cn.qijiv.domain.activity.model.entity.SkuRechargeEntity;
+import cn.qijiv.domain.activity.model.valobj.OrderTradeTypeVO;
 import cn.qijiv.domain.activity.service.IRaffleActivityAccountQuotaService;
 import cn.qijiv.domain.activity.service.IRaffleActivityPartakeService;
 import cn.qijiv.domain.activity.service.armory.IActivityArmory;
@@ -304,6 +307,41 @@ public class RaffleActivityController implements IRaffleActivityService {
         } catch (Exception e) {
             log.error("查询用户活动账户失败，用户ID：{}，活动ID：{}", userId, activityId, e);
             return Response.<UserActivityAccountResponseDTO>builder()
+                    .code(ResponseCode.UN_ERROR.getCode())
+                    .info(ResponseCode.UN_ERROR.getInfo())
+                    .build();
+        }
+    }
+
+    /** 使用积分兑换活动商品，并返回活动订单号。 */
+    @RequestMapping(value = "credit_pay_exchange_sku", method = RequestMethod.POST)
+    @Override
+    public Response<String> creditPayExchangeSku(@RequestBody CreditPayExchangeRequestDTO request) {
+        String userId = null == request ? null : request.getUserId();
+        Long sku = null == request ? null : request.getSku();
+        String outBusinessNo = null == request ? null : request.getOutBusinessNo();
+        try {
+            if (StringUtils.isBlank(userId) || null == sku || StringUtils.isBlank(outBusinessNo)) {
+                throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+            }
+
+            SkuRechargeEntity skuRechargeEntity = new SkuRechargeEntity();
+            skuRechargeEntity.setUserId(userId);
+            skuRechargeEntity.setSku(sku);
+            skuRechargeEntity.setOutBusinessNo(outBusinessNo);
+            skuRechargeEntity.setOrderTradeType(OrderTradeTypeVO.credit_pay_trade);
+            String orderId = raffleActivityAccountQuotaService.createSkuRechargeOrder(skuRechargeEntity);
+            return Response.<String>builder()
+                    .code(ResponseCode.SUCCESS.getCode())
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    .data(orderId)
+                    .build();
+        } catch (AppException e) {
+            log.warn("积分兑换商品失败 userId:{} sku:{} outBusinessNo:{}", userId, sku, outBusinessNo, e);
+            return Response.<String>builder().code(e.getCode()).info(e.getInfo()).build();
+        } catch (Exception e) {
+            log.error("积分兑换商品异常 userId:{} sku:{} outBusinessNo:{}", userId, sku, outBusinessNo, e);
+            return Response.<String>builder()
                     .code(ResponseCode.UN_ERROR.getCode())
                     .info(ResponseCode.UN_ERROR.getInfo())
                     .build();

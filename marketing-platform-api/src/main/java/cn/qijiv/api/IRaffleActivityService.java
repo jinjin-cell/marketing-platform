@@ -3,6 +3,7 @@ package cn.qijiv.api;
 
 import cn.qijiv.api.dto.ActivityDrawRequestDTO;
 import cn.qijiv.api.dto.ActivityDrawResponseDTO;
+import cn.qijiv.api.dto.CreditPayExchangeRequestDTO;
 import cn.qijiv.api.dto.UserActivityAccountRequestDTO;
 import cn.qijiv.api.dto.UserActivityAccountResponseDTO;
 import cn.qijiv.types.model.Response;
@@ -56,6 +57,14 @@ public interface IRaffleActivityService {
      * @return 返回结果「总额度、月额度、日额度」
      */
     Response<UserActivityAccountResponseDTO> queryUserActivityAccount(UserActivityAccountRequestDTO request);
+
+    /**
+     * 使用用户积分兑换活动商品。
+     *
+     * @param request 用户、SKU 与幂等业务号
+     * @return 活动订单号
+     */
+    Response<String> creditPayExchangeSku(CreditPayExchangeRequestDTO request);
 
 
 }

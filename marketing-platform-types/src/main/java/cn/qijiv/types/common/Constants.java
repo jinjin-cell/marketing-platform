@@ -75,6 +75,9 @@ public class Constants {
     /** 奖品 Key 缓存前缀，后接奖品 ID */
     public static String AWARD_KEY = "big_market_award_key_";
 
+    /** 活动账户操作分布式锁 Key 前缀，后接 userId_activityId */
+    public static String ACTIVITY_ACCOUNT_UPDATE_LOCK = "activity_account_update_lock_";
+
     /** 用户积分账户操作分布式锁 Key 前缀，后接 userId */
     public static String USER_CREDIT_ACCOUNT_LOCK = "user_credit_account_lock_";
 

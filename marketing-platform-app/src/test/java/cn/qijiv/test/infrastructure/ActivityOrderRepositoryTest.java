@@ -52,7 +52,7 @@ public class ActivityOrderRepositoryTest {
         activityRepository.doSaveOrder(createAggregate("100000000002", "order-flow-business-002", 2, 1, 1));
 
         assertEquals("100000000001",
-                activityRepository.queryOrderIdByOutBusinessNo(USER_ID, "order-flow-business-001"));
+                activityRepository.queryActivityOrderByOutBusinessNo(USER_ID, "order-flow-business-001").getOrderId());
         assertEquals(Integer.valueOf(2), queryOrderCount());
         assertAccountQuota(12, 12, 4, 4, 6, 6);
 

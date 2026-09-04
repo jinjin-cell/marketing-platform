@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 
 import static org.junit.Assert.*;
 
@@ -43,9 +44,9 @@ public class ActivitySkuDaoTest {
     public void setUp() {
         // 插入测试数据到 raffle_activity_sku 表
         jdbcTemplate.update(
-                "INSERT INTO raffle_activity_sku (sku, activity_id, activity_count_id, stock_count, stock_count_surplus, create_time, update_time) " +
-                "VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
-                TEST_SKU, TEST_ACTIVITY_ID, TEST_COUNT_ID, 100, 50
+                "INSERT INTO raffle_activity_sku (sku, activity_id, activity_count_id, stock_count, stock_count_surplus, product_amount, create_time, update_time) " +
+                "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())",
+                TEST_SKU, TEST_ACTIVITY_ID, TEST_COUNT_ID, 100, 50, new BigDecimal("8.80")
         );
         log.info("已插入测试SKU数据: sku={}", TEST_SKU);
     }
@@ -68,6 +69,7 @@ public class ActivitySkuDaoTest {
         assertEquals(TEST_COUNT_ID, sku.getActivityCountId());
         assertEquals(Integer.valueOf(100), sku.getStockCount());
         assertEquals(Integer.valueOf(50), sku.getStockCountSurplus());
+        assertEquals(0, new BigDecimal("8.80").compareTo(sku.getProductAmount()));
 
         log.info("查询结果：sku={}, activityId={}, activityCountId={}, stockCount={}, stockCountSurplus={}",
                 sku.getSku(), sku.getActivityId(), sku.getActivityCountId(),

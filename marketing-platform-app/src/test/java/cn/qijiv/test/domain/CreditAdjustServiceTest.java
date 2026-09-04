@@ -1,5 +1,6 @@
 package cn.qijiv.test.domain;
 
+import cn.qijiv.domain.credit.event.CreditAdjustSuccessMessageEvent;
 import cn.qijiv.domain.credit.model.entity.TradeEntity;
 import cn.qijiv.domain.credit.model.aggregate.TradeAggregate;
 import cn.qijiv.domain.credit.model.valobj.TradeNameVO;
@@ -26,6 +27,9 @@ public class CreditAdjustServiceTest {
         CreditAdjustService service = new CreditAdjustService();
         CapturingRepository repository = new CapturingRepository();
         setField(service, "creditRepository", repository);
+        CreditAdjustSuccessMessageEvent event = new CreditAdjustSuccessMessageEvent();
+        setField(event, "topic", "credit_adjust_success");
+        setField(service, "creditAdjustSuccessMessageEvent", event);
 
         String orderId = service.createOrder(TradeEntity.builder()
                 .userId("user001")
@@ -42,6 +46,16 @@ public class CreditAdjustServiceTest {
         assertEquals(TradeNameVO.REBATE, repository.aggregate.getCreditOrderEntity().getTradeName());
         assertEquals(TradeTypeVO.REVERSE, repository.aggregate.getCreditOrderEntity().getTradeType());
         assertEquals("rebate-002", repository.aggregate.getCreditOrderEntity().getOutBusinessNo());
+        assertNotNull(repository.aggregate.getTaskEntity());
+        assertEquals("user001", repository.aggregate.getTaskEntity().getUserId());
+        assertEquals("credit_adjust_success", repository.aggregate.getTaskEntity().getTopic());
+        assertEquals("order-001", orderId);
+        CreditAdjustSuccessMessageEvent.CreditAdjustSuccessMessage message =
+                repository.aggregate.getTaskEntity().getMessage().getData();
+        assertEquals("user001", message.getUserId());
+        assertEquals("rebate-002", message.getOutBusinessNo());
+        assertEquals(TradeNameVO.REBATE.getCode(), message.getTradeName());
+        assertEquals(TradeTypeVO.REVERSE.getCode(), message.getTradeType());
     }
 
     /** 零金额若允许落单，会产生无法反映任何资金变动的积分流水。 */

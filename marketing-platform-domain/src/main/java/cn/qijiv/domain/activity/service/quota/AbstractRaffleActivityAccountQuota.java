@@ -3,10 +3,13 @@ package cn.qijiv.domain.activity.service.quota;
 import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
 import cn.qijiv.domain.activity.model.entity.ActivityCountEntity;
 import cn.qijiv.domain.activity.model.entity.ActivityEntity;
+import cn.qijiv.domain.activity.model.entity.ActivityOrderEntity;
 import cn.qijiv.domain.activity.model.entity.ActivitySkuEntity;
 import cn.qijiv.domain.activity.model.entity.SkuRechargeEntity;
+import cn.qijiv.domain.activity.model.valobj.OrderStateVO;
 import cn.qijiv.domain.activity.repository.IActivityRepository;
 import cn.qijiv.domain.activity.service.IRaffleActivityAccountQuotaService;
+import cn.qijiv.domain.activity.service.quota.policy.ITradePolicy;
 import cn.qijiv.domain.activity.service.quota.rule.IActionChain;
 import cn.qijiv.domain.activity.service.quota.rule.factory.DefaultActivityChainFactory;
 import cn.qijiv.types.enums.ResponseCode;
@@ -14,20 +17,25 @@ import cn.qijiv.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Map;
+
 /**
  * 抽奖活动账户额度抽象类
  */
 @Slf4j
 public abstract class AbstractRaffleActivityAccountQuota extends RaffleActivityAccountQuotaSupport implements IRaffleActivityAccountQuotaService {
 
+
+    private final Map<String, ITradePolicy> tradePolicyGroup;
     /**
      * 构造方法注入活动仓库与责任链工厂
      *
      * @param activityRepository 活动仓库
      * @param defaultActivityChainFactory 默认活动责任链工厂
      */
-    public AbstractRaffleActivityAccountQuota(IActivityRepository activityRepository, DefaultActivityChainFactory defaultActivityChainFactory) {
+    public AbstractRaffleActivityAccountQuota(IActivityRepository activityRepository, DefaultActivityChainFactory defaultActivityChainFactory, Map<String, ITradePolicy> tradePolicyGroup) {
         super(activityRepository, defaultActivityChainFactory);
+        this.tradePolicyGroup = tradePolicyGroup;
     }
 
     /**
@@ -50,9 +58,18 @@ public abstract class AbstractRaffleActivityAccountQuota extends RaffleActivityA
         }
 
         // 2. 幂等校验。Bloom 判定不存在时跳过数据库，判定可能存在时再查询数据库确认。
-        String existingOrderId = activityRepository.queryOrderIdByOutBusinessNo(userId, outBusinessNo);
-        if (null != existingOrderId) {
-            return existingOrderId;
+        ActivityOrderEntity existingOrder = activityRepository.queryActivityOrderByOutBusinessNo(userId, outBusinessNo);
+        if (null != existingOrder) {
+            if (OrderStateVO.wait_pay == existingOrder.getState()) {
+                CreateQuotaOrderAggregate existingOrderAggregate = CreateQuotaOrderAggregate.builder()
+                        .userId(existingOrder.getUserId())
+                        .activityId(existingOrder.getActivityId())
+                        .activityOrderEntity(existingOrder)
+                        .build();
+                ITradePolicy tradePolicy = tradePolicyGroup.get(skuRechargeEntity.getOrderTradeType().getCode());
+                tradePolicy.trade(existingOrderAggregate);
+            }
+            return existingOrder.getOrderId();
         }
 
         // 3. 查询基础信息
@@ -71,7 +88,8 @@ public abstract class AbstractRaffleActivityAccountQuota extends RaffleActivityA
         CreateQuotaOrderAggregate createQuotaOrderAggregate = buildOrderAggregate(skuRechargeEntity, activitySkuEntity, activityEntity, activityCountEntity);
 
         // 6. 保存订单
-        doSaveOrder(createQuotaOrderAggregate);
+        ITradePolicy tradePolicy = tradePolicyGroup.get(skuRechargeEntity.getOrderTradeType().getCode());
+        tradePolicy.trade(createQuotaOrderAggregate);
 
         // 7. 返回单号
         return createQuotaOrderAggregate.getActivityOrderEntity().getOrderId();
@@ -88,11 +106,5 @@ public abstract class AbstractRaffleActivityAccountQuota extends RaffleActivityA
      */
     protected abstract CreateQuotaOrderAggregate buildOrderAggregate(SkuRechargeEntity skuRechargeEntity, ActivitySkuEntity activitySkuEntity, ActivityEntity activityEntity, ActivityCountEntity activityCountEntity);
 
-    /**
-     * 保存活动充值订单
-     *
-     * @param createQuotaOrderAggregate 创建充值订单聚合对象
-     */
-    protected abstract void doSaveOrder(CreateQuotaOrderAggregate createQuotaOrderAggregate);
 
 }

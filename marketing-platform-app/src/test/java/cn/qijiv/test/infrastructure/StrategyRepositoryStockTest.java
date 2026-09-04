@@ -44,11 +44,12 @@ public class StrategyRepositoryStockTest {
     @Test
     public void subtractionAwardStock_positiveSurplusAndUniqueSlot_returnsTrue() {
         when(redisService.decr(STOCK_KEY)).thenReturn(4L);
-        when(redisService.setNx(STOCK_KEY + "_4")).thenReturn(true);
+        when(redisService.setNx(STOCK_KEY + "_4", TimeUnit.DAYS.toMillis(1), TimeUnit.MILLISECONDS))
+                .thenReturn(true);
 
         assertTrue(repository.subtractionAwardStock(STOCK_KEY));
 
-        verify(redisService).setNx(STOCK_KEY + "_4");
+        verify(redisService).setNx(STOCK_KEY + "_4", TimeUnit.DAYS.toMillis(1), TimeUnit.MILLISECONDS);
         verify(redisService, never()).setAtomicLong(STOCK_KEY, 0);
     }
 
@@ -67,7 +68,8 @@ public class StrategyRepositoryStockTest {
     @Test
     public void subtractionAwardStock_duplicateSurplusSlot_returnsFalse() {
         when(redisService.decr(STOCK_KEY)).thenReturn(4L);
-        when(redisService.setNx(STOCK_KEY + "_4")).thenReturn(false);
+        when(redisService.setNx(STOCK_KEY + "_4", TimeUnit.DAYS.toMillis(1), TimeUnit.MILLISECONDS))
+                .thenReturn(false);
 
         assertFalse(repository.subtractionAwardStock(STOCK_KEY));
     }

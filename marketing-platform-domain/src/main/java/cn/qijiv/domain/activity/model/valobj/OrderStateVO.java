@@ -13,7 +13,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum OrderStateVO {
 
-    /** 已完成 */
+    wait_pay("wait_pay","待支付"),
     completed("completed", "完成");
 
     /** 状态编码 */

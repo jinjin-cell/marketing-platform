@@ -24,6 +24,15 @@
           AND activity_id = #{activityId}
     </select>
 
+    <select id="queryAccountByUserId" resultMap="RaffleActivityAccountMap">
+        SELECT id, user_id, activity_id, total_count, total_count_surplus, day_count,
+               day_count_surplus, month_count, month_count_surplus, create_time, update_time
+        FROM raffle_activity_account
+        WHERE user_id = #{userId}
+          AND activity_id = #{activityId}
+        LIMIT 1
+    </select>
+
     <update id="updateAccountQuota"
             parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO">
         UPDATE raffle_activity_account

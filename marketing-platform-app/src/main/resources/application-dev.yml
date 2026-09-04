@@ -49,6 +49,8 @@ spring:
       activity_sku_stock_zero: activity_sku_stock_zero
       send_award: send.award
       send_rebate: send.rebate
+      credit_adjust_success: credit_adjust_success
+
   shardingsphere:
     datasource:
       names: ds0,ds1,ds2

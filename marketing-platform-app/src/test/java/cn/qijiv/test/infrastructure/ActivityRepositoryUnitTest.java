@@ -37,6 +37,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -110,6 +111,7 @@ public class ActivityRepositoryUnitTest {
         skuPO.setActivityCountId(30001L);
         skuPO.setStockCount(100);
         skuPO.setStockCountSurplus(40);
+        skuPO.setProductAmount(new BigDecimal("12.50"));
         when(raffleActivitySkuDao.queryRaffleActivitySkuBySku(10001L)).thenReturn(skuPO);
 
         ActivitySkuEntity result = activityRepository.queryActivitySku(10001L);
@@ -119,6 +121,7 @@ public class ActivityRepositoryUnitTest {
         assertEquals(Long.valueOf(30001L), result.getActivityCountId());
         assertEquals(Integer.valueOf(100), result.getStockCount());
         assertEquals(Integer.valueOf(40), result.getStockCountSurplus());
+        assertEquals(new BigDecimal("12.50"), result.getProductAmount());
         verify(raffleActivitySkuDao).queryRaffleActivitySkuBySku(10001L);
     }
 
@@ -247,14 +250,31 @@ public class ActivityRepositoryUnitTest {
         verify(dbRouter).clear();
     }
 
+    /** 积分支付订单保存成功后必须登记业务号，后续重试才能走数据库幂等查询。 */
+    @Test
+    public void doSaveCreditPayOrder_success_addsBusinessNumberToBloomFilter() {
+        CreateQuotaOrderAggregate aggregate = createOrderAggregate();
+        aggregate.getActivityOrderEntity().setState(OrderStateVO.wait_pay);
+        aggregate.getActivityOrderEntity().setPayAmount(new BigDecimal("12.50"));
+
+        activityRepository.doSaveCreditPayOrder(aggregate);
+
+        ArgumentCaptor<RaffleActivityOrderPO> captor = ArgumentCaptor.forClass(RaffleActivityOrderPO.class);
+        verify(raffleActivityOrderDao).insert(captor.capture());
+        assertEquals(OrderStateVO.wait_pay.getCode(), captor.getValue().getState());
+        assertEquals(new BigDecimal("12.50"), captor.getValue().getPayAmount());
+        verify(orderBloomFilter).add("user001", "business001");
+        verify(dbRouter).clear();
+    }
+
     /** 验证布隆过滤器判不存在时跳过数据库查询直接返回 null。 */
     @Test
     public void queryOrder_bloomSaysAbsent_skipsDatabase() {
         when(orderBloomFilter.mightContain("user001", "business001")).thenReturn(false);
 
-        String orderId = activityRepository.queryOrderIdByOutBusinessNo("user001", "business001");
+        ActivityOrderEntity order = activityRepository.queryActivityOrderByOutBusinessNo("user001", "business001");
 
-        assertNull(orderId);
+        assertNull(order);
         verify(raffleActivityOrderDao, never()).queryByOutBusinessNo("user001", "business001");
         verify(dbRouter, never()).doRouter("user001");
     }
@@ -263,13 +283,25 @@ public class ActivityRepositoryUnitTest {
     @Test
     public void queryOrder_bloomSaysPossible_confirmsWithDatabase() {
         RaffleActivityOrderPO order = new RaffleActivityOrderPO();
+        order.setUserId("user001");
+        order.setSku(9011L);
+        order.setActivityId(100301L);
         order.setOrderId("123456789012");
+        order.setOutBusinessNo("business001");
+        order.setPayAmount(new BigDecimal("12.50"));
+        order.setState(OrderStateVO.wait_pay.getCode());
         when(orderBloomFilter.mightContain("user001", "business001")).thenReturn(true);
         when(raffleActivityOrderDao.queryByOutBusinessNo("user001", "business001")).thenReturn(order);
 
-        String orderId = activityRepository.queryOrderIdByOutBusinessNo("user001", "business001");
+        ActivityOrderEntity result = activityRepository.queryActivityOrderByOutBusinessNo("user001", "business001");
 
-        assertEquals("123456789012", orderId);
+        assertEquals("123456789012", result.getOrderId());
+        assertEquals("user001", result.getUserId());
+        assertEquals(Long.valueOf(9011L), result.getSku());
+        assertEquals(Long.valueOf(100301L), result.getActivityId());
+        assertEquals("business001", result.getOutBusinessNo());
+        assertEquals(new BigDecimal("12.50"), result.getPayAmount());
+        assertEquals(OrderStateVO.wait_pay, result.getState());
         verify(dbRouter).doRouter("user001");
         verify(dbRouter).clear();
     }
