@@ -151,6 +151,16 @@ spring:
             standard:
               sharding-column: user_id
               precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+        user_credit_order:
+          actual-data-nodes: ds$->{1..2}.user_credit_order_00$->{0..3}
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+          table-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
     props:
       sql:
         show: false
@@ -162,7 +172,7 @@ redis:
   database: 0
   connection-pool-size: 32
   connection-minimum-idle-size: 8
-  connect-timeout: 10000
+  connect-timeout: 15000
   timeout: 3000
 
 mybatis:
@@ -173,4 +183,7 @@ mybatis:
 logging:
   level:
     root: info
+    # 降低 ShardingSphere 启动时打印分库分表配置与元数据加载的 INFO 日志，避免刷屏
+    org.apache.shardingsphere: warn
+    ShardingSphere-metadata: warn
   config: classpath:logback-spring.xml

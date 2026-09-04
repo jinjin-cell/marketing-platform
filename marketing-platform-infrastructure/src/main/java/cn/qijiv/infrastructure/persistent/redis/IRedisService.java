@@ -2,6 +2,7 @@ package cn.qijiv.infrastructure.persistent.redis;
 
 import org.redisson.api.RBlockingQueue;
 import org.redisson.api.RDelayedQueue;
+import org.redisson.api.RLock;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -131,5 +132,13 @@ public interface IRedisService {
      * @return 获取成功返回 true
      */
     Boolean setNx(String key, long expired, TimeUnit timeUnit);
+
+    /**
+     * 获取分布式可重入锁
+     *
+     * @param lockKey 锁键
+     * @return 分布式锁
+     */
+    RLock getLock(String lockKey);
 
 }

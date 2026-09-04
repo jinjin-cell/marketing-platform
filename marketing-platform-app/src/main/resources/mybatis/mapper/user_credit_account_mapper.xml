@@ -31,6 +31,8 @@
             available_amount = available_amount + #{availableAmount},
             update_time = NOW()
         WHERE user_id = #{userId}
+          AND account_status = 'open'
+          AND available_amount + #{availableAmount} >= 0
     </update>
 
 </mapper>

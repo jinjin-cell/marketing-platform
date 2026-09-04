@@ -21,6 +21,7 @@ import cn.qijiv.infrastructure.persistent.po.RaffleActivitySkuPO;
 import cn.qijiv.infrastructure.persistent.redis.IRedisService;
 import cn.qijiv.infrastructure.persistent.redis.OrderBusinessNoBloomFilter;
 import cn.qijiv.infrastructure.persistent.repository.ActivityRepository;
+import org.redisson.api.RLock;
 import cn.qijiv.types.common.Constants;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
@@ -37,11 +38,12 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -82,6 +84,9 @@ public class ActivityRepositoryUnitTest {
     /** Mock 的订单号布隆过滤器，用于验证去重查询。 */
     @Mock
     private OrderBusinessNoBloomFilter orderBloomFilter;
+    /** Mock 的分布式可重入锁，用于验证保存订单时的加锁路径。 */
+    @Mock
+    private RLock activityLock;
 
     /** 被测的活动仓储，由 Mock 依赖注入构建。 */
     @InjectMocks
@@ -206,8 +211,10 @@ public class ActivityRepositoryUnitTest {
     /** 验证账户已存在时仅插入订单并更新账户额度，不重复创建账户。 */
     @Test
     public void doSaveOrder_existingAccount_insertsOrderAndAddsQuota() {
+        mockAccountLock();
         CreateQuotaOrderAggregate aggregate = createOrderAggregate();
         when(raffleActivityAccountDao.updateAccountQuota(any(RaffleActivityAccountPO.class))).thenReturn(1);
+        when(raffleActivityAccountDao.queryActivityAccountByUserId(any(RaffleActivityAccountPO.class))).thenReturn(new RaffleActivityAccountPO());
 
         activityRepository.doSaveOrder(aggregate);
 
@@ -230,8 +237,9 @@ public class ActivityRepositoryUnitTest {
     /** 验证账户不存在时插入订单的同时创建账户。 */
     @Test
     public void doSaveOrder_missingAccount_createsAccount() {
+        mockAccountLock();
         CreateQuotaOrderAggregate aggregate = createOrderAggregate();
-        when(raffleActivityAccountDao.updateAccountQuota(any(RaffleActivityAccountPO.class))).thenReturn(0);
+        when(raffleActivityAccountDao.queryActivityAccountByUserId(any(RaffleActivityAccountPO.class))).thenReturn(null);
 
         activityRepository.doSaveOrder(aggregate);
 
@@ -246,7 +254,7 @@ public class ActivityRepositoryUnitTest {
 
         String orderId = activityRepository.queryOrderIdByOutBusinessNo("user001", "business001");
 
-        assertEquals(null, orderId);
+        assertNull(orderId);
         verify(raffleActivityOrderDao, never()).queryByOutBusinessNo("user001", "business001");
         verify(dbRouter, never()).doRouter("user001");
     }
@@ -269,6 +277,7 @@ public class ActivityRepositoryUnitTest {
     /** 验证重复业务单号触发唯一索引异常时回滚事务并清理路由。 */
     @Test
     public void doSaveOrder_duplicateBusinessNumber_rollsBackAndClearsRoute() {
+        mockAccountLock();
         CreateQuotaOrderAggregate aggregate = createOrderAggregate();
         doThrow(new DuplicateKeyException("duplicate out_business_no"))
                 .when(raffleActivityOrderDao).insert(any(RaffleActivityOrderPO.class));
@@ -283,6 +292,17 @@ public class ActivityRepositoryUnitTest {
         verify(transactionStatus).setRollbackOnly();
         verify(raffleActivityAccountDao, never()).updateAccountQuota(any(RaffleActivityAccountPO.class));
         verify(dbRouter).clear();
+    }
+
+    /** 模拟分布式锁：获取锁成功，避免保存订单时加锁阻塞或超时。 */
+    private void mockAccountLock() {
+        when(redisService.getLock(anyString())).thenReturn(activityLock);
+        try {
+            when(activityLock.tryLock(anyLong(), any(TimeUnit.class))).thenReturn(true);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("模拟分布式锁获取被中断", e);
+        }
     }
 
     /** 构造一个创建订单聚合实体的默认测试数据。 */
