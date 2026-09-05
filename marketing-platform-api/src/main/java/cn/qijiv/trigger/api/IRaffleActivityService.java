@@ -1,7 +1,7 @@
-package cn.qijiv.api;
+package cn.qijiv.trigger.api;
 
 
-import cn.qijiv.api.dto.*;
+import cn.qijiv.trigger.api.dto.*;
 import cn.qijiv.types.model.Response;
 
 import java.math.BigDecimal;

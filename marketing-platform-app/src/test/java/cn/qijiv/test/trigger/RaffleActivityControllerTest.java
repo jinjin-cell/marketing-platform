@@ -1,8 +1,8 @@
 package cn.qijiv.test.trigger;
 
-import cn.qijiv.api.IRaffleActivityService;
-import cn.qijiv.api.dto.ActivityDrawRequestDTO;
-import cn.qijiv.api.dto.ActivityDrawResponseDTO;
+import cn.qijiv.trigger.api.IRaffleActivityService;
+import cn.qijiv.trigger.api.dto.ActivityDrawRequestDTO;
+import cn.qijiv.trigger.api.dto.ActivityDrawResponseDTO;
 import cn.qijiv.types.model.Response;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;

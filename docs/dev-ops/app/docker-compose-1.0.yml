@@ -8,10 +8,16 @@ services:
     restart: on-failure
     ports:
       - "8091:8091"
+      - "20880:20880"
     environment:
       TZ: Asia/Shanghai
       SERVER_PORT: 8091
       SPRING_PROFILES_ACTIVE: dev
+      DUBBO_PORT: 20880
+      DUBBO_IP_TO_REGISTRY: 111.228.17.153
+      JAVA_OPTS: "-DDUBBO_IP_TO_REGISTRY=111.228.17.153"
+      NACOS_HOST: 111.228.17.153
+      NACOS_PORT: 8848
     volumes:
       - ./log:/data/log
     logging:

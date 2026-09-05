@@ -1,7 +1,8 @@
-package cn.qijiv.api.dto;
+package cn.qijiv.trigger.api.dto;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
@@ -10,7 +11,7 @@ import java.math.BigDecimal;
  * @since 2026-09-05
  */
 @Data
-public class SkuProductResponseDTO {
+public class SkuProductResponseDTO implements Serializable {
 
     /**
      * 商品sku

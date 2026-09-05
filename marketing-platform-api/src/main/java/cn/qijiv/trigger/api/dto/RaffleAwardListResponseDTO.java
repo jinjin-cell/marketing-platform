@@ -1,9 +1,11 @@
-package cn.qijiv.api.dto;
+package cn.qijiv.trigger.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
 
 /**
  * 抽奖奖品列表查询响应参数
@@ -15,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RaffleAwardListResponseDTO {
+public class RaffleAwardListResponseDTO implements Serializable {
 
     /** 奖品ID。 */
     private Integer awardId;

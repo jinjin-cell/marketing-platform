@@ -1,9 +1,11 @@
-package cn.qijiv.api.dto;
+package cn.qijiv.trigger.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
 
 /**
  * 用户活动账户响应DTO
@@ -15,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserActivityAccountResponseDTO {
+public class UserActivityAccountResponseDTO implements Serializable {
 
     /**
      * 总次数

@@ -1,8 +1,8 @@
 package cn.qijiv.test.trigger;
 
-import cn.qijiv.api.IRaffleStrategyService;
-import cn.qijiv.api.dto.RaffleAwardListRequestDTO;
-import cn.qijiv.api.dto.RaffleAwardListResponseDTO;
+import cn.qijiv.trigger.api.IRaffleStrategyService;
+import cn.qijiv.trigger.api.dto.RaffleAwardListRequestDTO;
+import cn.qijiv.trigger.api.dto.RaffleAwardListResponseDTO;
 import cn.qijiv.types.model.Response;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;

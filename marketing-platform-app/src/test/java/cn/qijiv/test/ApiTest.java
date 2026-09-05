@@ -1,6 +1,6 @@
 package cn.qijiv.test;
 
-import cn.qijiv.api.dto.RaffleAwardListRequestDTO;
+import cn.qijiv.trigger.api.dto.RaffleAwardListRequestDTO;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;

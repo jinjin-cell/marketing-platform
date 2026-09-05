@@ -1,6 +1,8 @@
-package cn.qijiv.api.dto;
+package cn.qijiv.trigger.api.dto;
 
 import lombok.Data;
+
+import java.io.Serializable;
 
 /**
  * 活动抽奖请求参数
@@ -9,7 +11,7 @@ import lombok.Data;
  * @since 2026-08-24
  */
 @Data
-public class ActivityDrawRequestDTO {
+public class ActivityDrawRequestDTO implements Serializable {
 
     /**
      * 用户ID

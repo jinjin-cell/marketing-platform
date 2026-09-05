@@ -1,10 +1,12 @@
-package cn.qijiv.api.dto;
+package cn.qijiv.trigger.api.dto;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 /** 积分兑换活动商品请求。 */
 @Data
-public class CreditPayExchangeRequestDTO {
+public class CreditPayExchangeRequestDTO implements Serializable {
 
     /** 用户ID。 */
     private String userId;

@@ -94,6 +94,19 @@ redis:
   connect-timeout: 15000
   timeout: 3000
 
+dubbo:
+  application:
+    name: marketing-platform
+    version: 1.0
+  registry:
+    id: nacos-registry
+    address: nacos://${NACOS_HOST:111.228.17.153}:${NACOS_PORT:8848}
+  protocol:
+    name: dubbo
+    port: ${DUBBO_PORT:20880}
+  scan:
+    base-packages: cn.qijiv.trigger.http
+
 mybatis:
  mapper-locations: classpath:/mybatis/mapper/*.xml
  config-location:  classpath:/mybatis/config/mybatis-config.xml

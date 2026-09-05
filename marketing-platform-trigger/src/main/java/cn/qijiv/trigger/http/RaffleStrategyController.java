@@ -1,7 +1,5 @@
 package cn.qijiv.trigger.http;
 
-import cn.qijiv.api.IRaffleStrategyService;
-import cn.qijiv.api.dto.*;
 import cn.qijiv.domain.activity.service.IRaffleActivityAccountQuotaService;
 import cn.qijiv.domain.strategy.model.entity.RaffleAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.RaffleFactorEntity;
@@ -11,18 +9,16 @@ import cn.qijiv.domain.strategy.service.IRaffleAward;
 import cn.qijiv.domain.strategy.service.IRaffleRule;
 import cn.qijiv.domain.strategy.service.IRaffleStrategy;
 import cn.qijiv.domain.strategy.service.armory.IStrategyArmory;
+import cn.qijiv.trigger.api.IRaffleStrategyService;
+import cn.qijiv.trigger.api.dto.*;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import cn.qijiv.types.model.Response;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.apache.dubbo.config.annotation.DubboService;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +30,7 @@ import java.util.stream.Collectors;
 @RestController
 @CrossOrigin("${app.config.cross-origin:*}")
 @RequestMapping("/api/${app.config.api-version:v1}/raffle/strategy/")
+@DubboService(version = "1.0")
 public class RaffleStrategyController implements IRaffleStrategyService {
 
     /** 系统用户ID，随机抽奖场景下使用 */

@@ -1,7 +1,8 @@
-package cn.qijiv.api.dto;
+package cn.qijiv.trigger.api.dto;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -11,7 +12,7 @@ import java.util.List;
  * @since  2026/08/31
  */
 @Data
-public class RaffleStrategyRuleWeightResponseDTO {
+public class RaffleStrategyRuleWeightResponseDTO implements Serializable {
 
     // 权重规则配置的抽奖次数
     private Integer ruleWeightCount;

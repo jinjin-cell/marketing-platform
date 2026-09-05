@@ -1,6 +1,6 @@
 package cn.qijiv.test.trigger;
 
-import cn.qijiv.api.dto.SkuProductShopCartRequestDTO;
+import cn.qijiv.trigger.api.dto.SkuProductShopCartRequestDTO;
 import cn.qijiv.domain.activity.model.entity.SkuRechargeEntity;
 import cn.qijiv.domain.activity.model.entity.UnpaidActivityOrderEntity;
 import cn.qijiv.domain.activity.model.valobj.OrderTradeTypeVO;

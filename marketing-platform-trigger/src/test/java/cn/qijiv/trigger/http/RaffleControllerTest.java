@@ -1,9 +1,9 @@
 package cn.qijiv.trigger.http;
 
-import cn.qijiv.api.dto.RaffleAwardListRequestDTO;
-import cn.qijiv.api.dto.RaffleAwardListResponseDTO;
-import cn.qijiv.api.dto.RaffleStrategyRequestDTO;
-import cn.qijiv.api.dto.RaffleStrategyResponseDTO;
+import cn.qijiv.trigger.api.dto.RaffleAwardListRequestDTO;
+import cn.qijiv.trigger.api.dto.RaffleAwardListResponseDTO;
+import cn.qijiv.trigger.api.dto.RaffleStrategyRequestDTO;
+import cn.qijiv.trigger.api.dto.RaffleStrategyResponseDTO;
 import cn.qijiv.domain.activity.service.IRaffleActivityAccountQuotaService;
 import cn.qijiv.domain.strategy.model.entity.RaffleAwardEntity;
 import cn.qijiv.domain.strategy.model.entity.RaffleFactorEntity;
