@@ -71,11 +71,20 @@
           AND state = 'wait_pay'
     </update>
 
-    <select id="queryUnpaidActivityOrder" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO" resultMap="dataMap">
+    <select id="queryUnpaidActivityOrder" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO" resultMap="RaffleActivityOrderMap">
         select user_id, order_id, out_business_no, pay_amount
         from raffle_activity_order
         where user_id = #{userId} and sku = #{sku} and state = 'wait_pay' and order_time >= NOW() - INTERVAL 1 MONTH
         limit 1
     </select>
+
+    <!-- 不带 user_id 分片键，由 ShardingSphere 广播到全部分表，将超过一个月未支付的订单置为过期 -->
+    <update id="updateOrderExpired">
+        UPDATE raffle_activity_order
+        SET state = 'expired',
+            update_time = NOW()
+        WHERE state = 'wait_pay'
+          AND order_time &lt; #{beforeTime}
+    </update>
 
 </mapper>

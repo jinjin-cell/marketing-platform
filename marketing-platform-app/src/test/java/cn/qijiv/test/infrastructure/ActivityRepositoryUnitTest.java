@@ -5,6 +5,8 @@ import cn.qijiv.domain.activity.model.entity.ActivityCountEntity;
 import cn.qijiv.domain.activity.model.entity.ActivityEntity;
 import cn.qijiv.domain.activity.model.entity.ActivityOrderEntity;
 import cn.qijiv.domain.activity.model.entity.ActivitySkuEntity;
+import cn.qijiv.domain.activity.model.entity.SkuRechargeEntity;
+import cn.qijiv.domain.activity.model.entity.UnpaidActivityOrderEntity;
 import cn.qijiv.domain.activity.model.valobj.ActivityStateVO;
 import cn.qijiv.domain.activity.model.valobj.OrderStateVO;
 import cn.qijiv.infrastructure.persistent.dao.IRaffleActivityAccountDao;
@@ -306,6 +308,46 @@ public class ActivityRepositoryUnitTest {
         verify(dbRouter).clear();
     }
 
+    /** 验证查询未支付订单时按用户与SKU查询并完整映射返回实体。 */
+    @Test
+    public void queryUnpaidActivityOrder_mapsOrderFields() {
+        RaffleActivityOrderPO order = new RaffleActivityOrderPO();
+        order.setUserId("user001");
+        order.setSku(9011L);
+        order.setOrderId("123456789012");
+        order.setOutBusinessNo("business001");
+        order.setPayAmount(new BigDecimal("12.50"));
+        when(raffleActivityOrderDao.queryUnpaidActivityOrder(any(RaffleActivityOrderPO.class))).thenReturn(order);
+
+        SkuRechargeEntity skuRechargeEntity = SkuRechargeEntity.builder()
+                .userId("user001")
+                .sku(9011L)
+                .outBusinessNo("business001")
+                .build();
+        UnpaidActivityOrderEntity result = activityRepository.queryUnpaidActivityOrder(skuRechargeEntity);
+
+        assertNotNull(result);
+        assertEquals("user001", result.getUserId());
+        assertEquals("123456789012", result.getOrderId());
+        assertEquals("business001", result.getOutBusinessNo());
+        assertEquals(new BigDecimal("12.50"), result.getPayAmount());
+    }
+
+    /** 验证不存在未支付订单时返回 null。 */
+    @Test
+    public void queryUnpaidActivityOrder_missing_returnsNull() {
+        when(raffleActivityOrderDao.queryUnpaidActivityOrder(any(RaffleActivityOrderPO.class))).thenReturn(null);
+
+        SkuRechargeEntity skuRechargeEntity = SkuRechargeEntity.builder()
+                .userId("user001")
+                .sku(9011L)
+                .outBusinessNo("business001")
+                .build();
+        UnpaidActivityOrderEntity result = activityRepository.queryUnpaidActivityOrder(skuRechargeEntity);
+
+        assertNull(result);
+    }
+
     /** 验证重复业务单号触发唯一索引异常时回滚事务并清理路由。 */
     @Test
     public void doSaveOrder_duplicateBusinessNumber_rollsBackAndClearsRoute() {
@@ -324,6 +366,20 @@ public class ActivityRepositoryUnitTest {
         verify(transactionStatus).setRollbackOnly();
         verify(raffleActivityAccountDao, never()).updateAccountQuota(any(RaffleActivityAccountPO.class));
         verify(dbRouter).clear();
+    }
+
+    /** 验证超时未支付订单批量置为过期时，透传给分表 DAO 执行广播更新。 */
+    @Test
+    public void updateOrderExpired_delegatesToBroadcastUpdate() {
+        Date beforeTime = new Date(1000L);
+        when(raffleActivityOrderDao.updateOrderExpired(beforeTime)).thenReturn(3);
+
+        int expiredCount = activityRepository.updateOrderExpired(beforeTime);
+
+        assertEquals(3, expiredCount);
+        verify(raffleActivityOrderDao).updateOrderExpired(beforeTime);
+        verify(dbRouter, never()).doRouter(anyString());
+        verify(dbRouter, never()).clear();
     }
 
     /** 模拟分布式锁：获取锁成功，避免保存订单时加锁阻塞或超时。 */

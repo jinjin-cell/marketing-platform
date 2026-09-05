@@ -190,6 +190,9 @@ public interface IActivityRepository {
     /** 查询未支付订单。 */
     UnpaidActivityOrderEntity queryUnpaidActivityOrder(SkuRechargeEntity skuRechargeEntity);
 
+    /** 将超过一个月的「待支付」订单批量置为过期。 */
+    int updateOrderExpired(Date beforeTime);
+
     /** 根据活动ID查询商品列表。 */
     List<SkuProductEntity> querySkuProductEntityListByActivityId(Long activityId);
 }

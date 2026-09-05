@@ -14,7 +14,8 @@ import lombok.Getter;
 public enum OrderStateVO {
 
     wait_pay("wait_pay","待支付"),
-    completed("completed", "完成");
+    completed("completed", "完成"),
+    expired("expired", "已过期");
 
     /** 状态编码 */
     private final String code;

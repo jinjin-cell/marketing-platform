@@ -159,6 +159,10 @@ public class CreditRepository implements ICreditRepository {
         try {
             dbRouter.doRouter(userId);
             UserCreditAccountPO userCreditAccount = userCreditAccountDao.queryUserCreditAccountByUserId(userCreditAccountReq);
+            // 首次查询的用户可能尚未开通积分账户，返回 0 而非空指针，便于前端稳定展示。
+            if (null == userCreditAccount) {
+                return CreditAccountEntity.builder().userId(userId).adjustAmount(BigDecimal.ZERO).build();
+            }
             return CreditAccountEntity.builder().userId(userId).adjustAmount(userCreditAccount.getAvailableAmount()).build();
         } finally {
             dbRouter.clear();

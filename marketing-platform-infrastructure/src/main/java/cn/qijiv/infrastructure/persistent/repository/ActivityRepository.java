@@ -176,9 +176,14 @@ public class ActivityRepository implements IActivityRepository {
             if (null == order) {
                 return null;
             }
-            OrderStateVO orderState = OrderStateVO.wait_pay.getCode().equals(order.getState())
-                    ? OrderStateVO.wait_pay
-                    : OrderStateVO.completed;
+            OrderStateVO orderState;
+            if (OrderStateVO.wait_pay.getCode().equals(order.getState())) {
+                orderState = OrderStateVO.wait_pay;
+            } else if (OrderStateVO.expired.getCode().equals(order.getState())) {
+                orderState = OrderStateVO.expired;
+            } else {
+                orderState = OrderStateVO.completed;
+            }
             return ActivityOrderEntity.builder()
                     .userId(order.getUserId())
                     .sku(order.getSku())
@@ -920,6 +925,19 @@ public class ActivityRepository implements IActivityRepository {
                 .outBusinessNo(raffleActivityOrderRes.getOutBusinessNo())
                 .payAmount(raffleActivityOrderRes.getPayAmount())
                 .build();
+    }
+
+    /**
+     * 将超过一个月的「待支付」订单批量置为过期。
+     * <p>
+     * 该操作不设 user_id 分片键，由 ShardingSphere 广播到全部分表执行。
+     *
+     * @param beforeTime 过期临界时间
+     * @return 影响行数
+     */
+    @Override
+    public int updateOrderExpired(Date beforeTime) {
+        return raffleActivityOrderDao.updateOrderExpired(beforeTime);
     }
 
     @Override

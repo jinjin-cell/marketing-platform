@@ -175,6 +175,21 @@ public class RaffleActivityServiceTest {
         public Integer queryRaffleActivityAccountPartakeCount(Long activityId, String userId) {
             return 0;
         }
+
+        @Override
+        public UnpaidActivityOrderEntity queryUnpaidActivityOrder(SkuRechargeEntity skuRechargeEntity) {
+            return null;
+        }
+
+        @Override
+        public int updateOrderExpired(Date beforeTime) {
+            return 0;
+        }
+
+        @Override
+        public List<SkuProductEntity> querySkuProductEntityListByActivityId(Long activityId) {
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -275,10 +290,11 @@ public class RaffleActivityServiceTest {
         skuRechargeEntity.setSku(10001L);
         skuRechargeEntity.setOutBusinessNo("biz_001");
 
-        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
+        UnpaidActivityOrderEntity order = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
 
         // 5. 验证返回的订单ID
-        assertNotNull(orderId);
+        assertNotNull(order);
+        assertNotNull(order.getOrderId());
         assertEquals(new BigDecimal("12.50"), stubRepo.getSavedAggregate().getActivityOrderEntity().getPayAmount());
     }
 
@@ -306,9 +322,9 @@ public class RaffleActivityServiceTest {
         skuRechargeEntity.setSku(10001L);
         skuRechargeEntity.setOutBusinessNo("biz_existing");
 
-        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
+        UnpaidActivityOrderEntity order = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
 
-        assertEquals("123456789012", orderId);
+        assertEquals("123456789012", order.getOrderId());
         assertNull(stubRepo.queriedSku);
         assertNull(stubRepo.getSavedAggregate());
     }
@@ -332,9 +348,9 @@ public class RaffleActivityServiceTest {
         skuRechargeEntity.setOutBusinessNo("biz_waiting");
         skuRechargeEntity.setOrderTradeType(OrderTradeTypeVO.credit_pay_trade);
 
-        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
+        UnpaidActivityOrderEntity order = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
 
-        assertEquals("123456789012", orderId);
+        assertEquals("123456789012", order.getOrderId());
         assertNotNull(stubRepo.getSavedAggregate());
         assertSame(existingOrder, stubRepo.getSavedAggregate().getActivityOrderEntity());
         assertNull(stubRepo.queriedSku);
@@ -373,9 +389,10 @@ public class RaffleActivityServiceTest {
         skuRechargeEntity.setSku(99999L);
         skuRechargeEntity.setOutBusinessNo("biz_002");
 
-        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
+        UnpaidActivityOrderEntity order = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
 
-        assertNotNull(orderId);
+        assertNotNull(order);
+        assertNotNull(order.getOrderId());
     }
 
     /** 验证实体字段为空时方法不会抛出空指针异常。 */
@@ -391,9 +408,10 @@ public class RaffleActivityServiceTest {
         skuRechargeEntity.setSku(1L);
         skuRechargeEntity.setOutBusinessNo("biz_003");
 
-        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
+        UnpaidActivityOrderEntity order = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
 
-        assertNotNull(orderId);
+        assertNotNull(order);
+        assertNotNull(order.getOrderId());
     }
 
     /** 验证 SKU 与活动、次数配置的关联关系正确。 */
@@ -428,9 +446,10 @@ public class RaffleActivityServiceTest {
         skuRechargeEntity.setSku(100L);
         skuRechargeEntity.setOutBusinessNo("biz_004");
 
-        String orderId = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
+        UnpaidActivityOrderEntity order = raffleActivityService.createSkuRechargeOrder(skuRechargeEntity);
 
-        assertNotNull(orderId);
+        assertNotNull(order);
+        assertNotNull(order.getOrderId());
     }
 
     /** 验证库存相关操作正确委托给仓储实现。 */

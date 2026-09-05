@@ -5,6 +5,7 @@ import cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -75,4 +76,14 @@ public interface IRaffleActivityOrderDao {
      */
     @DBRouter
     RaffleActivityOrderPO queryUnpaidActivityOrder(RaffleActivityOrderPO raffleActivityOrderReq);
+
+    /**
+     * 将创建时间早于指定时间的「待支付」订单批量置为过期。
+     * <p>
+     * 该操作不带用户ID分片键，由 ShardingSphere 广播到全部分表执行。
+     *
+     * @param beforeTime 过期临界时间
+     * @return 影响行数
+     */
+    int updateOrderExpired(@Param("beforeTime") Date beforeTime);
 }

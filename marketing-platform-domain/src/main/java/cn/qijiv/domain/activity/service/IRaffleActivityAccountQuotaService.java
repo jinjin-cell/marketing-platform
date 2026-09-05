@@ -5,6 +5,8 @@ import cn.qijiv.domain.activity.model.entity.DeliveryOrderEntity;
 import cn.qijiv.domain.activity.model.entity.SkuRechargeEntity;
 import cn.qijiv.domain.activity.model.entity.UnpaidActivityOrderEntity;
 
+import java.util.Date;
+
 
 /**
  * 抽奖活动账户额度服务接口
@@ -56,5 +58,13 @@ public interface IRaffleActivityAccountQuotaService {
      * @return 已参与次数
      */
     Integer queryRaffleActivityAccountPartakeCount(Long activityId, String userId);
+
+    /**
+     * 将超过一个月的「待支付」订单批量置为过期。
+     *
+     * @param beforeTime 过期临界时间
+     * @return 影响行数
+     */
+    int updateOrderExpired(Date beforeTime);
 }
 

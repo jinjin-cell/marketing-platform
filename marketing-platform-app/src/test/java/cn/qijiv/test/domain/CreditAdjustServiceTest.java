@@ -91,6 +91,12 @@ public class CreditAdjustServiceTest {
             fail("非法交易不应进入持久化层");
             return null;
         }
+
+        @Override
+        public cn.qijiv.domain.credit.model.entity.CreditAccountEntity queryUserCreditAccount(String userId) {
+            fail("非法交易不应触发账户查询");
+            return null;
+        }
     }
 
     private static class CapturingRepository implements ICreditRepository {
@@ -101,6 +107,11 @@ public class CreditAdjustServiceTest {
         public String saveUserCreditTradeOrder(TradeAggregate tradeAggregate) {
             aggregate = tradeAggregate;
             return "order-001";
+        }
+
+        @Override
+        public cn.qijiv.domain.credit.model.entity.CreditAccountEntity queryUserCreditAccount(String userId) {
+            return null;
         }
     }
 }

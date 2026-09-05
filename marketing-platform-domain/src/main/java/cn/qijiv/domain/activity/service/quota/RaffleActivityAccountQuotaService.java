@@ -144,4 +144,15 @@ public class RaffleActivityAccountQuotaService extends AbstractRaffleActivityAcc
         return activityRepository.queryRaffleActivityAccountPartakeCount(activityId, userId);
     }
 
+    /**
+     * 将超过一个月的「待支付」订单批量置为过期。
+     *
+     * @param beforeTime 过期临界时间
+     * @return 影响行数
+     */
+    @Override
+    public int updateOrderExpired(Date beforeTime) {
+        return activityRepository.updateOrderExpired(beforeTime);
+    }
+
 }
