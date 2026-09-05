@@ -1,0 +1,54 @@
+# ShardingSphere table routing rules; datasource connections stay in application-*.yml.
+spring:
+  shardingsphere:
+    sharding:
+      default-data-source-name: ds0
+      tables:
+        raffle_activity_order:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_order_00$->{0..3}
+          database-strategy: &user-id-database-strategy
+            standard: &user-id-standard-strategy
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+          table-strategy:
+            standard: *user-id-standard-strategy
+        raffle_activity_account:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_account
+          database-strategy: *user-id-database-strategy
+        raffle_activity_account_day:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_account_day
+          database-strategy: *user-id-database-strategy
+        raffle_activity_account_month:
+          actual-data-nodes: ds$->{1..2}.raffle_activity_account_month
+          database-strategy: *user-id-database-strategy
+        task:
+          actual-data-nodes: ds$->{1..2}.task
+          database-strategy:
+            hint:
+              algorithm-class-name: cn.qijiv.infrastructure.persistent.db.TaskDBHintAlgorithm
+        user_award_record:
+          actual-data-nodes: ds$->{1..2}.user_award_record_00$->{0..3}
+          database-strategy: *user-id-database-strategy
+          table-strategy:
+            standard: *user-id-standard-strategy
+        user_behavior_rebate_order:
+          actual-data-nodes: ds$->{1..2}.user_behavior_rebate_order_00$->{0..3}
+          database-strategy: *user-id-database-strategy
+          table-strategy:
+            standard: *user-id-standard-strategy
+        user_raffle_order:
+          actual-data-nodes: ds$->{1..2}.user_raffle_order_00$->{0..3}
+          database-strategy: *user-id-database-strategy
+          table-strategy:
+            standard: *user-id-standard-strategy
+        user_credit_account:
+          actual-data-nodes: ds$->{1..2}.user_credit_account
+          database-strategy: *user-id-database-strategy
+        user_credit_order:
+          actual-data-nodes: ds$->{1..2}.user_credit_order_00$->{0..3}
+          database-strategy: *user-id-database-strategy
+          table-strategy:
+            standard: *user-id-standard-strategy
+    props:
+      sql:
+        show: false

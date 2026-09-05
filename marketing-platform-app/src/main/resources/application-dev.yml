@@ -38,6 +38,8 @@ thread:
 
 # Sharding-JDBC 多数据源配置；ds0 为配置库，ds1、ds2 为用户行为分库
 spring:
+  config:
+    import: classpath:sharding-tables.yml
   rabbitmq:
     addresses: 111.228.17.153:5672
     username: qijiv
@@ -81,91 +83,6 @@ spring:
         pool-name: Retail_HikariCP_DS2
         minimum-idle: 5
         maximum-pool-size: 10
-    sharding:
-      default-data-source-name: ds0
-      tables:
-        raffle_activity_order:
-          actual-data-nodes: ds$->{1..2}.raffle_activity_order_00$->{0..3}
-          database-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-          table-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-        raffle_activity_account:
-          actual-data-nodes: ds$->{1..2}.raffle_activity_account
-          database-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-        raffle_activity_account_day:
-          actual-data-nodes: ds$->{1..2}.raffle_activity_account_day
-          database-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-        raffle_activity_account_month:
-          actual-data-nodes: ds$->{1..2}.raffle_activity_account_month
-          database-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-        task:
-          actual-data-nodes: ds$->{1..2}.task
-          database-strategy:
-            hint:
-              algorithm-class-name: cn.qijiv.infrastructure.persistent.db.TaskDBHintAlgorithm
-        user_award_record:
-          actual-data-nodes: ds$->{1..2}.user_award_record_00$->{0..3}
-          database-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-          table-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-        user_behavior_rebate_order:
-          actual-data-nodes: ds$->{1..2}.user_behavior_rebate_order_00$->{0..3}
-          database-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-          table-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-        user_raffle_order:
-          actual-data-nodes: ds$->{1..2}.user_raffle_order_00$->{0..3}
-          database-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-          table-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-        user_credit_account:
-          actual-data-nodes: ds$->{1..2}.user_credit_account
-          database-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-        user_credit_order:
-          actual-data-nodes: ds$->{1..2}.user_credit_order_00$->{0..3}
-          database-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-          table-strategy:
-            standard:
-              sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
-    props:
-      sql:
-        show: false
 
 redis:
   address: redis://111.228.17.153:16379
