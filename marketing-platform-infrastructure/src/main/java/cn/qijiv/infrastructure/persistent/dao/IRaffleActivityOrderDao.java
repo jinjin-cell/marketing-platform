@@ -1,5 +1,6 @@
 package cn.qijiv.infrastructure.persistent.dao;
 
+import cn.qijiv.infrastructure.persistent.db.annotation.DBRouter;
 import cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -20,6 +21,7 @@ public interface IRaffleActivityOrderDao {
      *
      * @param raffleActivityOrder 活动订单信息
      */
+    @DBRouter
     void insert(RaffleActivityOrderPO raffleActivityOrder);
 
     /**
@@ -28,6 +30,7 @@ public interface IRaffleActivityOrderDao {
      * @param userId 用户ID
      * @return 活动订单列表
      */
+    @DBRouter
     List<RaffleActivityOrderPO> queryRaffleActivityOrderByUserId(@Param("userId") String userId);
 
     /**
@@ -53,6 +56,7 @@ public interface IRaffleActivityOrderDao {
      * @param raffleActivityOrderReq 活动订单信息
      * @return 活动订单；不存在时返回null
      */
+    @DBRouter
     RaffleActivityOrderPO queryRaffleActivityOrder(RaffleActivityOrderPO raffleActivityOrderReq);
 
     /**
@@ -62,4 +66,13 @@ public interface IRaffleActivityOrderDao {
      * @return 影响行数
      */
     int updateOrderCompleted(RaffleActivityOrderPO raffleActivityOrderReq);
+
+    /**
+     * 查询未支付的活动订单。
+     *
+     * @param raffleActivityOrderReq 活动订单信息
+     * @return 活动订单；不存在时返回null
+     */
+    @DBRouter
+    RaffleActivityOrderPO queryUnpaidActivityOrder(RaffleActivityOrderPO raffleActivityOrderReq);
 }

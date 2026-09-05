@@ -3,6 +3,7 @@ package cn.qijiv.domain.activity.service;
 import cn.qijiv.domain.activity.model.entity.ActivityAccountEntity;
 import cn.qijiv.domain.activity.model.entity.DeliveryOrderEntity;
 import cn.qijiv.domain.activity.model.entity.SkuRechargeEntity;
+import cn.qijiv.domain.activity.model.entity.UnpaidActivityOrderEntity;
 
 
 /**
@@ -19,7 +20,7 @@ public interface IRaffleActivityAccountQuotaService {
      * @param skuRechargeEntity 活动商品充值实体对象
      * @return 活动ID
      */
-    String createSkuRechargeOrder(SkuRechargeEntity skuRechargeEntity);
+    UnpaidActivityOrderEntity createSkuRechargeOrder(SkuRechargeEntity skuRechargeEntity);
 
 
     /**

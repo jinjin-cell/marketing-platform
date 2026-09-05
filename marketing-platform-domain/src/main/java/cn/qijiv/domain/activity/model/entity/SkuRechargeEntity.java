@@ -1,15 +1,21 @@
 package cn.qijiv.domain.activity.model.entity;
 
 import cn.qijiv.domain.activity.model.valobj.OrderTradeTypeVO;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
 /**
  * sku 账户充值订单实体对象
  * @author qijiv
- * @date 2026/7/18
+ * @since  2026/7/18
  */
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class SkuRechargeEntity {
 
     /** 用户ID */

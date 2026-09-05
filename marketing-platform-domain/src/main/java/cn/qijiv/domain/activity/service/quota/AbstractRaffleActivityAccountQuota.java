@@ -1,11 +1,7 @@
 package cn.qijiv.domain.activity.service.quota;
 
 import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
-import cn.qijiv.domain.activity.model.entity.ActivityCountEntity;
-import cn.qijiv.domain.activity.model.entity.ActivityEntity;
-import cn.qijiv.domain.activity.model.entity.ActivityOrderEntity;
-import cn.qijiv.domain.activity.model.entity.ActivitySkuEntity;
-import cn.qijiv.domain.activity.model.entity.SkuRechargeEntity;
+import cn.qijiv.domain.activity.model.entity.*;
 import cn.qijiv.domain.activity.model.valobj.OrderStateVO;
 import cn.qijiv.domain.activity.repository.IActivityRepository;
 import cn.qijiv.domain.activity.service.IRaffleActivityAccountQuotaService;
@@ -45,7 +41,7 @@ public abstract class AbstractRaffleActivityAccountQuota extends RaffleActivityA
      * @return 订单ID
      */
     @Override
-    public String createSkuRechargeOrder(SkuRechargeEntity skuRechargeEntity) {
+    public UnpaidActivityOrderEntity createSkuRechargeOrder(SkuRechargeEntity skuRechargeEntity) {
         // 1. 参数校验
         if (null == skuRechargeEntity) {
             throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
@@ -57,7 +53,13 @@ public abstract class AbstractRaffleActivityAccountQuota extends RaffleActivityA
             throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
         }
 
-        // 2. 幂等校验。Bloom 判定不存在时跳过数据库，判定可能存在时再查询数据库确认。
+        // 2.1 查询未支付订单「一个月以内的未支付订单」
+        UnpaidActivityOrderEntity unpaidCreditOrder =  activityRepository.queryUnpaidActivityOrder(skuRechargeEntity);
+        if (null != unpaidCreditOrder) return unpaidCreditOrder;
+
+
+
+        // 2.2 幂等校验。Bloom 判定不存在时跳过数据库，判定可能存在时再查询数据库确认。
         ActivityOrderEntity existingOrder = activityRepository.queryActivityOrderByOutBusinessNo(userId, outBusinessNo);
         if (null != existingOrder) {
             if (OrderStateVO.wait_pay == existingOrder.getState()) {
@@ -69,7 +71,12 @@ public abstract class AbstractRaffleActivityAccountQuota extends RaffleActivityA
                 ITradePolicy tradePolicy = tradePolicyGroup.get(skuRechargeEntity.getOrderTradeType().getCode());
                 tradePolicy.trade(existingOrderAggregate);
             }
-            return existingOrder.getOrderId();
+            return UnpaidActivityOrderEntity.builder()
+                    .userId(existingOrder.getUserId())
+                    .orderId(existingOrder.getOrderId())
+                    .outBusinessNo(existingOrder.getOutBusinessNo())
+                    .payAmount(existingOrder.getPayAmount())
+                    .build();
         }
 
         // 3. 查询基础信息
@@ -91,8 +98,15 @@ public abstract class AbstractRaffleActivityAccountQuota extends RaffleActivityA
         ITradePolicy tradePolicy = tradePolicyGroup.get(skuRechargeEntity.getOrderTradeType().getCode());
         tradePolicy.trade(createQuotaOrderAggregate);
 
-        // 7. 返回单号
-        return createQuotaOrderAggregate.getActivityOrderEntity().getOrderId();
+        // 7. 返回订单信息
+        ActivityOrderEntity activityOrderEntity = createQuotaOrderAggregate.getActivityOrderEntity();
+        return UnpaidActivityOrderEntity.builder()
+                .userId(userId)
+                .orderId(activityOrderEntity.getOrderId())
+                .outBusinessNo(activityOrderEntity.getOutBusinessNo())
+                .payAmount(activityOrderEntity.getPayAmount())
+                .build();
+
     }
 
     /**

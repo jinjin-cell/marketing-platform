@@ -1,5 +1,6 @@
 package cn.qijiv.domain.credit.service;
 
+import cn.qijiv.domain.credit.model.entity.CreditAccountEntity;
 import cn.qijiv.domain.credit.model.entity.TradeEntity;
 
 /**
@@ -18,5 +19,12 @@ public interface ICreditAdjustService {
      */
     String createOrder(TradeEntity tradeEntity);
 
+    /**
+     * 查询用户积分账户
+     *
+     * @param userId 用户ID
+     * @return 用户积分账户
+     */
+    CreditAccountEntity queryUserCreditAccount(String userId);
 }
 

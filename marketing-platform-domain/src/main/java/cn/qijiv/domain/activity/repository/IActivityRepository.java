@@ -187,5 +187,10 @@ public interface IActivityRepository {
     /** 更新订单。 */
     void updateOrder(DeliveryOrderEntity deliveryOrderEntity);
 
+    /** 查询未支付订单。 */
+    UnpaidActivityOrderEntity queryUnpaidActivityOrder(SkuRechargeEntity skuRechargeEntity);
+
+    /** 根据活动ID查询商品列表。 */
+    List<SkuProductEntity> querySkuProductEntityListByActivityId(Long activityId);
 }
 

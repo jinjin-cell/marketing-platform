@@ -1,12 +1,11 @@
 package cn.qijiv.api;
 
 
-import cn.qijiv.api.dto.ActivityDrawRequestDTO;
-import cn.qijiv.api.dto.ActivityDrawResponseDTO;
-import cn.qijiv.api.dto.CreditPayExchangeRequestDTO;
-import cn.qijiv.api.dto.UserActivityAccountRequestDTO;
-import cn.qijiv.api.dto.UserActivityAccountResponseDTO;
+import cn.qijiv.api.dto.*;
 import cn.qijiv.types.model.Response;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 抽奖活动接口
@@ -58,13 +57,32 @@ public interface IRaffleActivityService {
      */
     Response<UserActivityAccountResponseDTO> queryUserActivityAccount(UserActivityAccountRequestDTO request);
 
+
+    /**
+     * 查询sku商品集合
+     *
+     * @param activityId 活动ID
+     * @return 商品集合
+     */
+    Response<List<SkuProductResponseDTO>> querySkuProductListByActivityId(Long activityId);
+
+    /**
+     * 查询用户积分值
+     *
+     * @param userId 用户ID
+     * @return 可用积分
+     */
+    Response<BigDecimal> queryUserCreditAccount(String userId);
+
+
     /**
      * 使用用户积分兑换活动商品。
      *
      * @param request 用户、SKU 与幂等业务号
      * @return 活动订单号
      */
-    Response<String> creditPayExchangeSku(CreditPayExchangeRequestDTO request);
+    Response<Boolean> creditPayExchangeSku(SkuProductShopCartRequestDTO request);
+
 
 
 }

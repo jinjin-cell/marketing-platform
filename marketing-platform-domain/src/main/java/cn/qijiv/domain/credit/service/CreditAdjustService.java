@@ -76,6 +76,12 @@ public class CreditAdjustService implements ICreditAdjustService {
         return orderId;
     }
 
+    @Override
+    public CreditAccountEntity queryUserCreditAccount(String userId) {
+        return creditRepository.queryUserCreditAccount(userId);
+    }
+
+
     /**
      * 校验交易参数
      * @param tradeEntity 交易实体

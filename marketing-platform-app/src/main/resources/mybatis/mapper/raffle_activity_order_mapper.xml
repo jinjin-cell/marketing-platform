@@ -71,4 +71,11 @@
           AND state = 'wait_pay'
     </update>
 
+    <select id="queryUnpaidActivityOrder" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO" resultMap="dataMap">
+        select user_id, order_id, out_business_no, pay_amount
+        from raffle_activity_order
+        where user_id = #{userId} and sku = #{sku} and state = 'wait_pay' and order_time >= NOW() - INTERVAL 1 MONTH
+        limit 1
+    </select>
+
 </mapper>

@@ -1,6 +1,7 @@
 package cn.qijiv.domain.credit.repository;
 
 import cn.qijiv.domain.credit.model.aggregate.TradeAggregate;
+import cn.qijiv.domain.credit.model.entity.CreditAccountEntity;
 
 /**
  * 用户积分仓储
@@ -17,5 +18,12 @@ public interface ICreditRepository {
      */
     String saveUserCreditTradeOrder(TradeAggregate tradeAggregate);
 
+    /**
+     * 查询用户积分账户
+     *
+     * @param userId 用户ID
+     * @return 用户积分账户
+     */
+    CreditAccountEntity queryUserCreditAccount(String userId);
 }
 
