@@ -39,3 +39,4 @@ build/
 /data/
 /marketing-platform-app/data/
 /.idea/
+.m2-codex/
