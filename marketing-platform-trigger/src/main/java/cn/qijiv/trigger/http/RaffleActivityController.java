@@ -24,6 +24,7 @@ import cn.qijiv.domain.strategy.service.IRaffleStrategy;
 import cn.qijiv.domain.strategy.service.armory.IStrategyArmory;
 import cn.qijiv.trigger.api.IRaffleActivityService;
 import cn.qijiv.trigger.api.dto.*;
+import cn.qijiv.types.annotations.DCCValue;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import cn.qijiv.types.model.Response;
@@ -67,6 +68,9 @@ public class RaffleActivityController implements IRaffleActivityService {
     private IBehaviorRebateService behaviorRebateService;
     @Resource
     private ICreditAdjustService creditAdjustService;
+
+    @DCCValue("degradeSwitch:open")
+    private String degradeSwitch;
 
     private static final DateTimeFormatter DATE_FORMAT_DAY = DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -136,9 +140,16 @@ public class RaffleActivityController implements IRaffleActivityService {
     @Override
     public Response<ActivityDrawResponseDTO> draw(@RequestBody ActivityDrawRequestDTO request) {
         try {
-            log.info("活动抽奖开始，用户ID：{}，活动ID：{}", request.getUserId(), request.getActivityId());
+            if(!"open".equals(degradeSwitch)) {
+                return Response.<ActivityDrawResponseDTO>builder()
+                        .code(ResponseCode.DEGRADE_SWITCH.getCode())
+                        .info(ResponseCode.DEGRADE_SWITCH.getInfo())
+                        .build();
+            }
+
             // 1. 参数校验
-            if (StringUtils.isBlank(request.getUserId()) || null == request.getActivityId()) {
+            log.info("活动抽奖开始，用户ID：{}，活动ID：{}", request == null ? null : request.getUserId(), request == null ? null : request.getActivityId());
+            if (request == null || StringUtils.isBlank(request.getUserId()) || null == request.getActivityId()) {
                 throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
             }
             // 2. 参与活动 - 创建参与记录订单

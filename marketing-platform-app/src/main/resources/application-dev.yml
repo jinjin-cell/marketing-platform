@@ -111,6 +111,17 @@ mybatis:
  mapper-locations: classpath:/mybatis/mapper/*.xml
  config-location:  classpath:/mybatis/config/mybatis-config.xml
 
+zookeeper:
+  sdk:
+    config:
+      connect-string: 111.228.17.153:2181
+      base-sleep-time-ms: 1000
+      max-retries: 5
+      # sessionTimeout 必须大于 connectionTimeout，否则 Curator 会告警且会话易在连接期超时
+      session-timeout-ms: 60000
+      connection-timeout-ms: 30000
+
+
 # 日志
 logging:
   level:

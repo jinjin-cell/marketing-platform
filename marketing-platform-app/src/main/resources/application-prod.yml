@@ -163,6 +163,16 @@ mybatis:
   mapper-locations: classpath:/mybatis/mapper/*.xml
   config-location: classpath:/mybatis/config/mybatis-config.xml
 
+# 自定义 Curator DCC 客户端配置。生产环境可通过环境变量覆盖连接串。
+zookeeper:
+  sdk:
+    config:
+      connect-string: ${ZOOKEEPER_CONNECT_STRING:111.228.17.153:2181}
+      base-sleep-time-ms: ${ZOOKEEPER_BASE_SLEEP_TIME_MS:1000}
+      max-retries: ${ZOOKEEPER_MAX_RETRIES:5}
+      session-timeout-ms: ${ZOOKEEPER_SESSION_TIMEOUT_MS:60000}
+      connection-timeout-ms: ${ZOOKEEPER_CONNECTION_TIMEOUT_MS:30000}
+
 # 日志
 logging:
   level:
