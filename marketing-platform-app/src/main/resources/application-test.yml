@@ -154,10 +154,10 @@ redis:
   username: ${REDIS_USERNAME:qijiv}
   password: ${REDIS_PASSWORD:18903705503qQ}
   database: ${REDIS_DATABASE:0}
-  connection-pool-size: 32
-  connection-minimum-idle-size: 8
-  connect-timeout: 10000
-  timeout: 3000
+  connection-pool-size: ${REDIS_CONNECTION_POOL_SIZE:16}
+  connection-minimum-idle-size: ${REDIS_CONNECTION_MINIMUM_IDLE_SIZE:2}
+  connect-timeout: ${REDIS_CONNECT_TIMEOUT:30000}
+  timeout: ${REDIS_TIMEOUT:10000}
 
 mybatis:
   mapper-locations: classpath:/mybatis/mapper/*.xml

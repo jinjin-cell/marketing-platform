@@ -85,14 +85,14 @@ spring:
         maximum-pool-size: 10
 
 redis:
-  address: redis://111.228.17.153:16379
-  username: qijiv
-  password: 18903705503qQ
-  database: 0
-  connection-pool-size: 32
-  connection-minimum-idle-size: 8
-  connect-timeout: 15000
-  timeout: 3000
+  address: ${REDIS_ADDRESS:redis://111.228.17.153:16379}
+  username: ${REDIS_USERNAME:qijiv}
+  password: ${REDIS_PASSWORD:18903705503qQ}
+  database: ${REDIS_DATABASE:0}
+  connection-pool-size: ${REDIS_CONNECTION_POOL_SIZE:16}
+  connection-minimum-idle-size: ${REDIS_CONNECTION_MINIMUM_IDLE_SIZE:2}
+  connect-timeout: ${REDIS_CONNECT_TIMEOUT:30000}
+  timeout: ${REDIS_TIMEOUT:10000}
 
 dubbo:
   application:

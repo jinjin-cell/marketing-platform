@@ -23,10 +23,10 @@ redis:
   username: ${REDIS_USERNAME}
   password: ${REDIS_PASSWORD}
   database: ${REDIS_DATABASE:0}
-  connection-pool-size: 32
-  connection-minimum-idle-size: 8
-  connect-timeout: 10000
-  timeout: 3000
+  connection-pool-size: ${REDIS_CONNECTION_POOL_SIZE:32}
+  connection-minimum-idle-size: ${REDIS_CONNECTION_MINIMUM_IDLE_SIZE:8}
+  connect-timeout: ${REDIS_CONNECT_TIMEOUT:30000}
+  timeout: ${REDIS_TIMEOUT:10000}
 
 # 分库分表路由配置
 db-router:

@@ -4,6 +4,7 @@ import cn.qijiv.infrastructure.persistent.dao.IRaffleActivityOrderDao;
 import cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO;
 import cn.qijiv.infrastructure.persistent.redis.OrderBloomFilterInitializer;
 import cn.qijiv.infrastructure.persistent.redis.OrderBusinessNoBloomFilter;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
@@ -11,8 +12,11 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
+import java.util.concurrent.Executor;
 
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /** 订单布隆过滤器初始化器单元测试：验证历史订单号加载逻辑。 */
@@ -25,19 +29,27 @@ public class OrderBloomFilterInitializerTest {
     /** Mock 的订单号布隆过滤器，用于初始化与写入历史订单号。 */
     @Mock
     private OrderBusinessNoBloomFilter orderBloomFilter;
+    /** Mock 的业务线程池，用于验证初始化任务异步提交。 */
+    @Mock
+    private Executor executor;
 
     /** 验证初始化器先初始化过滤器，再将所有历史订单号写入。 */
     @Test
-    public void initializesThenLoadsEveryHistoricalBusinessKey() {
+    public void submitsInitializationAndLoadsEveryHistoricalBusinessKey() {
         RaffleActivityOrderPO first = order("user001", "business001");
         RaffleActivityOrderPO second = order("user002", "business002");
         when(raffleActivityOrderDao.queryAllBusinessKeys()).thenReturn(Arrays.asList(first, second));
         OrderBloomFilterInitializer initializer =
-                new OrderBloomFilterInitializer(raffleActivityOrderDao, orderBloomFilter);
+                new OrderBloomFilterInitializer(raffleActivityOrderDao, orderBloomFilter, executor);
+        doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(0)).run();
+            return null;
+        }).when(executor).execute(org.mockito.ArgumentMatchers.any(Runnable.class));
 
-        initializer.afterSingletonsInstantiated();
+        initializer.onApplicationEvent(mock(ApplicationReadyEvent.class));
 
-        InOrder inOrder = inOrder(orderBloomFilter, raffleActivityOrderDao);
+        InOrder inOrder = inOrder(executor, orderBloomFilter, raffleActivityOrderDao);
+        inOrder.verify(executor).execute(org.mockito.ArgumentMatchers.any(Runnable.class));
         inOrder.verify(orderBloomFilter).initialize();
         inOrder.verify(raffleActivityOrderDao).queryAllBusinessKeys();
         inOrder.verify(orderBloomFilter).add("user001", "business001");
