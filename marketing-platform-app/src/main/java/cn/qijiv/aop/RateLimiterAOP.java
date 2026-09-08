@@ -55,10 +55,16 @@ public class RateLimiterAOP {
     /** 限流器空闲失效时间：与旧版 Guava 缓存 1 分钟一致，避免 Redis key 无限增长 */
     private static final long RATE_LIMITER_IDLE_SECONDS = 60L;
 
-    /** 拦截计数 +1，首次写入时设置 24h 过期（原子） */
+    /**
+     * 拦截计数 +1，首次写入时设置 24h 过期（原子）。
+     *
+     * <p>注意：TTL 以字面量形式内嵌在 Lua 中，不能通过 ARGV 传 Long——
+     * 客户端使用 JsonJacksonCodec 时会把 Long 序列化成 EXPIRE 无法识别的形式，
+     * 导致「value is not an integer」且 key 永不过期。
+     */
     private static final String INCR_BLACKLIST_LUA =
             "local c = redis.call('incr', KEYS[1]) " +
-                    "if c == 1 then redis.call('expire', KEYS[1], ARGV[1]) end " +
+                    "if c == 1 then redis.call('expire', KEYS[1], " + BLACKLIST_TTL_SECONDS + ") end " +
                     "return c";
     /** 读取黑名单计数，不存在返回 0 */
     private static final String GET_BLACKLIST_LUA =
@@ -144,13 +150,14 @@ public class RateLimiterAOP {
      * 黑名单计数 +1，首次写入设置 24h 过期。
      */
     private void incrementBlacklist(String keyAttr) {
-        evalInt(INCR_BLACKLIST_LUA, BLACKLIST_KEY_PREFIX + keyAttr, BLACKLIST_TTL_SECONDS);
+        evalInt(INCR_BLACKLIST_LUA, BLACKLIST_KEY_PREFIX + keyAttr);
     }
 
     /**
      * 分布式令牌桶限流：每秒补充 permitsPerSecond 个令牌。
      *
-     * <p>key 空闲 60 秒后过期，等价旧版 Guava 缓存 1 分钟失效的语义。
+     * <p>无论是否获取成功都刷新 TTL：避免“仅被拦截、从未放行”的用户留下永不过期的
+     * 限流器 key；空闲 60 秒后 key 自动过期（限流状态重置），与旧版 Guava 缓存 1 分钟失效语义一致。
      */
     private boolean tryAcquire(String keyAttr, double permitsPerSecond) {
         String key = RATE_LIMITER_KEY_PREFIX + keyAttr;
@@ -159,10 +166,7 @@ public class RateLimiterAOP {
         // 幂等设置限流速率：配置已存在则 no-op，key 过期后会重新初始化
         rateLimiter.trySetRate(RateType.OVERALL, permits, 1, RateIntervalUnit.SECONDS);
         boolean acquired = rateLimiter.tryAcquire();
-        if (acquired) {
-            // 活跃期间刷新 TTL；空闲 60s 后 key 自动过期（限流状态重置）
-            rateLimiter.expire(RATE_LIMITER_IDLE_SECONDS, TimeUnit.SECONDS);
-        }
+        rateLimiter.expire(RATE_LIMITER_IDLE_SECONDS, TimeUnit.SECONDS);
         return acquired;
     }
 

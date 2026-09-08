@@ -24,14 +24,14 @@ import cn.qijiv.domain.strategy.service.IRaffleStrategy;
 import cn.qijiv.domain.strategy.service.armory.IStrategyArmory;
 import cn.qijiv.trigger.api.IRaffleActivityService;
 import cn.qijiv.trigger.api.dto.*;
-import cn.qijiv.types.annotations.DCCValue;
 import cn.qijiv.types.annotations.RateLimiterAccessInterceptor;
+import cn.qijiv.types.annotations.SentinelGuard;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import cn.qijiv.types.model.Response;
+import com.alibaba.csp.sentinel.Tracer;
+import com.alibaba.csp.sentinel.context.ContextUtil;
 import com.alibaba.fastjson.JSON;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -71,9 +71,6 @@ public class RaffleActivityController implements IRaffleActivityService {
     private IBehaviorRebateService behaviorRebateService;
     @Resource
     private ICreditAdjustService creditAdjustService;
-
-    @DCCValue("degradeSwitch:open")
-    private String degradeSwitch;
 
     private static final DateTimeFormatter DATE_FORMAT_DAY = DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -140,24 +137,13 @@ public class RaffleActivityController implements IRaffleActivityService {
      * <br>示例：{@code curl --request POST --url http://localhost:8091/api/v1/raffle/activity/draw}
      */
     @RateLimiterAccessInterceptor(key = "userId", fallbackMethod = "drawRateLimiterError", permitsPerSecond = 1.0d, blacklistCount = 1)
-    @HystrixCommand(commandKey = "raffleActivityDraw", threadPoolKey = "raffleActivityDraw",
-            fallbackMethod = "drawHystrixError",
-            commandProperties = {
-                    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "5000")
-            })
+    @SentinelGuard("activityDraw")
     @RequestMapping(value = "draw", method = RequestMethod.POST)
     @Override
     public Response<ActivityDrawResponseDTO> draw(@RequestBody ActivityDrawRequestDTO request) {
         String userId = request == null ? null : request.getUserId();
         Long activityId = request == null ? null : request.getActivityId();
         try {
-            if(!"open".equals(degradeSwitch)) {
-                return Response.<ActivityDrawResponseDTO>builder()
-                        .code(ResponseCode.DEGRADE_SWITCH.getCode())
-                        .info(ResponseCode.DEGRADE_SWITCH.getInfo())
-                        .build();
-            }
-
             // 1. 参数校验
             log.info("活动抽奖开始，用户ID：{}，活动ID：{}", userId, activityId);
             if (request == null || StringUtils.isBlank(request.getUserId()) || null == request.getActivityId()) {
@@ -197,13 +183,22 @@ public class RaffleActivityController implements IRaffleActivityService {
                             .build())
                     .build();
         } catch (AppException e) {
-            // 业务校验异常属于预期内分支，记录 WARN 即可，不打印全栈，避免 ERROR 日志噪音
+            // 业务校验异常属于预期内分支，记录 WARN 即可，不打印全栈，避免 ERROR 日志噪音；
+            // 业务性失败（如额度不足）不应计入熔断，故不做 Tracer.trace
             log.warn("活动抽奖失败(业务校验)，用户ID：{}，活动ID：{}，错误码：{}，错误信息：{}", userId, activityId, e.getCode(), e.getInfo());
             return Response.<ActivityDrawResponseDTO>builder()
                     .code(e.getCode())
                     .info(e.getInfo())
                     .build();
         } catch (Exception e) {
+            // 意外异常：计入 Sentinel 熔断统计（供异常比例/异常数降级规则使用）
+            try {
+                if (ContextUtil.getContext() != null) {
+                    Tracer.trace(e);
+                }
+            } catch (Throwable ignore) {
+                // trace 失败不影响主流程
+            }
             log.error("活动抽奖失败，用户ID：{}，活动ID：{}", userId, activityId, e);
             return Response.<ActivityDrawResponseDTO>builder()
                     .code(ResponseCode.UN_ERROR.getCode())
@@ -217,14 +212,6 @@ public class RaffleActivityController implements IRaffleActivityService {
         return Response.<ActivityDrawResponseDTO>builder()
                 .code(ResponseCode.RATE_LIMITER.getCode())
                 .info(ResponseCode.RATE_LIMITER.getInfo())
-                .build();
-    }
-
-    public Response<ActivityDrawResponseDTO> drawHystrixError(@RequestBody ActivityDrawRequestDTO request) {
-        log.info("活动抽奖熔断 userId:{} activityId:{}", request.getUserId(), request.getActivityId());
-        return Response.<ActivityDrawResponseDTO>builder()
-                .code(ResponseCode.HYSTRIX.getCode())
-                .info(ResponseCode.HYSTRIX.getInfo())
                 .build();
     }
 
