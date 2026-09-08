@@ -22,6 +22,11 @@ public enum ResponseCode {
     INDEX_DUP("0003", "唯一索引冲突"),
     /** 活动已降级 */
     DEGRADE_SWITCH("0004", "活动已降级"),
+    /** 访问限流拦截 */
+    RATE_LIMITER("0005", "访问限流拦截"),
+    /** 访问熔断拦截 */
+    HYSTRIX("0006", "访问熔断拦截"),
+
     /** 策略规则权重配置异常 */
     STRATEGY_RULE_WEIGHT_IS_NULL("ERR_BIZ_001", "业务异常，策略规则中 rule_weight 权重规则已适用但未配置"),
     /** 抽奖策略配置未装配 */

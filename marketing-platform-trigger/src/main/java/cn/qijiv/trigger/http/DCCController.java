@@ -25,8 +25,12 @@ public class DCCController implements IDCCService {
 
     private static final String BASE_CONFIG_PATH = "/market-platform-dcc";
     private static final String BASE_CONFIG_PATH_CONFIG = BASE_CONFIG_PATH + "/config";
-    private static final String DEGRADE_SWITCH_KEY = "degradeSwitch";
-    private static final Set<String> DEGRADE_SWITCH_VALUES = Collections.unmodifiableSet(
+
+    /** 允许通过 DCC 接口动态修改的开关键 */
+    private static final Set<String> DCC_SWITCH_KEYS = Collections.unmodifiableSet(
+            new java.util.HashSet<>(Arrays.asList("degradeSwitch", "rateLimiterSwitch")));
+    /** 开关允许的值 */
+    private static final Set<String> DCC_SWITCH_VALUES = Collections.unmodifiableSet(
             new java.util.HashSet<>(Arrays.asList("open", "close")));
 
     /**
@@ -38,10 +42,10 @@ public class DCCController implements IDCCService {
     @Override
     public Response<Boolean> updateConfig(@RequestParam String key, @RequestParam String value) {
         try {
-            if (!DEGRADE_SWITCH_KEY.equals(key) || !DEGRADE_SWITCH_VALUES.contains(value)) {
+            if (!DCC_SWITCH_KEYS.contains(key) || !DCC_SWITCH_VALUES.contains(value)) {
                 return Response.<Boolean>builder()
                         .code(ResponseCode.ILLEGAL_PARAMETER.getCode())
-                        .info("仅允许修改 degradeSwitch，值必须为 open 或 close")
+                        .info("仅允许修改 " + DCC_SWITCH_KEYS + "，值必须为 open 或 close")
                         .data(false)
                         .build();
             }

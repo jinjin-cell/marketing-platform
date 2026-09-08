@@ -25,10 +25,13 @@ import cn.qijiv.domain.strategy.service.armory.IStrategyArmory;
 import cn.qijiv.trigger.api.IRaffleActivityService;
 import cn.qijiv.trigger.api.dto.*;
 import cn.qijiv.types.annotations.DCCValue;
+import cn.qijiv.types.annotations.RateLimiterAccessInterceptor;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import cn.qijiv.types.model.Response;
 import com.alibaba.fastjson.JSON;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -136,9 +139,17 @@ public class RaffleActivityController implements IRaffleActivityService {
      * <p>接口：{@code /api/v1/raffle/activity/draw}
      * <br>示例：{@code curl --request POST --url http://localhost:8091/api/v1/raffle/activity/draw}
      */
+    @RateLimiterAccessInterceptor(key = "userId", fallbackMethod = "drawRateLimiterError", permitsPerSecond = 1.0d, blacklistCount = 1)
+    @HystrixCommand(commandKey = "raffleActivityDraw", threadPoolKey = "raffleActivityDraw",
+            fallbackMethod = "drawHystrixError",
+            commandProperties = {
+                    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "5000")
+            })
     @RequestMapping(value = "draw", method = RequestMethod.POST)
     @Override
     public Response<ActivityDrawResponseDTO> draw(@RequestBody ActivityDrawRequestDTO request) {
+        String userId = request == null ? null : request.getUserId();
+        Long activityId = request == null ? null : request.getActivityId();
         try {
             if(!"open".equals(degradeSwitch)) {
                 return Response.<ActivityDrawResponseDTO>builder()
@@ -148,7 +159,7 @@ public class RaffleActivityController implements IRaffleActivityService {
             }
 
             // 1. 参数校验
-            log.info("活动抽奖开始，用户ID：{}，活动ID：{}", request == null ? null : request.getUserId(), request == null ? null : request.getActivityId());
+            log.info("活动抽奖开始，用户ID：{}，活动ID：{}", userId, activityId);
             if (request == null || StringUtils.isBlank(request.getUserId()) || null == request.getActivityId()) {
                 throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
             }
@@ -186,19 +197,37 @@ public class RaffleActivityController implements IRaffleActivityService {
                             .build())
                     .build();
         } catch (AppException e) {
-            log.error("活动抽奖失败，用户ID：{}，活动ID：{}", request.getUserId(), request.getActivityId(), e);
+            // 业务校验异常属于预期内分支，记录 WARN 即可，不打印全栈，避免 ERROR 日志噪音
+            log.warn("活动抽奖失败(业务校验)，用户ID：{}，活动ID：{}，错误码：{}，错误信息：{}", userId, activityId, e.getCode(), e.getInfo());
             return Response.<ActivityDrawResponseDTO>builder()
                     .code(e.getCode())
                     .info(e.getInfo())
                     .build();
         } catch (Exception e) {
-            log.error("活动抽奖失败，用户ID：{}，活动ID：{}", request.getUserId(), request.getActivityId(), e);
+            log.error("活动抽奖失败，用户ID：{}，活动ID：{}", userId, activityId, e);
             return Response.<ActivityDrawResponseDTO>builder()
                     .code(ResponseCode.UN_ERROR.getCode())
                     .info(ResponseCode.UN_ERROR.getInfo())
                     .build();
         }
     }
+
+    public Response<ActivityDrawResponseDTO> drawRateLimiterError(@RequestBody ActivityDrawRequestDTO request) {
+        log.info("活动抽奖限流 userId:{} activityId:{}", request.getUserId(), request.getActivityId());
+        return Response.<ActivityDrawResponseDTO>builder()
+                .code(ResponseCode.RATE_LIMITER.getCode())
+                .info(ResponseCode.RATE_LIMITER.getInfo())
+                .build();
+    }
+
+    public Response<ActivityDrawResponseDTO> drawHystrixError(@RequestBody ActivityDrawRequestDTO request) {
+        log.info("活动抽奖熔断 userId:{} activityId:{}", request.getUserId(), request.getActivityId());
+        return Response.<ActivityDrawResponseDTO>builder()
+                .code(ResponseCode.HYSTRIX.getCode())
+                .info(ResponseCode.HYSTRIX.getInfo())
+                .build();
+    }
+
 
 
     /**
