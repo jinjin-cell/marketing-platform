@@ -1,0 +1,47 @@
+# 应用服务 compose：与同目录的 docker-compose.yml 合并使用，
+# 让 marketing-platform-app 容器加入中间件所在的 my-network，容器内可直接用服务名
+# 访问（elasticsearch:9200、canal-server:11111、kibana:5601 等）。
+#
+# 启动（在 docs/dev-ops/environment 目录下执行）：
+#   docker compose -f docker-compose.yml -f docker-compose-app.yml up -d
+# 只启动应用：
+#   docker compose -f docker-compose.yml -f docker-compose-app.yml up -d marketing-platform-app
+# 停止应用：
+#   docker compose -f docker-compose.yml -f docker-compose-app.yml stop marketing-platform-app
+#
+# 说明：
+# - 必须两个 -f 一起用，my-network 由 docker-compose.yml 定义；单独执行本文件
+#   没有网络定义，应用容器也无法与中间件互访。
+# - MySQL/Redis/RabbitMQ/Nacos 仍按 application-dev.yml 走 111.228.17.153，
+#   只有搜索链路（Elasticsearch）走本网络内的 elasticsearch 服务名。
+# - docs/dev-ops/app/docker-compose-1.0.yml 是应用的单机部署文件，两者镜像与端口
+#   一致；区别是本文件挂在环境网络上。DUBBO_IP_TO_REGISTRY 需按部署机对外地址调整。
+
+services:
+  marketing-platform-app:
+    image: system/marketing-platform-app:1.0-SNAPSHOT
+    container_name: marketing-platform
+    restart: on-failure
+    ports:
+      - "8091:8091"
+      - "20880:20880"
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: 8091
+      SPRING_PROFILES_ACTIVE: dev
+      DUBBO_PORT: 20880
+      DUBBO_IP_TO_REGISTRY: 111.228.17.153
+      JAVA_OPTS: "-DDUBBO_IP_TO_REGISTRY=111.228.17.153"
+      NACOS_HOST: 111.228.17.153
+      NACOS_PORT: 8848
+      # 覆盖 application-dev.yml 的默认值，直接走环境内的 Elasticsearch
+      ELASTICSEARCH_URIS: http://elasticsearch:9200
+    volumes:
+      - ./log:/data/log
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - my-network
