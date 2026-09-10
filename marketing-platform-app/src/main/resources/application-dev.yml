@@ -14,6 +14,7 @@ app:
     cross-origin: "*"
 
 activity:
+
   order:
     bloom-filter:
       expected-insertions: 1000000
@@ -40,6 +41,11 @@ thread:
 spring:
   config:
     import: classpath:sharding-tables.yml
+  # 搜索与同步服务部署在 192.168.94.128；MySQL/Redis/MQ/Nacos 仍使用 111.228.17.153。
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://192.168.94.128:9200}
+    username: ${ELASTICSEARCH_USERNAME:qijiv}
+    password: ${ELASTICSEARCH_PASSWORD:123456}
   rabbitmq:
     addresses: 111.228.17.153:5672
     username: qijiv

@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: canal-adapter
+
+# Keep Canal Adapter in local-file configuration mode. The Docker image ships
+# with a canal-manager JDBC URL in its default bootstrap.yml; leaving manager
+# mode disabled makes it load application.yml and the es7 mapping directory.

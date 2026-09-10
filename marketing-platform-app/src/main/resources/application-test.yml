@@ -38,6 +38,10 @@ thread:
 # Sharding-JDBC 多数据源配置；ds0 为配置库，ds1、ds2 为用户行为分库
 # 连接信息默认指向开发库，可通过环境变量覆盖
 spring:
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://192.168.94.128:9200}
+    username: ${ELASTICSEARCH_USERNAME:qijiv}
+    password: ${ELASTICSEARCH_PASSWORD:123456}
   rabbitmq:
     addresses: ${RABBITMQ_ADDRESSES:111.228.17.153:5672}
     username: ${RABBITMQ_USERNAME:qijiv}

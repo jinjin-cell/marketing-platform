@@ -1,5 +1,4 @@
 # 命令执行 docker-compose up -d
-version: '3.9'
 services:
   mysql:
     image: mysql:8.0.32
@@ -128,7 +127,128 @@ services:
     networks:
       - my-network
 
+  # Canal 1.1.7 监听 MySQL binlog，并通过 11111 向 adapter 提供数据。
+  canal-server:
+    image: registry.cn-hangzhou.aliyuncs.com/xfg-studio/canal-server:v1.1.7
+    container_name: canal-server
+    restart: unless-stopped
+    ports:
+      - "11111:11111"
+    environment:
+      # Canal stores its TCP password as SHA1(SHA1(password)).
+      JAVA_OPTS: -Dcanal.user=qijiv -Dcanal.passwd=6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9 -Xms256m -Xmx512m -Xmn128m
+    volumes:
+      - ./canal/instance.properties:/home/admin/canal-server/conf/example/instance.properties:ro
+    networks:
+      - my-network
+
+  # Adapter 1.1.6 的 es7 插件与 Elasticsearch 7.17.x 配套。
+  canal-adapter:
+    image: registry.cn-hangzhou.aliyuncs.com/xfg-studio/canal-adapter:v1.1.6
+    container_name: canal-adapter
+    restart: unless-stopped
+    # The reference image defaults to a 2-3 GB JVM heap. This host has 3 GB of
+    # RAM, so reduce only the adapter heap before invoking its stock launcher.
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        sed -i 's/-Xms2g -Xmx3g/-Xms256m -Xmx512m/'
+        /opt/canal-adapter/bin/startup.sh &&
+        sh /opt/canal-adapter/bin/restart.sh &&
+        tail -F /opt/canal-adapter/logs/adapter/adapter.log
+    ports:
+      - "8082:8081"
+    volumes:
+      - ./canal-adapter/bootstrap.yml:/opt/canal-adapter/conf/bootstrap.yml:ro
+      - ./canal-adapter/application.yml:/opt/canal-adapter/conf/application.yml:ro
+      - ./canal-adapter/es7:/opt/canal-adapter/conf/es7:ro
+    depends_on:
+      canal-server:
+        condition: service_started
+      elasticsearch-init:
+        condition: service_completed_successfully
+    networks:
+      - my-network
+
+  elasticsearch:
+    image: registry.cn-hangzhou.aliyuncs.com/xfg-studio/elasticsearch:7.17.14
+    container_name: elasticsearch
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+    environment:
+      TZ: Asia/Shanghai
+      discovery.type: single-node
+      cluster.name: docker-cluster
+      xpack.security.enabled: "true"
+      ELASTIC_PASSWORD: "123456"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - my-network
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS -u elastic:123456 http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  # Initialize the project account and Kibana's built-in service account.
+  elasticsearch-init:
+    image: registry.cn-hangzhou.aliyuncs.com/xfg-studio/elasticsearch:7.17.14
+    restart: "no"
+    entrypoint: [ "/bin/sh", "/config/configure-security.sh" ]
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_BOOTSTRAP_USER: elastic
+      ELASTICSEARCH_BOOTSTRAP_PASSWORD: "123456"
+      ELASTICSEARCH_PROJECT_USER: qijiv
+      ELASTICSEARCH_PROJECT_PASSWORD: "123456"
+      KIBANA_SYSTEM_PASSWORD: "123456"
+    volumes:
+      - ./elasticsearch/configure-security.sh:/config/configure-security.sh:ro
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - my-network
+
+  kibana:
+    image: registry.cn-hangzhou.aliyuncs.com/xfg-studio/kibana:7.17.14
+    container_name: kibana
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    depends_on:
+      elasticsearch-init:
+        condition: service_completed_successfully
+    networks:
+      - my-network
+
+  portainer:
+    image: portainer/portainer-ce:2.21.5
+    container_name: portainer
+    restart: unless-stopped
+    command: --http-enabled
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    networks:
+      - my-network
+
 
 networks:
   my-network:
     driver: bridge
+
+volumes:
+  elasticsearch-data:
+  portainer-data:

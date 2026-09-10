@@ -48,6 +48,10 @@ thread:
 # Sharding-JDBC 多数据源配置；ds0 为配置库，ds1、ds2 为用户行为分库
 # 连接信息通过环境变量注入（对齐 redis 的 ${REDIS_*} 写法），部署时必须设置
 spring:
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS}
+    username: ${ELASTICSEARCH_USERNAME}
+    password: ${ELASTICSEARCH_PASSWORD}
   rabbitmq:
     addresses: ${RABBITMQ_ADDRESSES}
     username: ${RABBITMQ_USERNAME}
