@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.qijiv.infrastructure.persistent.dao.IDailyBehaviorRebateDao">
+<mapper namespace="cn.qijiv.infrastructure.dao.IDailyBehaviorRebateDao">
 
-    <resultMap id="DailyBehaviorRebateMap" type="cn.qijiv.infrastructure.persistent.po.DailyBehaviorRebatePO">
+    <resultMap id="DailyBehaviorRebateMap" type="cn.qijiv.infrastructure.dao.po.DailyBehaviorRebatePO">
         <id column="id" property="id"/>
         <result column="behavior_type" property="behaviorType"/>
         <result column="rebate_desc" property="rebateDesc"/>

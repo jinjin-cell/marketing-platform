@@ -1,7 +1,7 @@
 package cn.qijiv.test.infrastructure;
 
-import cn.qijiv.infrastructure.persistent.dao.IRuleTreeNodeDao;
-import cn.qijiv.infrastructure.persistent.po.RuleTreeNodePO;
+import cn.qijiv.infrastructure.dao.IRuleTreeNodeDao;
+import cn.qijiv.infrastructure.dao.po.RuleTreeNodePO;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;

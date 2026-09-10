@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.qijiv.infrastructure.persistent.dao.IUserRaffleOrderDao">
+<mapper namespace="cn.qijiv.infrastructure.dao.IUserRaffleOrderDao">
 
-    <resultMap id="UserRaffleOrderMap" type="cn.qijiv.infrastructure.persistent.po.UserRaffleOrderPO">
+    <resultMap id="UserRaffleOrderMap" type="cn.qijiv.infrastructure.dao.po.UserRaffleOrderPO">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="activity_id" property="activityId"/>
@@ -16,7 +16,7 @@
     </resultMap>
 
     <!--suppress SqlResolve -->
-    <insert id="insert" parameterType="cn.qijiv.infrastructure.persistent.po.UserRaffleOrderPO">
+    <insert id="insert" parameterType="cn.qijiv.infrastructure.dao.po.UserRaffleOrderPO">
         INSERT INTO user_raffle_order
             (user_id, activity_id, activity_name, strategy_id, order_id, order_time, order_state)
         VALUES

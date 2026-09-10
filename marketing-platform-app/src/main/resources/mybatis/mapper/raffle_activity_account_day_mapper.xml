@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.qijiv.infrastructure.persistent.dao.IRaffleActivityAccountDayDao">
+<mapper namespace="cn.qijiv.infrastructure.dao.IRaffleActivityAccountDayDao">
 
-    <resultMap id="RaffleActivityAccountDayMap" type="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountDayPO">
+    <resultMap id="RaffleActivityAccountDayMap" type="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountDayPO">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="activity_id" property="activityId"/>
@@ -13,7 +13,7 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <insert id="insertActivityAccountDay" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountDayPO">
+    <insert id="insertActivityAccountDay" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountDayPO">
         INSERT INTO raffle_activity_account_day
             (user_id, activity_id, day, day_count, day_count_surplus)
         VALUES
@@ -29,7 +29,7 @@
     </select>
 
     <update id="updateActivityAccountDaySubtractionQuota"
-            parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountDayPO">
+            parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountDayPO">
         UPDATE raffle_activity_account_day
         SET day_count_surplus = day_count_surplus - 1,
             update_time = NOW()
@@ -39,7 +39,7 @@
           AND day_count_surplus > 0
     </update>
 
-    <update id="addAccountQuota" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountDayPO">
+    <update id="addAccountQuota" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountDayPO">
         UPDATE raffle_activity_account_day
         SET day_count = day_count + #{dayCount},
             day_count_surplus = day_count_surplus + #{dayCountSurplus},

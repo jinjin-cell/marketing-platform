@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.qijiv.infrastructure.persistent.dao.IRaffleActivityOrderDao">
+<mapper namespace="cn.qijiv.infrastructure.dao.IRaffleActivityOrderDao">
 
-    <resultMap id="RaffleActivityOrderMap" type="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO">
+    <resultMap id="RaffleActivityOrderMap" type="cn.qijiv.infrastructure.dao.po.RaffleActivityOrderPO">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="sku" property="sku"/>
@@ -21,7 +21,7 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <insert id="insert" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO">
+    <insert id="insert" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityOrderPO">
         INSERT INTO raffle_activity_order
             (user_id, sku, activity_id, activity_name, strategy_id, order_id, out_business_no, order_time, pay_amount,
              total_count, day_count, month_count, state)
@@ -53,7 +53,7 @@
         FROM raffle_activity_order
     </select>
 
-    <select id="queryRaffleActivityOrder" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO" resultMap="RaffleActivityOrderMap">
+    <select id="queryRaffleActivityOrder" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityOrderPO" resultMap="RaffleActivityOrderMap">
         SELECT id, user_id, sku, activity_id, activity_name, strategy_id, order_id, out_business_no, order_time, pay_amount,
                total_count, day_count, month_count, state
         FROM raffle_activity_order
@@ -62,7 +62,7 @@
         LIMIT 1
     </select>
 
-    <update id="updateOrderCompleted" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO">
+    <update id="updateOrderCompleted" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityOrderPO">
         UPDATE raffle_activity_order
         SET state = 'completed',
             update_time = NOW()
@@ -71,7 +71,7 @@
           AND state = 'wait_pay'
     </update>
 
-    <select id="queryUnpaidActivityOrder" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO" resultMap="RaffleActivityOrderMap">
+    <select id="queryUnpaidActivityOrder" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityOrderPO" resultMap="RaffleActivityOrderMap">
         select user_id, order_id, out_business_no, pay_amount
         from raffle_activity_order
         where user_id = #{userId} and sku = #{sku} and state = 'wait_pay' and order_time >= NOW() - INTERVAL 1 MONTH

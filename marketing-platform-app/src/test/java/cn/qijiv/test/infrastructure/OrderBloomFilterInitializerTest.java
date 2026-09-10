@@ -1,9 +1,9 @@
 package cn.qijiv.test.infrastructure;
 
-import cn.qijiv.infrastructure.persistent.dao.IRaffleActivityOrderDao;
-import cn.qijiv.infrastructure.persistent.po.RaffleActivityOrderPO;
-import cn.qijiv.infrastructure.persistent.redis.OrderBloomFilterInitializer;
-import cn.qijiv.infrastructure.persistent.redis.OrderBusinessNoBloomFilter;
+import cn.qijiv.infrastructure.dao.IRaffleActivityOrderDao;
+import cn.qijiv.infrastructure.dao.po.RaffleActivityOrderPO;
+import cn.qijiv.infrastructure.redis.OrderBloomFilterInitializer;
+import cn.qijiv.infrastructure.redis.OrderBusinessNoBloomFilter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.junit.Test;
 import org.junit.runner.RunWith;

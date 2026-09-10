@@ -1,6 +1,6 @@
 package cn.qijiv.test.infrastructure;
 
-import cn.qijiv.infrastructure.persistent.redis.IRedisService;
+import cn.qijiv.infrastructure.redis.IRedisService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;

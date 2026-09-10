@@ -9,7 +9,7 @@ spring:
           database-strategy: &user-id-database-strategy
             standard: &user-id-standard-strategy
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
           table-strategy:
             standard: *user-id-standard-strategy
         raffle_activity_account:
@@ -25,7 +25,7 @@ spring:
           actual-data-nodes: ds$->{1..2}.task
           database-strategy:
             hint:
-              algorithm-class-name: cn.qijiv.infrastructure.persistent.db.TaskDBHintAlgorithm
+              algorithm-class-name: cn.qijiv.infrastructure.db.TaskDBHintAlgorithm
         user_award_record:
           actual-data-nodes: ds$->{1..2}.user_award_record_00$->{0..3}
           database-strategy: *user-id-database-strategy

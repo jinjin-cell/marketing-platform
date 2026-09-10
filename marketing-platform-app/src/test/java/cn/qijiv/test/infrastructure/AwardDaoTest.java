@@ -1,7 +1,7 @@
 package cn.qijiv.test.infrastructure;
 
-import cn.qijiv.infrastructure.persistent.dao.IAwardDao;
-import cn.qijiv.infrastructure.persistent.po.AwardPO;
+import cn.qijiv.infrastructure.dao.IAwardDao;
+import cn.qijiv.infrastructure.dao.po.AwardPO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;

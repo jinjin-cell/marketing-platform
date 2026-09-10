@@ -1,6 +1,6 @@
 package cn.qijiv.test.infrastructure;
 
-import cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm;
+import cn.qijiv.infrastructure.db.UserIdShardingAlgorithm;
 import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue;
 import org.junit.Test;
 

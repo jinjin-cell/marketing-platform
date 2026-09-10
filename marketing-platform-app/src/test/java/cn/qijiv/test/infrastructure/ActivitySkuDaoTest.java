@@ -1,7 +1,7 @@
 package cn.qijiv.test.infrastructure;
 
-import cn.qijiv.infrastructure.persistent.dao.IRaffleActivitySkuDao;
-import cn.qijiv.infrastructure.persistent.po.RaffleActivitySkuPO;
+import cn.qijiv.infrastructure.dao.IRaffleActivitySkuDao;
+import cn.qijiv.infrastructure.dao.po.RaffleActivitySkuPO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;

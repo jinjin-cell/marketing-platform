@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.qijiv.infrastructure.persistent.dao.IRaffleActivityAccountMonthDao">
+<mapper namespace="cn.qijiv.infrastructure.dao.IRaffleActivityAccountMonthDao">
 
-    <resultMap id="RaffleActivityAccountMonthMap" type="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountMonthPO">
+    <resultMap id="RaffleActivityAccountMonthMap" type="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountMonthPO">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="activity_id" property="activityId"/>
@@ -13,7 +13,7 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <insert id="insertActivityAccountMonth" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountMonthPO">
+    <insert id="insertActivityAccountMonth" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountMonthPO">
         INSERT INTO raffle_activity_account_month
             (user_id, activity_id, month, month_count, month_count_surplus)
         VALUES
@@ -29,7 +29,7 @@
     </select>
 
     <update id="updateActivityAccountMonthSubtractionQuota"
-            parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountMonthPO">
+            parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountMonthPO">
         UPDATE raffle_activity_account_month
         SET month_count_surplus = month_count_surplus - 1,
             update_time = NOW()
@@ -39,7 +39,7 @@
           AND month_count_surplus > 0
     </update>
 
-    <update id="addAccountQuota" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountMonthPO">
+    <update id="addAccountQuota" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountMonthPO">
         UPDATE raffle_activity_account_month
         SET month_count = month_count + #{monthCount},
             month_count_surplus = month_count_surplus + #{monthCountSurplus},

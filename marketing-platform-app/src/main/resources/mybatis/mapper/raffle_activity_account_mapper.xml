@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.qijiv.infrastructure.persistent.dao.IRaffleActivityAccountDao">
+<mapper namespace="cn.qijiv.infrastructure.dao.IRaffleActivityAccountDao">
 
-    <resultMap id="RaffleActivityAccountMap" type="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO">
+    <resultMap id="RaffleActivityAccountMap" type="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountPO">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="activity_id" property="activityId"/>
@@ -34,7 +34,7 @@
     </select>
 
     <update id="updateAccountQuota"
-            parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO">
+            parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountPO">
         UPDATE raffle_activity_account
         SET total_count = total_count + #{totalCount},
             total_count_surplus = total_count_surplus + #{totalCountSurplus},
@@ -47,7 +47,7 @@
           AND activity_id = #{activityId}
     </update>
 
-    <insert id="insert" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO">
+    <insert id="insert" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountPO">
         INSERT INTO raffle_activity_account
             (user_id, activity_id, total_count, total_count_surplus, day_count,
              day_count_surplus, month_count, month_count_surplus)
@@ -56,7 +56,7 @@
              #{dayCountSurplus}, #{monthCount}, #{monthCountSurplus})
     </insert>
 
-    <update id="updateActivityAccountSubtractionQuota" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO">
+    <update id="updateActivityAccountSubtractionQuota" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountPO">
         update raffle_activity_account
         set total_count_surplus = total_count_surplus - 1,
             day_count_surplus = day_count_surplus - 1,
@@ -65,13 +65,13 @@
         where user_id = #{userId} and activity_id = #{activityId} and total_count_surplus > 0 and day_count_surplus > 0 and month_count_surplus > 0
     </update>
 
-    <update id="updateActivityAccountMonthSurplusImageQuota" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountPO">
+    <update id="updateActivityAccountMonthSurplusImageQuota" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountPO">
         update raffle_activity_account
         set month_count_surplus = #{monthCountSurplus} - 1, update_time = now()
         where user_id = #{userId} and activity_id = #{activityId}
     </update>
 
-    <update id="updateActivityAccountDaySurplusImageQuota" parameterType="cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountDayPO">
+    <update id="updateActivityAccountDaySurplusImageQuota" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountDayPO">
         update raffle_activity_account
         set day_count_surplus = #{dayCountSurplus} - 1, update_time = now()
         where user_id = #{userId} and activity_id = #{activityId}

@@ -3,7 +3,7 @@ package cn.qijiv.test.infrastructure;
 import cn.qijiv.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
 import cn.qijiv.domain.activity.model.entity.ActivityOrderEntity;
 import cn.qijiv.domain.activity.model.valobj.OrderStateVO;
-import cn.qijiv.infrastructure.persistent.repository.ActivityRepository;
+import cn.qijiv.infrastructure.adapter.repository.ActivityRepository;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import org.junit.After;

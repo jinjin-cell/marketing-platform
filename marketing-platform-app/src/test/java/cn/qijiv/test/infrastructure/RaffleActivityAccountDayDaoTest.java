@@ -1,7 +1,7 @@
 package cn.qijiv.test.infrastructure;
 
-import cn.qijiv.infrastructure.persistent.dao.IRaffleActivityAccountDayDao;
-import cn.qijiv.infrastructure.persistent.po.RaffleActivityAccountDayPO;
+import cn.qijiv.infrastructure.dao.IRaffleActivityAccountDayDao;
+import cn.qijiv.infrastructure.dao.po.RaffleActivityAccountDayPO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;

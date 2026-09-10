@@ -1,6 +1,6 @@
 package cn.qijiv.test.infrastructure;
 
-import cn.qijiv.infrastructure.persistent.redis.OrderBusinessNoBloomFilter;
+import cn.qijiv.infrastructure.redis.OrderBusinessNoBloomFilter;
 import cn.qijiv.types.common.Constants;
 import org.junit.Before;
 import org.junit.Test;

@@ -2,7 +2,7 @@ package cn.qijiv.trigger.job;
 
 import cn.qijiv.domain.task.model.entity.TaskEntity;
 import cn.qijiv.domain.task.service.ITaskService;
-import cn.qijiv.infrastructure.persistent.db.IDBRouterStrategy;
+import cn.qijiv.infrastructure.db.IDBRouterStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

@@ -1,13 +1,13 @@
 package cn.qijiv.test.infrastructure;
 
 import cn.qijiv.domain.strategy.model.valobj.RuleTreeVO;
-import cn.qijiv.infrastructure.persistent.dao.IRuleTreeDao;
-import cn.qijiv.infrastructure.persistent.dao.IRuleTreeNodeDao;
-import cn.qijiv.infrastructure.persistent.dao.IRuleTreeNodeLineDao;
-import cn.qijiv.infrastructure.persistent.po.RuleTreeNodePO;
-import cn.qijiv.infrastructure.persistent.po.RuleTreePO;
-import cn.qijiv.infrastructure.persistent.redis.IRedisService;
-import cn.qijiv.infrastructure.persistent.repository.StrategyRespository;
+import cn.qijiv.infrastructure.dao.IRuleTreeDao;
+import cn.qijiv.infrastructure.dao.IRuleTreeNodeDao;
+import cn.qijiv.infrastructure.dao.IRuleTreeNodeLineDao;
+import cn.qijiv.infrastructure.dao.po.RuleTreeNodePO;
+import cn.qijiv.infrastructure.dao.po.RuleTreePO;
+import cn.qijiv.infrastructure.redis.IRedisService;
+import cn.qijiv.infrastructure.adapter.repository.StrategyRespository;
 import cn.qijiv.types.common.Constants;
 import org.junit.Before;
 import org.junit.Test;

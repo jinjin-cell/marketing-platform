@@ -1,10 +1,10 @@
 package cn.qijiv.test.infrastructure;
 
 import cn.qijiv.domain.strategy.model.entity.StrategyAwardEntity;
-import cn.qijiv.infrastructure.persistent.dao.IStrategyAwardDao;
-import cn.qijiv.infrastructure.persistent.po.StrategyAwardPO;
-import cn.qijiv.infrastructure.persistent.redis.IRedisService;
-import cn.qijiv.infrastructure.persistent.repository.StrategyRespository;
+import cn.qijiv.infrastructure.dao.IStrategyAwardDao;
+import cn.qijiv.infrastructure.dao.po.StrategyAwardPO;
+import cn.qijiv.infrastructure.redis.IRedisService;
+import cn.qijiv.infrastructure.adapter.repository.StrategyRespository;
 import cn.qijiv.types.common.Constants;
 import org.junit.Before;
 import org.junit.Test;

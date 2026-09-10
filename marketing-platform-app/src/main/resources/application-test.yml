@@ -91,64 +91,64 @@ spring:
           database-strategy:
             standard:
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
           table-strategy:
             standard:
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
         raffle_activity_account:
           actual-data-nodes: ds$->{1..2}.raffle_activity_account
           database-strategy:
             standard:
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
         raffle_activity_account_day:
           actual-data-nodes: ds$->{1..2}.raffle_activity_account_day
           database-strategy:
             standard:
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
         raffle_activity_account_month:
           actual-data-nodes: ds$->{1..2}.raffle_activity_account_month
           database-strategy:
             standard:
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
         task:
           actual-data-nodes: ds$->{1..2}.task
           database-strategy:
             hint:
-              algorithm-class-name: cn.qijiv.infrastructure.persistent.db.TaskDBHintAlgorithm
+              algorithm-class-name: cn.qijiv.infrastructure.db.TaskDBHintAlgorithm
         user_award_record:
           actual-data-nodes: ds$->{1..2}.user_award_record_00$->{0..3}
           database-strategy:
             standard:
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
           table-strategy:
             standard:
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
         user_behavior_rebate_order:
           actual-data-nodes: ds$->{1..2}.user_behavior_rebate_order_00$->{0..3}
           database-strategy:
             standard:
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
           table-strategy:
             standard:
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
         user_raffle_order:
           actual-data-nodes: ds$->{1..2}.user_raffle_order_00$->{0..3}
           database-strategy:
             standard:
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
           table-strategy:
             standard:
               sharding-column: user_id
-              precise-algorithm-class-name: cn.qijiv.infrastructure.persistent.db.UserIdShardingAlgorithm
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
     props:
       sql:
         show: false

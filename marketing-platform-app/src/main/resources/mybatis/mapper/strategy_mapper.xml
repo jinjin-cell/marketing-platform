@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.qijiv.infrastructure.persistent.dao.IStrategyDao">
+<mapper namespace="cn.qijiv.infrastructure.dao.IStrategyDao">
 
-    <resultMap id="StrategyMap" type="cn.qijiv.infrastructure.persistent.po.StrategyPO">
+    <resultMap id="StrategyMap" type="cn.qijiv.infrastructure.dao.po.StrategyPO">
         <id column="id" property="id"/>
         <result column="strategy_id" property="strategyId"/>
         <result column="strategy_desc" property="strategyDesc"/>
