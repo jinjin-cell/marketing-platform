@@ -135,7 +135,11 @@
                 <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
                 <version>4.1.1</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.elasticsearch.plugin</groupId>
+                <artifactId>x-pack-sql-jdbc</artifactId>
+                <version>7.17.14</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.dubbo</groupId>
                 <artifactId>dubbo</artifactId>
