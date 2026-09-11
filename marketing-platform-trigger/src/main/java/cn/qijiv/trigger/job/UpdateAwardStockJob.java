@@ -2,33 +2,53 @@ package cn.qijiv.trigger.job;
 
 import cn.qijiv.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 import cn.qijiv.domain.strategy.service.IRaffleStock;
+import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.concurrent.TimeUnit;
 
-/** 更新奖品消耗库存定时任务。 */
+/** 更新奖品库存任务；为了不让更新库存的压力打到数据库中，这里采用了redis更新缓存库存，异步队列更新数据库，数据库表最终一致即可。 */
 @Slf4j
-@Component
+@Component()
 public class UpdateAwardStockJob {
 
-    /** 奖品库存服务 */
     @Resource
     private IRaffleStock raffleStock;
+    @Resource
+    private RedissonClient redissonClient;
 
     /**
-     * 定时执行：从延迟队列取出消耗记录，异步更新奖品库存
+     * 本地化任务注解；@Scheduled(cron = "0/5 * * * * ?")
+     * 分布式任务注解； @XxlJob("updateAwardStockJob")
      */
-    @Scheduled(cron = "0/5 * * * * ?")
+    @XxlJob("updateAwardStockJob")
     public void exec() {
+        // 为什么加锁？分布式应用N台机器部署互备，任务调度会有N个同时执行，那么这里需要增加抢占机制，谁抢占到谁就执行。完毕后，下一轮继续抢占。
+        RLock lock = redissonClient.getLock("big-market-updateAwardStockJob");
+        boolean isLocked = false;
         try {
-            StrategyAwardStockKeyVO strategyAwardStockKeyVO = raffleStock.takeQueueValue();
-            if (null == strategyAwardStockKeyVO) return;
-            log.info("定时任务，更新奖品消耗库存 strategyId:{} awardId:{}", strategyAwardStockKeyVO.getStrategyId(), strategyAwardStockKeyVO.getAwardId());
-            raffleStock.updateStrategyAwardStock(strategyAwardStockKeyVO.getStrategyId(), strategyAwardStockKeyVO.getAwardId());
+            isLocked = lock.tryLock(3, 0, TimeUnit.SECONDS);
+            if (!isLocked) return;
+
+            // 延迟队列趋势更新；队列为空时 poll 返回 null，结束本轮处理
+            while (true) {
+                StrategyAwardStockKeyVO strategyAwardStockKeyVO = raffleStock.takeQueueValue();
+                if (null == strategyAwardStockKeyVO) break;
+                log.info("定时任务，更新奖品消耗库存 strategyId:{} awardId:{}", strategyAwardStockKeyVO.getStrategyId(), strategyAwardStockKeyVO.getAwardId());
+                raffleStock.updateStrategyAwardStock(strategyAwardStockKeyVO.getStrategyId(), strategyAwardStockKeyVO.getAwardId());
+            }
+        } catch (InterruptedException e) {
+            log.error("定时任务，更新奖品消耗库存被中断", e);
         } catch (Exception e) {
             log.error("定时任务，更新奖品消耗库存失败", e);
+        } finally {
+            if (isLocked) {
+                lock.unlock();
+            }
         }
     }
 

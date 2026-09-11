@@ -167,6 +167,20 @@ mybatis:
   mapper-locations: classpath:/mybatis/mapper/mysql/*.xml
   config-location: classpath:/mybatis/config/mybatis-config.xml
 
+# XXL-JOB 分布式任务调度；生产环境通过环境变量注入（部署时必须设置）
+xxl:
+  job:
+    admin:
+      addresses: ${XXL_JOB_ADMIN_ADDRESSES}
+    accessToken: ${XXL_JOB_ACCESS_TOKEN:default_token}
+    executor:
+      appname: ${XXL_JOB_EXECUTOR_APPNAME:big-market-job}
+      address: ${XXL_JOB_EXECUTOR_ADDRESS:}
+      ip: ${XXL_JOB_EXECUTOR_IP:}
+      port: ${XXL_JOB_EXECUTOR_PORT:9999}
+      logpath: ${XXL_JOB_EXECUTOR_LOGPATH:/data/applogs/xxl-job/jobhandler}
+      logretentiondays: ${XXL_JOB_EXECUTOR_LOGRETENTIONDAYS:30}
+
 # 自定义 Curator DCC 客户端配置。生产环境可通过环境变量覆盖连接串。
 zookeeper:
   sdk:
