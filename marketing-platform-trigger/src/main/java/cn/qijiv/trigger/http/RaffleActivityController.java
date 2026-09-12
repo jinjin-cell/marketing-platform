@@ -352,9 +352,13 @@ public class RaffleActivityController implements IRaffleActivityService {
 
     /**
      * 查询sku商品集合
+     *
+     * <p>接口：{@code /api/v1/raffle/activity/query_sku_product_list}
+     * <br>示例：{@code curl --request GET --url 'http://localhost:8091/api/v1/raffle/activity/query_sku_product_list?activityId=100301'}
      */
+    @RequestMapping(value = "query_sku_product_list", method = RequestMethod.GET)
     @Override
-    public Response<List<SkuProductResponseDTO>> querySkuProductListByActivityId(Long activityId) {
+    public Response<List<SkuProductResponseDTO>> querySkuProductListByActivityId(@RequestParam Long activityId) {
         try {
             log.info("查询sku商品集合开始 activityId:{}", activityId);
             // 1. 参数校验
@@ -399,9 +403,13 @@ public class RaffleActivityController implements IRaffleActivityService {
 
     /**
      * 查询用户积分值
+     *
+     * <p>接口：{@code /api/v1/raffle/activity/query_user_credit}
+     * <br>示例：{@code curl --request GET --url 'http://localhost:8091/api/v1/raffle/activity/query_user_credit?userId=xiaofuge'}
      */
+    @RequestMapping(value = "query_user_credit", method = RequestMethod.GET)
     @Override
-    public Response<BigDecimal> queryUserCreditAccount(String userId) {
+    public Response<BigDecimal> queryUserCreditAccount(@RequestParam String userId) {
         try {
             log.info("查询用户积分值开始 userId:{}", userId);
             // 1. 参数校验
@@ -482,6 +490,53 @@ public class RaffleActivityController implements IRaffleActivityService {
                     .code(ResponseCode.UN_ERROR.getCode())
                     .info(ResponseCode.UN_ERROR.getInfo())
                     .data(false)
+                    .build();
+        }
+    }
+
+    /**
+     * 查询用户中奖记录
+     *
+     * <p>接口：{@code /api/v1/raffle/activity/query_user_award_record}
+     * <br>示例：{@code curl --request GET --url 'http://localhost:8091/api/v1/raffle/activity/query_user_award_record?userId=qijiv&activityId=100301'}
+     */
+    @RequestMapping(value = "query_user_award_record", method = RequestMethod.GET)
+    @Override
+    public Response<List<UserAwardRecordResponseDTO>> queryUserAwardRecordList(@RequestParam String userId, @RequestParam Long activityId) {
+        try {
+            log.info("查询用户中奖记录开始 userId:{} activityId:{}", userId, activityId);
+            // 1. 参数校验
+            if (StringUtils.isBlank(userId) || null == activityId) {
+                throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+            }
+            // 2. 查询中奖记录&封装数据
+            List<UserAwardRecordEntity> userAwardRecordEntities = awardService.queryUserAwardRecordList(userId, activityId);
+            List<UserAwardRecordResponseDTO> userAwardRecordResponseDTOS = new ArrayList<>(userAwardRecordEntities.size());
+            for (UserAwardRecordEntity userAwardRecordEntity : userAwardRecordEntities) {
+                userAwardRecordResponseDTOS.add(UserAwardRecordResponseDTO.builder()
+                        .awardId(userAwardRecordEntity.getAwardId())
+                        .awardTitle(userAwardRecordEntity.getAwardTitle())
+                        .awardTime(userAwardRecordEntity.getAwardTime())
+                        .awardState(userAwardRecordEntity.getAwardState().getCode())
+                        .build());
+            }
+            log.info("查询用户中奖记录完成 userId:{} activityId:{} 记录数:{}", userId, activityId, userAwardRecordResponseDTOS.size());
+            return Response.<List<UserAwardRecordResponseDTO>>builder()
+                    .code(ResponseCode.SUCCESS.getCode())
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    .data(userAwardRecordResponseDTOS)
+                    .build();
+        } catch (AppException e) {
+            log.warn("查询用户中奖记录参数错误 userId:{} activityId:{}", userId, activityId);
+            return Response.<List<UserAwardRecordResponseDTO>>builder()
+                    .code(e.getCode())
+                    .info(e.getInfo())
+                    .build();
+        } catch (Exception e) {
+            log.error("查询用户中奖记录失败 userId:{} activityId:{}", userId, activityId, e);
+            return Response.<List<UserAwardRecordResponseDTO>>builder()
+                    .code(ResponseCode.UN_ERROR.getCode())
+                    .info(ResponseCode.UN_ERROR.getInfo())
                     .build();
         }
     }

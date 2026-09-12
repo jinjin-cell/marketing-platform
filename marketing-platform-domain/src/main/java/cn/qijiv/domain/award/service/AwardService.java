@@ -12,6 +12,7 @@ import cn.qijiv.types.event.BaseEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -62,6 +63,11 @@ public class AwardService implements IAwardService {
 
         // 存储聚合对象 - 一个事务下，用户的中奖记录
         awardRepository.saveUserAwardRecord(userAwardRecordAggregate);
+    }
+
+    @Override
+    public List<UserAwardRecordEntity> queryUserAwardRecordList(String userId, Long activityId) {
+        return awardRepository.queryUserAwardRecordList(userId, activityId);
     }
 
     @Override

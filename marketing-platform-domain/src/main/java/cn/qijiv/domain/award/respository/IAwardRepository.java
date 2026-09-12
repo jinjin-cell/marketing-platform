@@ -2,6 +2,9 @@ package cn.qijiv.domain.award.respository;
 
 import cn.qijiv.domain.award.model.aggregate.GiveOutPrizesAggregate;
 import cn.qijiv.domain.award.model.aggregate.UserAwardRecordAggregate;
+import cn.qijiv.domain.award.model.entity.UserAwardRecordEntity;
+
+import java.util.List;
 
 /**
  * 奖品仓储服务
@@ -41,6 +44,15 @@ public interface IAwardRepository {
      * @return 奖品key
      */
     String queryAwardKey(Integer awardId);
+
+    /**
+     * 查询用户中奖记录列表
+     *
+     * @param userId     用户ID
+     * @param activityId 活动ID
+     * @return 用户中奖记录列表
+     */
+    List<UserAwardRecordEntity> queryUserAwardRecordList(String userId, Long activityId);
 
 
 }

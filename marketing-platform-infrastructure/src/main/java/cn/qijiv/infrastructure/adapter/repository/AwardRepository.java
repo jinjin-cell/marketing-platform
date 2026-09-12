@@ -6,6 +6,7 @@ import cn.qijiv.domain.award.model.entity.TaskEntity;
 import cn.qijiv.domain.award.model.entity.UserAwardRecordEntity;
 import cn.qijiv.domain.award.model.entity.UserCreditAwardEntity;
 import cn.qijiv.domain.award.model.valobj.AccountStatusVO;
+import cn.qijiv.domain.award.model.valobj.AwardStateVO;
 import cn.qijiv.domain.award.respository.IAwardRepository;
 import cn.qijiv.infrastructure.dao.*;
 import cn.qijiv.infrastructure.event.EventPublisher;
@@ -25,6 +26,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -187,6 +190,29 @@ public class AwardRepository implements IAwardRepository {
         } finally {
             dbRouter.clear();
         }
+    }
+
+    @Override
+    public List<UserAwardRecordEntity> queryUserAwardRecordList(String userId, Long activityId) {
+        UserAwardRecordPO userAwardRecordReq = new UserAwardRecordPO();
+        userAwardRecordReq.setUserId(userId);
+        userAwardRecordReq.setActivityId(activityId);
+        // user_award_record 由 ShardingSphere 按 user_id 分库分表，查询条件携带 user_id 即可自动路由
+        List<UserAwardRecordPO> userAwardRecordPOS = userAwardRecordDao.queryUserAwardRecordList(userAwardRecordReq);
+        List<UserAwardRecordEntity> userAwardRecordEntities = new ArrayList<>(userAwardRecordPOS.size());
+        for (UserAwardRecordPO userAwardRecordPO : userAwardRecordPOS) {
+            userAwardRecordEntities.add(UserAwardRecordEntity.builder()
+                    .userId(userAwardRecordPO.getUserId())
+                    .activityId(userAwardRecordPO.getActivityId())
+                    .strategyId(userAwardRecordPO.getStrategyId())
+                    .orderId(userAwardRecordPO.getOrderId())
+                    .awardId(userAwardRecordPO.getAwardId())
+                    .awardTitle(userAwardRecordPO.getAwardTitle())
+                    .awardTime(userAwardRecordPO.getAwardTime())
+                    .awardState(AwardStateVO.valueOf(userAwardRecordPO.getAwardState()))
+                    .build());
+        }
+        return userAwardRecordEntities;
     }
 
     @Override

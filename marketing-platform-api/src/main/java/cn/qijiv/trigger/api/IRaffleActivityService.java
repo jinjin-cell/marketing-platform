@@ -83,6 +83,15 @@ public interface IRaffleActivityService {
      */
     Response<Boolean> creditPayExchangeSku(SkuProductShopCartRequestDTO request);
 
+    /**
+     * 查询用户中奖记录列表
+     *
+     * @param userId     用户ID
+     * @param activityId 活动ID
+     * @return 中奖记录列表（按中奖时间倒序）
+     */
+    Response<List<UserAwardRecordResponseDTO>> queryUserAwardRecordList(String userId, Long activityId);
+
 
 
 }
