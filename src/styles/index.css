@@ -1,0 +1,133 @@
+/* 全局主题：红金喜庆风（营销抽奖场景） */
+:root {
+  --brand-red: #d43d2a;
+  --brand-red-dark: #c0392b;
+  --brand-red-deep: #a52a1e;
+  --brand-gold: #f0a500;
+  --brand-gold-deep: #c98a00;
+  --brand-gold-light: #ffd873;
+  --brand-cream: #faf6ef;
+  --brand-brown: #5b3a29;
+  --page-bg: #f1ead9;
+
+  --card-border: #f0e2c8;
+  --card-shadow: 0 2px 8px rgba(91, 58, 41, 0.06);
+  --card-shadow-hover: 0 6px 16px rgba(91, 58, 41, 0.12);
+
+  /* Element Plus 主色覆盖 */
+  --el-color-primary: #d43d2a;
+  --el-color-primary-light-3: #e06a5a;
+  --el-color-primary-light-5: #ea9e95;
+  --el-color-primary-light-7: #f3c4be;
+  --el-color-primary-light-8: #f8d8d4;
+  --el-color-primary-light-9: #fcecea;
+  --el-color-primary-dark-2: #aa3121;
+  --el-color-success: #3d8b37;
+  --el-color-warning: #f0a500;
+  --el-border-radius-base: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--page-bg);
+  color: #2b2b2b;
+}
+
+/* 页面容器：移动端居中，PC 限宽 */
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding-bottom: 80px;
+  background: var(--brand-cream);
+  box-shadow: 0 0 24px rgba(91, 58, 41, 0.08);
+}
+
+.page-header {
+  background: var(--brand-red);
+  color: #fff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid var(--brand-gold);
+}
+
+.page-header .title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* 卡片：暖色描边 + 入场动效 */
+.card {
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 12px;
+  box-shadow: var(--card-shadow);
+  animation: card-in 0.35s ease both;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.card:hover {
+  box-shadow: var(--card-shadow-hover);
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 区域标题：左侧金色竖条装饰 */
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--brand-red-dark);
+}
+
+.section-heading::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--brand-gold);
+}
+
+.text-gold {
+  color: var(--brand-gold-deep);
+  font-weight: 600;
+}
+
+/* Element Plus 弹窗圆角统一 */
+.el-dialog {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+/* 全局圆角按钮主色加深对比 */
+.el-button--primary.is-round {
+  letter-spacing: 1px;
+}
