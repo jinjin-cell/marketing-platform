@@ -30,6 +30,9 @@ public class Constants {
     /** 活动次数额度缓存 Key 前缀，后接活动 ID */
     public static String ACTIVITY_COUNT_KEY = "big_market_activity_count_key_";
 
+    /** 活动-策略映射缓存 Key 前缀，后接活动 ID */
+    public static String ACTIVITY_STRATEGY_ID_KEY = "big_market_activity_strategy_id_key_";
+
     /** 活动订单业务号布隆过滤器；版本变化时使用新 key 重新装载。 */
     public static String ACTIVITY_ORDER_BUSINESS_NO_BLOOM_FILTER = "big_market_activity_order_business_no_bloom_filter_v1";
 
@@ -42,6 +45,9 @@ public class Constants {
     /** 策略信息缓存 Key 前缀，后接策略 ID */
     public static String STRATEGY_KEY = "big_market_strategy_key_";
 
+    /** 策略权重规则配置缓存 Key 前缀，后接策略 ID */
+    public static String STRATEGY_RULE_WEIGHT_KEY = "big_market_strategy_rule_weight_key_";
+
     /** 策略权重概率范围缓存 Key 前缀，后接策略 ID */
     public static String STRATEGY_RATE_RANGE_KEY = "big_market_strategy_rate_range_key_";
 
@@ -50,6 +56,9 @@ public class Constants {
 
     /** 规则树 VO 缓存 Key 前缀，后接缓存版本与 treeId */
     public static String RULE_TREE_VO_KEY = "big_market_rule_tree_vo_key_";
+
+    /** 规则树次数解锁配置缓存 Key 前缀，后接规则树 ID */
+    public static String RULE_TREE_LOCK_COUNT_KEY = "big_market_rule_tree_lock_count_key_";
 
     /** 策略奖品库存缓存 Key 前缀，后接策略 ID */
     public static String STRATEGY_AWARD_COUNT_KEY = "big_market_strategy_award_count_key_";

@@ -51,14 +51,33 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
     /**
      * 装配抽奖策略的概率表。
      *
-     * <p>为完整奖品范围生成普通概率表；配置了权重规则时，再为每个权重档位
-     * 过滤出对应奖品并生成权重概率表，同时缓存各奖品的剩余库存。</p>
+     * <p>概率表已存在时幂等短路，直接返回成功，避免缓存有效期内重复查库和写 Redis。
+     * 懒装配路径如需强制全量重建，应调用 {@link #doAssembleLotteryStrategy(Long)}。</p>
      *
      * @param strategyId 策略ID
      * @return 装配是否成功
      */
     @Override
     public boolean assembleLotteryStrategy(Long strategyId) {
+        // 基础概率表总是最先装配，它存在说明本策略此前装配成功。
+        Integer rateTableSize = repository.queryStrategyRateTableSize(String.valueOf(strategyId));
+        if (rateTableSize != null && rateTableSize > 0) {
+            log.info("策略概率表已装配，跳过重复装配 - strategyId: {}", strategyId);
+            return true;
+        }
+        return doAssembleLotteryStrategy(strategyId);
+    }
+
+    /**
+     * 全量装配抽奖策略的概率表。
+     *
+     * <p>为完整奖品范围生成普通概率表；配置了权重规则时，再为每个权重档位
+     * 过滤出对应奖品并生成权重概率表，同时缓存各奖品的剩余库存。</p>
+     *
+     * @param strategyId 策略ID
+     * @return 装配是否成功
+     */
+    private boolean doAssembleLotteryStrategy(Long strategyId) {
         // 1. 奖品概率是装配基础；没有奖品时不创建任何概率表。
         List<StrategyAwardEntity> strategyAwardList = repository.queryStrategyAwardList(strategyId);
         if (strategyAwardList == null || strategyAwardList.isEmpty()) {
@@ -119,7 +138,7 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
     @Override
     public boolean assembleLotteryStrategyByActivityId(Long activityId) {
         Long strategyId = repository.queryStrategyIdByActivityId(activityId);
-        return assembleLotteryStrategy(strategyId);
+        return strategyId != null && assembleLotteryStrategy(strategyId);
 
     }
 
@@ -247,7 +266,8 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
         if (currentSize != null && currentSize > 0) {
             return;
         }
-        if (!assembleLotteryStrategy(strategyId)) {
+        // 懒装配已确认目标概率表缺失，必须全量重建，不能再被幂等短路跳过。
+        if (!doAssembleLotteryStrategy(strategyId)) {
             throw new IllegalStateException("策略概率表初始化失败，strategyId: " + strategyId);
         }
     }

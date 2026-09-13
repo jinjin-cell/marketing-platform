@@ -49,6 +49,8 @@ public class StrategyRespository implements IStrategyRepository {
 
     private static final long STRATEGY_AWARD_CACHE_TTL_MINUTES = 10L;  // 抽奖策略奖品缓存过期时间
     private static final long STRATEGY_RATE_TABLE_CACHE_TTL_MINUTES = 30L;  // 抽奖策略奖品率表缓存过期时间
+    private static final long STRATEGY_ENTITY_CACHE_TTL_MINUTES = 5L;   // 策略实体缓存过期时间
+    private static final long STRATEGY_CONFIG_CACHE_TTL_MINUTES = 10L;  // 策略配置类数据（规则、映射）缓存过期时间
     private static final long RULE_TREE_CACHE_TTL_MINUTES = 30L;   // 规则树缓存过期时间
 
     /** 抽奖活动 DAO */
@@ -208,16 +210,24 @@ public class StrategyRespository implements IStrategyRepository {
      */
     @Override
     public StrategyEntity queryStrategyEntityByStrategyId(Long strategyId) {
-        // rule_models 决定本次抽奖实际执行的规则，直接读取数据库以避免永久缓存旧配置。
+        // rule_models 决定本次抽奖实际执行的规则；配置调整频率低，用短 TTL 缓存兼顾时效与远程库访问成本。
+        String cacheKey = Constants.RedisKey.STRATEGY_KEY + strategyId;
+        StrategyEntity cachedEntity = redisService.getValue(cacheKey);
+        if (cachedEntity != null) {
+            return cachedEntity;
+        }
+
         StrategyPO strategyPO = strategyDao.queryStrategyByStrategyId(strategyId);
         if (strategyPO == null) {
             return null;
         }
-        return StrategyEntity.builder()
+        StrategyEntity strategyEntity = StrategyEntity.builder()
                 .strategyId(strategyPO.getStrategyId())
                 .strategyDesc(strategyPO.getStrategyDesc())
                 .ruleModels(strategyPO.getRuleModels())
                 .build();
+        redisService.setValue(cacheKey, strategyEntity, STRATEGY_ENTITY_CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+        return strategyEntity;
     }
 
     /**
@@ -312,14 +322,35 @@ public class StrategyRespository implements IStrategyRepository {
         if (treeIds == null || treeIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        List<RuleTreeNodePO> nodePOList = ruleTreeNodeDao.queryRuleLockNodeListByTreeIds(treeIds);
-        if (nodePOList == null || nodePOList.isEmpty()) {
-            return Collections.emptyMap();
-        }
+        // 解锁次数属于规则树配置数据，按 treeId 缓存；未命中的 treeId 再批量查数据库。
         Map<String, Integer> lockCountMap = new LinkedHashMap<>();
-        for (RuleTreeNodePO nodePO : nodePOList) {
-            if (nodePO.getTreeId() != null && nodePO.getRuleValue() != null) {
-                lockCountMap.put(nodePO.getTreeId(), Integer.valueOf(nodePO.getRuleValue()));
+        List<String> missedTreeIds = new ArrayList<>();
+        for (String treeId : treeIds.stream().distinct().collect(Collectors.toList())) {
+            Integer cachedCount = redisService.getValue(
+                    Constants.RedisKey.RULE_TREE_LOCK_COUNT_KEY + treeId);
+            if (cachedCount != null) {
+                lockCountMap.put(treeId, cachedCount);
+            } else {
+                missedTreeIds.add(treeId);
+            }
+        }
+        if (!missedTreeIds.isEmpty()) {
+            List<RuleTreeNodePO> nodePOList = ruleTreeNodeDao.queryRuleLockNodeListByTreeIds(missedTreeIds);
+            Map<String, String> nodeValueMap = new LinkedHashMap<>();
+            if (nodePOList != null) {
+                for (RuleTreeNodePO nodePO : nodePOList) {
+                    if (nodePO.getTreeId() != null && nodePO.getRuleValue() != null) {
+                        nodeValueMap.put(nodePO.getTreeId(), nodePO.getRuleValue());
+                    }
+                }
+            }
+            for (String treeId : missedTreeIds) {
+                // 未配置解锁节点的树视为无解锁限制，缓存 0 避免反复穿透数据库。
+                Integer lockCount = nodeValueMap.containsKey(treeId)
+                        ? Integer.valueOf(nodeValueMap.get(treeId)) : 0;
+                lockCountMap.put(treeId, lockCount);
+                redisService.setValue(Constants.RedisKey.RULE_TREE_LOCK_COUNT_KEY + treeId,
+                        lockCount, STRATEGY_CONFIG_CACHE_TTL_MINUTES, TimeUnit.MINUTES);
             }
         }
         return lockCountMap;
@@ -512,7 +543,18 @@ public class StrategyRespository implements IStrategyRepository {
      */
     @Override
     public Long queryStrategyIdByActivityId(Long activityId) {
-        return raffleActivityDao.queryStrategyIdByActivityId(activityId);
+        // 活动-策略映射属于配置数据，缓存后避免每次页面加载都穿透到远程数据库。
+        String cacheKey = Constants.RedisKey.ACTIVITY_STRATEGY_ID_KEY + activityId;
+        Long cachedStrategyId = redisService.getValue(cacheKey);
+        if (cachedStrategyId != null) {
+            return cachedStrategyId;
+        }
+        Long strategyId = raffleActivityDao.queryStrategyIdByActivityId(activityId);
+        if (strategyId != null) {
+            redisService.setValue(cacheKey, strategyId,
+                    STRATEGY_CONFIG_CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+        }
+        return strategyId;
     }
 
     /**
@@ -553,8 +595,18 @@ public class StrategyRespository implements IStrategyRepository {
     @Override
     public List<RuleWeightVO> queryAwardRuleWeight(Long strategyId) {
         if (strategyId == null) return Collections.emptyList();
+        // 权重规则属于低频调整的配置数据，整表缓存避免每次查询规则表和逐奖品回查。
+        String cacheKey = Constants.RedisKey.STRATEGY_RULE_WEIGHT_KEY + strategyId;
+        List<RuleWeightVO> cachedResult = redisService.getValue(cacheKey);
+        if (cachedResult != null) {
+            return cachedResult;
+        }
         StrategyRulePO rule = strategyRuleDao.queryStrategyRule(strategyId, DefaultChainFactory.RULE_WEIGHT);
-        if (rule == null || rule.getRuleValue() == null || rule.getRuleValue().trim().isEmpty()) return Collections.emptyList();
+        if (rule == null || rule.getRuleValue() == null || rule.getRuleValue().trim().isEmpty()) {
+            redisService.setValue(cacheKey, Collections.emptyList(),
+                    STRATEGY_CONFIG_CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+            return Collections.emptyList();
+        }
         Map<String, List<Integer>> groups = StrategyRuleEntity.builder().ruleModel(DefaultChainFactory.RULE_WEIGHT).ruleValue(rule.getRuleValue()).build().getRuleWeightValues();
         List<RuleWeightVO> result = new ArrayList<>();
         for (Map.Entry<String, List<Integer>> group : groups.entrySet()) {
@@ -566,6 +618,7 @@ public class StrategyRespository implements IStrategyRepository {
             result.add(RuleWeightVO.builder().ruleValue(group.getKey()).weight(Integer.valueOf(group.getKey().split(Constants.COLON, 2)[0].trim())).awardIds(group.getValue()).awardList(awards).build());
         }
         result.sort((a, b) -> Integer.compare(a.getWeight(), b.getWeight()));
+        redisService.setValue(cacheKey, result, STRATEGY_CONFIG_CACHE_TTL_MINUTES, TimeUnit.MINUTES);
         return result;
     }
 
