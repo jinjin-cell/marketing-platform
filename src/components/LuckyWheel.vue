@@ -25,14 +25,21 @@
         v-for="(award, i) in awards"
         :key="award.awardId"
         class="sector-label"
-        :style="{ transform: `rotate(${sectorAngle * i}deg)` }"
+        :style="{ transform: `rotate(${sectorAngle * (i + 0.5)}deg)` }"
       >
-        <div class="sector-content" :class="{ locked: !award.isAwardUnlock }">
+        <div
+          class="sector-content"
+          :class="{ locked: !award.isAwardUnlock }"
+          :style="{
+            transform: `translateX(-50%) rotate(${-sectorAngle * (i + 0.5) - rotation}deg)`,
+            transition: spinning ? 'transform 4s cubic-bezier(0.25, 0.1, 0.25, 1)' : 'none'
+          }"
+        >
           <span class="award-title">{{ award.awardTitle }}</span>
           <span v-if="!award.isAwardUnlock" class="lock-tip">
-            🔒 还差{{ award.waitUnlockCount }}次
+            <el-icon><Lock /></el-icon>还差{{ award.waitUnlockCount }}次
           </span>
-          <span v-else class="award-sub">{{ award.awardSubTitle }}</span>
+          <span v-else-if="award.awardRuleLockCount" class="award-sub unlocked">已解锁</span>
         </div>
       </div>
     </div>
@@ -46,11 +53,13 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { Lock } from '@element-plus/icons-vue'
 
 const props = defineProps({
   // 奖品列表（已按 sort 排序）
   awards: { type: Array, default: () => [] },
-  usableCount: { type: Number, default: 0 }
+  usableCount: { type: Number, default: 0 },
+  disabled: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['draw'])
@@ -72,7 +81,7 @@ const wheelBackground = computed(() => {
   return `conic-gradient(${stops.join(', ')})`
 })
 
-const centerDisabled = computed(() => spinning.value || props.usableCount <= 0)
+const centerDisabled = computed(() => spinning.value || props.disabled || props.usableCount <= 0)
 
 // 跑马灯位置：沿外圈均匀分布
 function bulbStyle(i) {
@@ -97,7 +106,12 @@ function onCenterClick() {
 function spinTo(awardIndex) {
   return new Promise((resolve) => {
     const i = props.awards.findIndex((a) => a.sort === awardIndex)
-    const index = i === -1 ? 0 : i
+    if (i === -1) {
+      throw Object.assign(new Error(`抽奖结果索引 ${awardIndex} 未匹配到转盘奖品`), {
+        code: 'AWARD_INDEX_MISMATCH'
+      })
+    }
+    const index = i
     // 目标扇区中心角度（从顶部顺时针计算）
     const sectorCenter = (index + 0.5) * sectorAngle.value
     // 当前角度归一化后，再叠加 5 圈以上，保证顺时针旋转惯性
@@ -118,8 +132,8 @@ defineExpose({ spinTo, spinning })
 <style scoped>
 .wheel-wrap {
   position: relative;
-  width: 340px;
-  height: 340px;
+  width: min(340px, calc(100vw - 64px));
+  aspect-ratio: 1;
   margin: 16px auto;
 }
 
@@ -151,8 +165,9 @@ defineExpose({ spinTo, spinning })
 }
 
 .wheel {
-  width: 320px;
-  height: 320px;
+  width: calc(100% - 20px);
+  height: calc(100% - 20px);
+  box-sizing: border-box;
   margin: 10px;
   border-radius: 50%;
   border: 10px solid var(--brand-red);
@@ -199,9 +214,9 @@ defineExpose({ spinTo, spinning })
 
 .sector-content {
   position: absolute;
-  top: 18px;
+  top: 5.5%;
   left: 0;
-  transform: translateX(-50%);
+  transform-origin: center;
   width: 88px;
   display: flex;
   flex-direction: column;
@@ -214,7 +229,12 @@ defineExpose({ spinTo, spinning })
   font-weight: 700;
   color: var(--brand-red-dark);
   text-align: center;
-  word-break: keep-all;
+  line-height: 1.15;
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .award-sub {
@@ -222,6 +242,11 @@ defineExpose({ spinTo, spinning })
   color: var(--brand-brown);
   opacity: 0.8;
   text-align: center;
+}
+
+.award-sub.unlocked {
+  color: #4a7f42;
+  opacity: 1;
 }
 
 .sector-content.locked .award-title {
@@ -232,6 +257,9 @@ defineExpose({ spinTo, spinning })
   font-size: 10px;
   color: #999;
   text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .wheel-center {
