@@ -54,5 +54,14 @@ public interface IAwardRepository {
      */
     List<UserAwardRecordEntity> queryUserAwardRecordList(String userId, Long activityId);
 
+    /**
+     * 将中奖记录置为发奖完成（仅改状态，不发放奖品）
+     * <p>用于本项目未实现发放逻辑的奖品收口，避免 MQ 消息无限重试。
+     *
+     * @param userId  用户ID
+     * @param orderId 抽奖订单ID
+     */
+    void completeAwardRecord(String userId, String orderId);
+
 
 }

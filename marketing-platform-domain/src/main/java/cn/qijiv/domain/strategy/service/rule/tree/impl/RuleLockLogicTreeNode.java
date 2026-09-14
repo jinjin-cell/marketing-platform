@@ -36,8 +36,11 @@ public class RuleLockLogicTreeNode implements ILogicTreeNode {
     } catch (Exception e) {
         throw new RuntimeException("规则过滤-次数锁异常 ruleValue: " + ruleValue + " 配置不正确");
     }
-    // 查询用户今日抽奖次数
-    Integer userRaffleCount = repository.queryTodayUserRaffleCount(userId, strategyId);
+    // 解锁按活动累计抽奖次数计算，与转盘展示和权重规则保持同一口径。
+    Integer userRaffleCount = repository.queryActivityAccountTotalUseCount(userId, strategyId);
+    if (userRaffleCount == null) {
+        userRaffleCount = 0;
+    }
 
     // 用户抽奖次数大于规则限定值，规则放行
     if (userRaffleCount >= raffleCount) {

@@ -75,7 +75,9 @@ public class AwardService implements IAwardService {
         // 奖品Key
         String awardKey = awardRepository.queryAwardKey(distributeAwardEntity.getAwardId());
         if (null == awardKey) {
-            log.error("分发奖品，奖品ID不存在。awardKey:{}", awardKey);
+            // 消息可以正常确认，但中奖记录必须保持 create，等待人工履约。
+            log.warn("分发奖品，奖品未配置 awardKey，保留为待发放 userId:{} orderId:{} awardId:{}",
+                    distributeAwardEntity.getUserId(), distributeAwardEntity.getOrderId(), distributeAwardEntity.getAwardId());
             return;
         }
 
@@ -83,8 +85,11 @@ public class AwardService implements IAwardService {
         IDistributeAward distributeAward = distributeAwardMap.get(awardKey);
 
         if (null == distributeAward) {
-            log.error("分发奖品，对应的服务不存在。awardKey:{}", awardKey);
-            throw new RuntimeException("分发奖品，奖品" + awardKey + "对应的服务不存在");
+            // 本项目目前只实现积分类奖品自动发放。未知实现不抛异常，避免 MQ 无限重投，
+            // 同时不伪造完成态，保留 create 供人工履约。
+            log.warn("分发奖品，未实现该 awardKey 的发放逻辑，保留为待发放 userId:{} orderId:{} awardId:{} awardKey:{}",
+                    distributeAwardEntity.getUserId(), distributeAwardEntity.getOrderId(), distributeAwardEntity.getAwardId(), awardKey);
+            return;
         }
 
         // 发放奖品

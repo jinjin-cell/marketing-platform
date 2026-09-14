@@ -76,11 +76,8 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
         if (chainStrategyAwardVO.getAwardId() == null || chainStrategyAwardVO.getLogicModel() == null) {
             throw new IllegalStateException("抽奖责任链未返回有效结果，strategyId: " + strategyId);
         }
-        if (!DefaultChainFactory.DEFAULT_CHAIN.equals(chainStrategyAwardVO.getLogicModel())) {
-            return buildRaffleAwardEntity(strategyId, chainStrategyAwardVO.getAwardId(), chainStrategyAwardVO.getAwardRuleValue());
-        }
-
-        // 第三步：只有普通概率抽奖结果才进入规则树，依次完成次数、库存和兜底判断。
+        // 第三步：无论奖品来自默认概率、权重还是黑名单，都必须进入规则树。
+        // 否则前置规则命中的奖品会绕过解锁和库存校验，造成未解锁中奖或库存超发。
         DefaultTreeFactory.StrategyAwardVO treeStrategyAwardVO = raffleLogicTree(
                 userId, strategyId, chainStrategyAwardVO.getAwardId(), raffleFactorEntity.getEndDateTime());
         if (treeStrategyAwardVO == null || treeStrategyAwardVO.getAwardId() == null) {
@@ -89,8 +86,15 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
         log.info("抽奖策略计算-规则树 userId:{} strategyId:{} awardId:{} awardRuleValue:{}",
                 userId, strategyId, treeStrategyAwardVO.getAwardId(), treeStrategyAwardVO.getAwardRuleValue());
 
+        // 规则树未接管且仍返回原奖品时，保留责任链携带的奖品配置（例如黑名单随机积分范围）。
+        String awardRuleValue = treeStrategyAwardVO.getAwardRuleValue();
+        if (StringUtils.isBlank(awardRuleValue)
+                && chainStrategyAwardVO.getAwardId().equals(treeStrategyAwardVO.getAwardId())) {
+            awardRuleValue = chainStrategyAwardVO.getAwardRuleValue();
+        }
+
         // 第四步：把规则树内部数据转换成抽奖服务对外返回的领域实体。
-        return buildRaffleAwardEntity(strategyId, treeStrategyAwardVO.getAwardId(), treeStrategyAwardVO.getAwardRuleValue());
+        return buildRaffleAwardEntity(strategyId, treeStrategyAwardVO.getAwardId(), awardRuleValue);
     }
 
     /**

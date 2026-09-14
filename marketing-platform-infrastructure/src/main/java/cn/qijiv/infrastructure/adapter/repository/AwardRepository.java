@@ -116,13 +116,20 @@ public class AwardRepository implements IAwardRepository {
                 }
             });
 
-            // 发送消息【在事务外执行，如果失败还有任务补偿】
-            eventPublisher.publish(task.getTopic(), task.getMessage());
-            // 更新数据库记录，task 任务表
-            taskDao.updateTaskSendMessageCompleted(task);
-        } catch (Exception e) {
-            log.error("写入中奖记录，发送MQ消息失败 userId: {} topic: {}", userId, task.getTopic());
-            taskDao.updateTaskSendMessageFail(task);
+            // 事务写入异常必须向上抛。只有事务成功后的 MQ 发送失败可以交给任务补偿。
+            try {
+                eventPublisher.publish(task.getTopic(), task.getMessage());
+                taskDao.updateTaskSendMessageCompleted(task);
+            } catch (Exception publishException) {
+                log.error("发送中奖消息失败，等待任务补偿 userId: {} activityId: {} awardId: {} topic: {}",
+                        userId, activityId, awardId, task.getTopic(), publishException);
+                try {
+                    taskDao.updateTaskSendMessageFail(task);
+                } catch (Exception updateException) {
+                    log.error("更新任务发送失败状态异常 userId: {} messageId: {}",
+                            userId, task.getMessageId(), updateException);
+                }
+            }
         } finally {
             dbRouter.clear();
         }
@@ -192,9 +199,28 @@ public class AwardRepository implements IAwardRepository {
         }
     }
 
+    /**
+     * 将中奖记录置为发奖完成（仅改状态，不发放奖品）
+     *
+     * @param userId  用户ID
+     * @param orderId 抽奖订单ID
+     */
     @Override
-    public List<UserAwardRecordEntity> queryUserAwardRecordList(String userId, Long activityId) {
+    public void completeAwardRecord(String userId, String orderId) {
         UserAwardRecordPO userAwardRecordReq = new UserAwardRecordPO();
+        userAwardRecordReq.setUserId(userId);
+        userAwardRecordReq.setOrderId(orderId);
+        userAwardRecordReq.setAwardState(AwardStateVO.complete.getCode());
+        try {
+            dbRouter.doRouter(userId);
+            userAwardRecordDao.updateAwardRecordCompletedState(userAwardRecordReq);
+        } finally {
+            dbRouter.clear();
+        }
+    }
+
+    @Override
+    public List<UserAwardRecordEntity> queryUserAwardRecordList(String userId, Long activityId) {        UserAwardRecordPO userAwardRecordReq = new UserAwardRecordPO();
         userAwardRecordReq.setUserId(userId);
         userAwardRecordReq.setActivityId(activityId);
         // user_award_record 由 ShardingSphere 按 user_id 分库分表，查询条件携带 user_id 即可自动路由
