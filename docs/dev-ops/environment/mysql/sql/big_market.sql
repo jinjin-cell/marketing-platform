@@ -37,13 +37,13 @@ CREATE TABLE `award`  (
 -- Records of award
 -- ----------------------------
 INSERT INTO `award` VALUES (1, 101, 'user_credit_random', '1,100', '用户积分【优先透彻规则范围，如果没有则走配置】', '2023-12-09 11:07:06', '2023-12-09 11:21:31');
-INSERT INTO `award` VALUES (2, 102, 'openai_use_count', '5', 'OpenAI 增加使用次数', '2023-12-09 11:07:06', '2023-12-09 11:12:59');
-INSERT INTO `award` VALUES (3, 103, 'openai_use_count', '10', 'OpenAI 增加使用次数', '2023-12-09 11:07:06', '2023-12-09 11:12:59');
-INSERT INTO `award` VALUES (4, 104, 'openai_use_count', '20', 'OpenAI 增加使用次数', '2023-12-09 11:07:06', '2023-12-09 11:12:58');
-INSERT INTO `award` VALUES (5, 105, 'openai_model', 'gpt-4', 'OpenAI 增加模型', '2023-12-09 11:07:06', '2023-12-09 11:12:01');
-INSERT INTO `award` VALUES (6, 106, 'openai_model', 'dall-e-2', 'OpenAI 增加模型', '2023-12-09 11:07:06', '2023-12-09 11:12:08');
-INSERT INTO `award` VALUES (7, 107, 'openai_model', 'dall-e-3', 'OpenAI 增加模型', '2023-12-09 11:07:06', '2023-12-09 11:12:10');
-INSERT INTO `award` VALUES (8, 108, 'openai_use_count', '100', 'OpenAI 增加使用次数', '2023-12-09 11:07:06', '2023-12-09 11:12:55');
+INSERT INTO `award` VALUES (2, 102, 'manual_fulfillment', 'OpenAI会员卡', 'OpenAI会员卡', '2023-12-09 11:07:06', '2023-12-09 11:12:59');
+INSERT INTO `award` VALUES (3, 103, 'manual_fulfillment', '支付优惠券', '支付优惠券', '2023-12-09 11:07:06', '2023-12-09 11:12:59');
+INSERT INTO `award` VALUES (4, 104, 'manual_fulfillment', '小米台灯', '小米台灯', '2023-12-09 11:07:06', '2023-12-09 11:12:58');
+INSERT INTO `award` VALUES (5, 105, 'manual_fulfillment', '小米SU7周体验', '小米SU7周体验', '2023-12-09 11:07:06', '2023-12-09 11:12:01');
+INSERT INTO `award` VALUES (6, 106, 'manual_fulfillment', '轻奢办公椅', '轻奢办公椅', '2023-12-09 11:07:06', '2023-12-09 11:12:08');
+INSERT INTO `award` VALUES (7, 107, 'manual_fulfillment', '小霸王游戏机', '小霸王游戏机', '2023-12-09 11:07:06', '2023-12-09 11:12:10');
+INSERT INTO `award` VALUES (8, 108, 'manual_fulfillment', '暴走玩偶', '暴走玩偶', '2023-12-09 11:07:06', '2023-12-09 11:12:55');
 INSERT INTO `award` VALUES (9, 109, 'openai_model', 'gpt-4,dall-e-2,dall-e-3', 'OpenAI 增加模型', '2023-12-09 11:07:06', '2023-12-09 11:12:39');
 INSERT INTO `award` VALUES (10, 100, 'user_credit_blacklist', '1', '黑名单积分', '2024-01-06 12:30:40', '2024-01-06 12:30:46');
 
@@ -116,7 +116,7 @@ CREATE TABLE `raffle_activity_count`  (
 -- ----------------------------
 -- Records of raffle_activity_count
 -- ----------------------------
-INSERT INTO `raffle_activity_count` VALUES (1, 11101, 100, 100, 100, '2024-03-09 10:15:42', '2024-05-04 13:06:45');
+INSERT INTO `raffle_activity_count` VALUES (1, 11101, 1, 1, 1, '2024-03-09 10:15:42', '2024-05-04 13:06:45');
 
 -- ----------------------------
 -- Table structure for raffle_activity_sku
@@ -222,7 +222,7 @@ INSERT INTO `rule_tree_node_line` VALUES (4, 'tree_luck_award', 'rule_stock', 'r
 INSERT INTO `rule_tree_node_line` VALUES (5, 'tree_lock_2', 'rule_lock', 'rule_stock', 'EQUAL', 'ALLOW', '0000-00-00 00:00:00', '2024-02-15 07:55:08');
 INSERT INTO `rule_tree_node_line` VALUES (6, 'tree_lock_2', 'rule_lock', 'rule_luck_award', 'EQUAL', 'TAKE_OVER', '0000-00-00 00:00:00', '2024-02-15 07:55:11');
 INSERT INTO `rule_tree_node_line` VALUES (7, 'tree_lock_2', 'rule_stock', 'rule_luck_award', 'EQUAL', 'ALLOW', '0000-00-00 00:00:00', '2024-02-15 07:55:13');
-INSERT INTO `rule_tree_node_line` VALUES (8, 'tree_lock_3', 'rule_lock', 'rule_luck_award', 'EQUAL', 'ALLOW', '0000-00-00 00:00:00', '2024-04-27 13:07:39');
+INSERT INTO `rule_tree_node_line` VALUES (8, 'tree_lock_3', 'rule_lock', 'rule_stock', 'EQUAL', 'ALLOW', '0000-00-00 00:00:00', '2024-04-27 13:07:39');
 INSERT INTO `rule_tree_node_line` VALUES (9, 'tree_lock_3', 'rule_lock', 'rule_luck_award', 'EQUAL', 'TAKE_OVER', '0000-00-00 00:00:00', '2024-02-15 07:55:11');
 INSERT INTO `rule_tree_node_line` VALUES (10, 'tree_lock_3', 'rule_stock', 'rule_luck_award', 'EQUAL', 'ALLOW', '0000-00-00 00:00:00', '2024-02-15 07:55:13');
 
@@ -331,5 +331,23 @@ INSERT INTO `strategy_rule` VALUES (13, 100001, NULL, 1, 'rule_weight', '60:102,
 INSERT INTO `strategy_rule` VALUES (14, 100001, NULL, 1, 'rule_blacklist', '101:user001,user002,user003', '黑名单抽奖，积分兜底', '2023-12-09 12:59:45', '2024-02-14 18:16:20');
 INSERT INTO `strategy_rule` VALUES (15, 100006, NULL, 1, 'rule_weight', '10:102,103 70:106,107 1000:104,105', '消耗6000分，必中奖范围', '2023-12-09 10:30:43', '2024-05-04 15:41:16');
 INSERT INTO `strategy_rule` VALUES (16, 100006, NULL, 1, 'rule_blacklist', '101:user001,user002,user003', '黑名单抽奖，积分兜底', '2023-12-09 12:59:45', '2024-02-14 18:16:20');
+
+-- ----------------------------
+-- Table structure for user_account
+-- ----------------------------
+DROP TABLE IF EXISTS `user_account`;
+CREATE TABLE `user_account`  (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `account_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '登录账号',
+  `user_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '内部用户ID',
+  `password_hash` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '密码哈希',
+  `password_salt` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '密码盐',
+  `account_status` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'open' COMMENT '账户状态',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uq_user_account_name`(`account_name` ASC) USING BTREE,
+  UNIQUE INDEX `uq_user_account_user_id`(`user_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户登录账户' ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;

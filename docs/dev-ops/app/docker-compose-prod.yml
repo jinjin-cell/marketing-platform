@@ -1,0 +1,68 @@
+# 生产部署（云服务器 111.228.17.153）
+# 目录结构：Dockerfile、target/marketing-platform-app.jar 与本文件同目录
+# 命令：docker compose -f docker-compose-prod.yml up -d --build
+# 说明：加入中间件所在网络 software_my-network，直接用容器名访问 MySQL/Redis/RabbitMQ/ZK/Nacos/XXL-JOB
+services:
+  marketing-platform-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: system/marketing-platform-app:1.0-SNAPSHOT
+    container_name: marketing-platform
+    restart: unless-stopped
+    expose:
+      - "8091"
+      - "20880"
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_PROFILES_ACTIVE: prod
+      # MySQL（分库 ds0/ds1/ds2）
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DB_DS0: big_market
+      MYSQL_DB_DS1: big_market_01
+      MYSQL_DB_DS2: big_market_02
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD}
+      # Redis
+      REDIS_ADDRESS: redis://redis:6379
+      REDIS_USERNAME: ${REDIS_USERNAME:?set REDIS_USERNAME}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
+      # Elasticsearch（容器停止时搜索接口不可用，docker start elasticsearch 后自动恢复）
+      ELASTICSEARCH_URIS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME:?set ELASTICSEARCH_USERNAME}
+      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD:?set ELASTICSEARCH_PASSWORD}
+      # RabbitMQ
+      RABBITMQ_ADDRESSES: rabbitmq:5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:?set RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD}
+      # XXL-JOB（admin 容器内部端口 9090）
+      XXL_JOB_ADMIN_ADDRESSES: http://xxl-job-admin:9090/xxl-job-admin
+      XXL_JOB_ACCESS_TOKEN: ${XXL_JOB_ACCESS_TOKEN:?set XXL_JOB_ACCESS_TOKEN}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      JWT_EXPIRES_SECONDS: ${JWT_EXPIRES_SECONDS:-604800}
+      APP_CROSS_ORIGIN: ${APP_CROSS_ORIGIN:-http://111.228.17.153}
+      # Zookeeper DCC
+      ZOOKEEPER_CONNECT_STRING: zookeeper:2181
+      # Dubbo / Nacos
+      NACOS_HOST: nacos
+      NACOS_PORT: "8848"
+      DUBBO_PORT: "20880"
+      # 宿主机内存紧张（3.7G），限制堆大小；DUBBO_IP_TO_REGISTRY 保证注册到宿主机可达 IP
+      JAVA_OPTS: -Xms256m -Xmx512m -XX:+UseG1GC -DDUBBO_IP_TO_REGISTRY=111.228.17.153
+    volumes:
+      - ./log:/data/log
+      - ./applogs:/data/applogs
+    networks:
+      - middleware
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  middleware:
+    name: software_my-network
+    external: true

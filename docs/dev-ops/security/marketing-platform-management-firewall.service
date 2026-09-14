@@ -1,0 +1,15 @@
+[Unit]
+Description=Marketing platform Docker management-port allowlist
+Requires=docker.service
+After=network-online.target docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/marketing-platform-management-firewall.conf
+ExecStart=/usr/local/sbin/apply-marketing-platform-management-firewall
+ExecReload=/usr/local/sbin/apply-marketing-platform-management-firewall
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
