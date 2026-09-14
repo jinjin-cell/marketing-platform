@@ -12,6 +12,10 @@ app:
     api-version: v1
     # 跨域，开发阶段可以设置为 * 不限制
     cross-origin: "*"
+    # 运维接口（手动触发定时任务）令牌
+    admin-token: ${ADMIN_TOKEN:local-dev-admin-token}
+    jwt-secret: ${JWT_SECRET:local-development-jwt-secret-change-me}
+    jwt-expires-seconds: ${JWT_EXPIRES_SECONDS:604800}
 
 activity:
 

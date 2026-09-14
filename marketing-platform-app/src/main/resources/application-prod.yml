@@ -10,7 +10,11 @@ server:
 app:
   config:
     api-version: v1
-    cross-origin: ${APP_CROSS_ORIGIN:*}
+    cross-origin: ${APP_CROSS_ORIGIN:http://111.228.17.153}
+    # 生产环境必须显式注入，不提供任何默认运维令牌。
+    admin-token: ${ADMIN_TOKEN}
+    jwt-secret: ${JWT_SECRET}
+    jwt-expires-seconds: ${JWT_EXPIRES_SECONDS:604800}
 
 activity:
   order:
@@ -48,6 +52,13 @@ thread:
 # Sharding-JDBC 多数据源配置；ds0 为配置库，ds1、ds2 为用户行为分库
 # 连接信息通过环境变量注入（对齐 redis 的 ${REDIS_*} 写法），部署时必须设置
 spring:
+  cloud:
+    zookeeper:
+      connect-string: ${ZOOKEEPER_CONNECT_STRING:111.228.17.153:2181}
+      discovery:
+        # 项目不使用 Spring Cloud 服务发现（RPC 走 Dubbo+Nacos，动态配置走自研 Curator DCC）；
+        # 开启时启动阶段会同步创建 ZK 节点，ZK 不可用将直接导致启动失败，故关闭
+        enabled: false
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS}
     username: ${ELASTICSEARCH_USERNAME}
@@ -63,6 +74,7 @@ spring:
       activity_sku_stock_zero: activity_sku_stock_zero
       send_award: send.award
       send_rebate: send.rebate
+      credit_adjust_success: credit_adjust_success
   shardingsphere:
     datasource:
       names: ds0,ds1,ds2
@@ -149,6 +161,25 @@ spring:
             standard:
               sharding-column: user_id
               precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
+        # 注意：以下两张表必须保留，否则会落到默认库 ds0（big_market）而该库无此表，
+        # 积分查询/调整接口会直接抛 "Table 'big_market.user_credit_account' doesn't exist"，
+        # 前端表现为“网络异常，请稍后重试”。修改时请与 sharding-tables.yml 保持一致。
+        user_credit_account:
+          actual-data-nodes: ds$->{1..2}.user_credit_account
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
+        user_credit_order:
+          actual-data-nodes: ds$->{1..2}.user_credit_order_00$->{0..3}
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
+          table-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
         user_raffle_order:
           actual-data-nodes: ds$->{1..2}.user_raffle_order_00$->{0..3}
           database-strategy:
@@ -167,12 +198,25 @@ mybatis:
   mapper-locations: classpath:/mybatis/mapper/mysql/*.xml
   config-location: classpath:/mybatis/config/mybatis-config.xml
 
+dubbo:
+  application:
+    name: marketing-platform
+    version: 1.0
+  registry:
+    id: nacos-registry
+    address: nacos://${NACOS_HOST:111.228.17.153}:${NACOS_PORT:8848}
+  protocol:
+    name: dubbo
+    port: ${DUBBO_PORT:20880}
+  scan:
+    base-packages: cn.qijiv.trigger.http
+
 # XXL-JOB 分布式任务调度；生产环境通过环境变量注入（部署时必须设置）
 xxl:
   job:
     admin:
       addresses: ${XXL_JOB_ADMIN_ADDRESSES}
-    accessToken: ${XXL_JOB_ACCESS_TOKEN:default_token}
+    accessToken: ${XXL_JOB_ACCESS_TOKEN}
     executor:
       appname: ${XXL_JOB_EXECUTOR_APPNAME:big-market-job}
       address: ${XXL_JOB_EXECUTOR_ADDRESS:}
@@ -185,6 +229,8 @@ xxl:
 zookeeper:
   sdk:
     config:
+      # 状态： true 开启，false 关闭；DCCValueBeanFactory 强依赖 zookeeperClient Bean，缺失会导致启动失败
+      enable: true
       connect-string: ${ZOOKEEPER_CONNECT_STRING:111.228.17.153:2181}
       base-sleep-time-ms: ${ZOOKEEPER_BASE_SLEEP_TIME_MS:1000}
       max-retries: ${ZOOKEEPER_MAX_RETRIES:5}

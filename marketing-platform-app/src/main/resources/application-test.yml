@@ -11,6 +11,10 @@ app:
   config:
     api-version: v1
     cross-origin: "*"
+    # 运维接口（手动触发定时任务）令牌
+    admin-token: ${TEST_ADMIN_TOKEN:test-only-admin-token}
+    jwt-secret: ${TEST_JWT_SECRET:test-only-jwt-secret-at-least-32-chars}
+    jwt-expires-seconds: 604800
 
 activity:
   order:
@@ -39,13 +43,13 @@ thread:
 # 连接信息默认指向开发库，可通过环境变量覆盖
 spring:
   elasticsearch:
-    uris: ${ELASTICSEARCH_URIS:http://192.168.94.128:9200}
-    username: ${ELASTICSEARCH_USERNAME:qijiv}
-    password: ${ELASTICSEARCH_PASSWORD:123456}
+    uris: ${TEST_ELASTICSEARCH_URIS:http://127.0.0.1:1}
+    username: ${TEST_ELASTICSEARCH_USERNAME:test}
+    password: ${TEST_ELASTICSEARCH_PASSWORD:test}
   rabbitmq:
-    addresses: ${RABBITMQ_ADDRESSES:111.228.17.153:5672}
-    username: ${RABBITMQ_USERNAME:qijiv}
-    password: ${RABBITMQ_PASSWORD:18903705503qQ}
+    addresses: ${TEST_RABBITMQ_ADDRESSES:127.0.0.1:1}
+    username: ${TEST_RABBITMQ_USERNAME:test}
+    password: ${TEST_RABBITMQ_PASSWORD:test}
     listener:
       simple:
         prefetch: 1
@@ -59,27 +63,27 @@ spring:
       ds0:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://${MYSQL_HOST:111.228.17.153}:${MYSQL_PORT:13306}/${MYSQL_DB_DS0:big_market}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
-        username: ${MYSQL_USERNAME:root}
-        password: ${MYSQL_PASSWORD:123456}
+        jdbc-url: jdbc:mysql://${TEST_MYSQL_HOST:127.0.0.1}:${TEST_MYSQL_PORT:1}/${TEST_MYSQL_DB_DS0:test_big_market}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
+        username: ${TEST_MYSQL_USERNAME:test}
+        password: ${TEST_MYSQL_PASSWORD:test}
         pool-name: Retail_HikariCP_DS0
         minimum-idle: 5
         maximum-pool-size: 10
       ds1:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://${MYSQL_HOST:111.228.17.153}:${MYSQL_PORT:13306}/${MYSQL_DB_DS1:big_market_01}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
-        username: ${MYSQL_USERNAME:root}
-        password: ${MYSQL_PASSWORD:123456}
+        jdbc-url: jdbc:mysql://${TEST_MYSQL_HOST:127.0.0.1}:${TEST_MYSQL_PORT:1}/${TEST_MYSQL_DB_DS1:test_big_market_01}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
+        username: ${TEST_MYSQL_USERNAME:test}
+        password: ${TEST_MYSQL_PASSWORD:test}
         pool-name: Retail_HikariCP_DS1
         minimum-idle: 5
         maximum-pool-size: 10
       ds2:
         type: com.zaxxer.hikari.HikariDataSource
         driver-class-name: com.mysql.cj.jdbc.Driver
-        jdbc-url: jdbc:mysql://${MYSQL_HOST:111.228.17.153}:${MYSQL_PORT:13306}/${MYSQL_DB_DS2:big_market_02}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
-        username: ${MYSQL_USERNAME:root}
-        password: ${MYSQL_PASSWORD:123456}
+        jdbc-url: jdbc:mysql://${TEST_MYSQL_HOST:127.0.0.1}:${TEST_MYSQL_PORT:1}/${TEST_MYSQL_DB_DS2:test_big_market_02}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull
+        username: ${TEST_MYSQL_USERNAME:test}
+        password: ${TEST_MYSQL_PASSWORD:test}
         pool-name: Retail_HikariCP_DS2
         minimum-idle: 5
         maximum-pool-size: 10
@@ -139,6 +143,25 @@ spring:
             standard:
               sharding-column: user_id
               precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
+        # 注意：以下两张表必须保留，否则会落到默认库 ds0（big_market）而该库无此表，
+        # 积分查询/调整接口会直接抛 "Table 'big_market.user_credit_account' doesn't exist"。
+        # 修改时请与 sharding-tables.yml（dev 共用）保持一致。
+        user_credit_account:
+          actual-data-nodes: ds$->{1..2}.user_credit_account
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
+        user_credit_order:
+          actual-data-nodes: ds$->{1..2}.user_credit_order_00$->{0..3}
+          database-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
+          table-strategy:
+            standard:
+              sharding-column: user_id
+              precise-algorithm-class-name: cn.qijiv.infrastructure.db.UserIdShardingAlgorithm
         user_raffle_order:
           actual-data-nodes: ds$->{1..2}.user_raffle_order_00$->{0..3}
           database-strategy:
@@ -154,9 +177,9 @@ spring:
         show: false
 
 redis:
-  address: ${REDIS_ADDRESS:redis://111.228.17.153:16379}
-  username: ${REDIS_USERNAME:qijiv}
-  password: ${REDIS_PASSWORD:18903705503qQ}
+  address: ${TEST_REDIS_ADDRESS:redis://127.0.0.1:1}
+  username: ${TEST_REDIS_USERNAME:test}
+  password: ${TEST_REDIS_PASSWORD:test}
   database: ${REDIS_DATABASE:0}
   connection-pool-size: ${REDIS_CONNECTION_POOL_SIZE:16}
   connection-minimum-idle-size: ${REDIS_CONNECTION_MINIMUM_IDLE_SIZE:2}
@@ -167,13 +190,13 @@ mybatis:
   mapper-locations: classpath:/mybatis/mapper/mysql/*.xml
   config-location: classpath:/mybatis/config/mybatis-config.xml
 
-# XXL-JOB 分布式任务调度；admin 部署在 111.228.17.153:9091（账号 root/123456）
+# 测试配置绝不默认连接外部调度中心；集成测试必须显式提供 TEST_* 地址。
 xxl:
   job:
     admin:
-      addresses: ${XXL_JOB_ADMIN_ADDRESSES:http://111.228.17.153:9091/xxl-job-admin}
+      addresses: ${TEST_XXL_JOB_ADMIN_ADDRESSES:http://127.0.0.1:1/xxl-job-admin}
     # 需与 xxl-job-admin 服务端 accessToken 保持一致
-    accessToken: ${XXL_JOB_ACCESS_TOKEN:default_token}
+    accessToken: ${TEST_XXL_JOB_ACCESS_TOKEN:test-only-token}
     executor:
       appname: ${XXL_JOB_EXECUTOR_APPNAME:big-market-job}
       # 留空则自动获取，多网卡时可指定
