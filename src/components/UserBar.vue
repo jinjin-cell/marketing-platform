@@ -8,9 +8,10 @@
     </div>
 
     <div class="user-info">
-      <div class="user-left">
+      <div class="user-left" @click="router.push('/my')">
         <span class="avatar">{{ avatarText }}</span>
-        <span class="user-id">{{ userStore.userId }}</span>
+        <span class="user-id">{{ userStore.accountName || userStore.userId }}</span>
+        <span class="user-arrow">我的资产 ›</span>
       </div>
       <el-tag size="small" effect="dark" round class="logout-tag" @click="onLogout">退出</el-tag>
     </div>
@@ -39,12 +40,17 @@ const userStore = useUserStore()
 const router = useRouter()
 
 const creditText = computed(() =>
-  userStore.credit === null ? '--' : Number(userStore.credit).toFixed(0)
+  userStore.credit === null ? '--' : formatAmount(userStore.credit)
 )
+
+function formatAmount(amount) {
+  const value = Number(amount || 0)
+  return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')
+}
 
 // 头像取用户 ID 尾号两位，纯展示用途
 const avatarText = computed(() => {
-  const id = String(userStore.userId || '')
+  const id = String(userStore.accountName || userStore.userId || '')
   return id.length > 2 ? id.slice(-2) : id || '--'
 })
 
@@ -114,6 +120,12 @@ async function onLogout() {
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+}
+
+.user-arrow {
+  font-size: 12px;
+  opacity: 0.75;
 }
 
 .avatar {

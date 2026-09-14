@@ -22,7 +22,8 @@ const router = useRouter()
 const navItems = [
   { path: '/', label: '抽奖', icon: '🎯' },
   { path: '/sign', label: '签到', icon: '📅' },
-  { path: '/exchange', label: '兑换', icon: '🎁' }
+  { path: '/exchange', label: '兑换', icon: '🎁' },
+  { path: '/my', label: '我的', icon: '👤' }
 ]
 </script>
 

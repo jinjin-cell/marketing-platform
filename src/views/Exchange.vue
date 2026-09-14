@@ -8,6 +8,10 @@
     </div>
 
     <div v-if="loading" class="card loading-card">加载中…</div>
+    <div v-else-if="error" class="card loading-card error-state">
+      <span>{{ error }}</span>
+      <el-button size="small" @click="loadProducts">重试</el-button>
+    </div>
     <div v-else-if="!products.length" class="card loading-card">暂无可兑换商品</div>
 
     <div v-for="p in products" :key="p.sku" class="card product-card">
@@ -50,20 +54,22 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import UserBar from '../components/UserBar.vue'
 import BottomNav from '../components/BottomNav.vue'
 import { creditPayExchangeSku, querySkuProductList } from '../api/raffle'
-import { useUserStore, ACTIVITY_ID } from '../store/user'
+import { useUserStore } from '../store/user'
 
 const userStore = useUserStore()
 
 const products = ref([])
 const loading = ref(true)
 const exchangingSku = ref(null)
+const error = ref('')
 
 const creditText = computed(() =>
-  userStore.credit === null ? '--' : Number(userStore.credit).toFixed(0)
+  userStore.credit === null ? '--' : formatAmount(userStore.credit)
 )
 
 function formatAmount(amount) {
-  return Number(amount).toFixed(0)
+  const value = Number(amount || 0)
+  return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')
 }
 
 function canExchange(p) {
@@ -83,10 +89,12 @@ function exchangeBtnText(p) {
 
 async function loadProducts() {
   loading.value = true
+  error.value = ''
   try {
-    products.value = await querySkuProductList(ACTIVITY_ID)
+    const result = await querySkuProductList(userStore.activityId)
+    products.value = Array.isArray(result) ? result : []
   } catch (e) {
-    products.value = []
+    error.value = '兑换商品加载失败'
   } finally {
     loading.value = false
   }
@@ -136,6 +144,14 @@ onMounted(() => {
   text-align: center;
   color: #999;
   font-size: 13px;
+}
+
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #b42318;
 }
 
 /* 商品卡：左侧金色票券边 */
