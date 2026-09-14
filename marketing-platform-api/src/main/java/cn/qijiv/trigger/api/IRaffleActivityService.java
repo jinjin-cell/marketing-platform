@@ -50,6 +50,16 @@ public interface IRaffleActivityService {
     Response<Boolean> isCalendarSignRebate(String userId);
 
     /**
+     * 查询指定日期区间内的日历签到记录，供前端渲染整月签到标记。
+     *
+     * @param userId    用户ID
+     * @param beginDate 起始日期 yyyy-MM-dd（含），为空取当月 1 号
+     * @param endDate   结束日期 yyyy-MM-dd（含），为空取当月最后一天
+     * @return 服务端当前日期与区间内的签到日期列表
+     */
+    Response<CalendarSignRebateResponseDTO> queryCalendarSignRebateList(String userId, String beginDate, String endDate);
+
+    /**
      * 查询用户活动账户
      *
      * @param request 请求对象「活动ID、用户ID」
@@ -92,6 +102,28 @@ public interface IRaffleActivityService {
      */
     Response<List<UserAwardRecordResponseDTO>> queryUserAwardRecordList(String userId, Long activityId);
 
+    /**
+     * 查询用户积分流水（积分明细）
+     *
+     * @param userId 用户ID
+     * @param limit  最大返回条数，为空默认 50、最大 200
+     * @return 积分流水列表（按交易时间倒序）
+     */
+    Response<List<UserCreditOrderResponseDTO>> queryUserCreditOrderList(String userId, Integer limit);
 
+    /**
+     * 查询用户活动订单（兑换/充值记录）
+     *
+     * @param userId 用户ID
+     * @return 活动订单列表（按下单时间倒序）
+     */
+    Response<List<UserActivityOrderResponseDTO>> queryUserActivityOrderList(String userId);
+
+    /**
+     * 查询活动配置列表，供前端活动切换使用
+     *
+     * @return 活动列表（活动ID升序）
+     */
+    Response<List<ActivityInfoResponseDTO>> queryActivityList();
 
 }

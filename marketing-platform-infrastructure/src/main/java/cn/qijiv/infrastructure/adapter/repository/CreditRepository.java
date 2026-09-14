@@ -4,6 +4,7 @@ import cn.qijiv.domain.award.model.valobj.AccountStatusVO;
 import cn.qijiv.domain.credit.model.aggregate.TradeAggregate;
 import cn.qijiv.domain.credit.model.entity.CreditAccountEntity;
 import cn.qijiv.domain.credit.model.entity.CreditOrderEntity;
+import cn.qijiv.domain.credit.model.entity.CreditOrderRecordEntity;
 import cn.qijiv.domain.credit.model.entity.TaskEntity;
 import cn.qijiv.domain.credit.repository.ICreditRepository;
 import cn.qijiv.infrastructure.event.EventPublisher;
@@ -27,6 +28,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -171,8 +174,40 @@ public class CreditRepository implements ICreditRepository {
     }
 
 
-    private void publishCreditAdjustMessage(TaskPO task, TaskEntity taskEntity, CreditOrderEntity creditOrderEntity) {
+    /**
+     * 查询用户积分流水（积分明细），按交易时间倒序
+     *
+     * @param userId 用户ID
+     * @param limit  最大返回条数
+     * @return 积分流水列表
+     */
+    @Override
+    public List<CreditOrderRecordEntity> queryCreditOrderRecordList(String userId, Integer limit) {
+        int size = (null == limit || limit <= 0) ? 50 : Math.min(limit, 200);
         try {
+            dbRouter.doRouter(userId);
+            List<UserCreditOrderPO> rows = userCreditOrderDao.queryUserCreditOrderList(userId, size);
+            List<CreditOrderRecordEntity> result = new ArrayList<>();
+            if (null == rows) {
+                return result;
+            }
+            for (UserCreditOrderPO row : rows) {
+                result.add(CreditOrderRecordEntity.builder()
+                        .orderId(row.getOrderId())
+                        .tradeName(row.getTradeName())
+                        .tradeType(row.getTradeType())
+                        .tradeAmount(row.getTradeAmount())
+                        .outBusinessNo(row.getOutBusinessNo())
+                        .createTime(row.getCreateTime())
+                        .build());
+            }
+            return result;
+        } finally {
+            dbRouter.clear();
+        }
+    }
+
+    private void publishCreditAdjustMessage(TaskPO task, TaskEntity taskEntity, CreditOrderEntity creditOrderEntity) {        try {
             eventPublisher.publish(task.getTopic(), taskEntity.getMessage());
             taskDao.updateTaskSendMessageCompleted(task);
             log.info("调整账户积分记录，发送MQ消息完成 userId:{} orderId:{} topic:{}",

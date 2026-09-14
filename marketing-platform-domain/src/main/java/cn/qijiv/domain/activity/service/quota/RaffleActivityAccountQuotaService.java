@@ -11,6 +11,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.time.LocalDate;
 import java.util.Map;
 
 /**
@@ -136,7 +137,31 @@ public class RaffleActivityAccountQuotaService extends AbstractRaffleActivityAcc
 
     @Override
     public ActivityAccountEntity queryActivityAccountEntity(Long activityId, String userId) {
-        return activityRepository.queryActivityAccountEntity(activityId, userId);
+        ActivityAccountEntity account = activityRepository.queryActivityAccountEntity(activityId, userId);
+        if (account == null) {
+            return null;
+        }
+
+        LocalDate today = LocalDate.now();
+        ActivityAccountMonthEntity monthAccount = activityRepository.queryActivityAccountMonthByUserId(
+                userId, activityId, today.toString().substring(0, 7));
+        ActivityAccountDayEntity dayAccount = activityRepository.queryActivityAccountDayByUserId(
+                userId, activityId, today.toString());
+
+        // 主表保存累计总额度和日/月配置；当前剩余额度以日/月明细为唯一事实来源。
+        int configuredMonthCount = defaultCount(account.getMonthCount());
+        int configuredDayCount = defaultCount(account.getDayCount());
+        account.setMonthCount(monthAccount == null ? configuredMonthCount : defaultCount(monthAccount.getMonthCount()));
+        account.setMonthCountSurplus(monthAccount == null
+                ? configuredMonthCount : defaultCount(monthAccount.getMonthCountSurplus()));
+        account.setDayCount(dayAccount == null ? configuredDayCount : defaultCount(dayAccount.getDayCount()));
+        account.setDayCountSurplus(dayAccount == null
+                ? configuredDayCount : defaultCount(dayAccount.getDayCountSurplus()));
+        return account;
+    }
+
+    private int defaultCount(Integer value) {
+        return value == null ? 0 : value;
     }
 
     @Override

@@ -190,6 +190,16 @@ public class RaffleActivityServiceTest {
         public List<SkuProductEntity> querySkuProductEntityListByActivityId(Long activityId) {
             return Collections.emptyList();
         }
+
+        @Override
+        public List<ActivityEntity> queryActivityList() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<ActivityOrderEntity> queryActivityOrderList(String userId) {
+            return Collections.emptyList();
+        }
     }
 
     /**

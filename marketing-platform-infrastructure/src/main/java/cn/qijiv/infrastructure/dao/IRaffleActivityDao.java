@@ -4,6 +4,8 @@ import cn.qijiv.infrastructure.dao.po.RaffleActivityPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 抽奖活动 DAO
  *
@@ -36,4 +38,11 @@ public interface IRaffleActivityDao {
      * @return 活动ID
      */
     Long queryActivityIdByStrategyId(Long strategyId);
+
+    /**
+     * 查询全部活动配置（活动ID升序），用于前端活动列表与多活动切换。
+     *
+     * @return 活动列表
+     */
+    List<RaffleActivityPO> queryRaffleActivityList();
 }

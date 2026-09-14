@@ -97,6 +97,12 @@ public class CreditAdjustServiceTest {
             fail("非法交易不应触发账户查询");
             return null;
         }
+
+        @Override
+        public java.util.List<cn.qijiv.domain.credit.model.entity.CreditOrderRecordEntity> queryCreditOrderRecordList(String userId, Integer limit) {
+            fail("非法交易不应触发流水查询");
+            return java.util.Collections.emptyList();
+        }
     }
 
     private static class CapturingRepository implements ICreditRepository {
@@ -112,6 +118,11 @@ public class CreditAdjustServiceTest {
         @Override
         public cn.qijiv.domain.credit.model.entity.CreditAccountEntity queryUserCreditAccount(String userId) {
             return null;
+        }
+
+        @Override
+        public java.util.List<cn.qijiv.domain.credit.model.entity.CreditOrderRecordEntity> queryCreditOrderRecordList(String userId, Integer limit) {
+            return java.util.Collections.emptyList();
         }
     }
 }

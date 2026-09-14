@@ -122,6 +122,11 @@ public class BehaviorRebateServiceTest {
         public List<BehaviorRebateOrderEntity> queryOrderByOutBusinessNo(String userId, String outBusinessNo) {
             return Collections.emptyList();
         }
+
+        @Override
+        public List<String> queryBehaviorDates(String userId, String behaviorType, String beginDate, String endDate) {
+            return Collections.emptyList();
+        }
     }
 
 }

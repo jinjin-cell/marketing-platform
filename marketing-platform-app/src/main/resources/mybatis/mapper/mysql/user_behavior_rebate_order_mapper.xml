@@ -30,4 +30,15 @@
         WHERE user_id = #{userId} AND out_business_no = #{outBusinessNo}
     </select>
 
+    <!-- 日历签到展示：查询区间内已完成的返利日期（out_business_no 为 yyyy-MM-dd，可直接按字符串区间比较） -->
+    <!--suppress SqlResolve -->
+    <select id="queryBehaviorDates" resultType="java.lang.String">
+        SELECT DISTINCT out_business_no
+        FROM user_behavior_rebate_order
+        WHERE user_id = #{userId}
+          AND behavior_type = #{behaviorType}
+          AND out_business_no BETWEEN #{beginDate} AND #{endDate}
+        ORDER BY out_business_no
+    </select>
+
 </mapper>

@@ -1,7 +1,10 @@
 package cn.qijiv.domain.credit.service;
 
 import cn.qijiv.domain.credit.model.entity.CreditAccountEntity;
+import cn.qijiv.domain.credit.model.entity.CreditOrderRecordEntity;
 import cn.qijiv.domain.credit.model.entity.TradeEntity;
+
+import java.util.List;
 
 /**
  * 积分调额接口【正逆向，增减积分】
@@ -26,5 +29,14 @@ public interface ICreditAdjustService {
      * @return 用户积分账户
      */
     CreditAccountEntity queryUserCreditAccount(String userId);
+
+    /**
+     * 查询用户积分流水（积分明细）
+     *
+     * @param userId 用户ID
+     * @param limit  最大返回条数，为空默认 50，最大 200
+     * @return 积分流水列表，按交易时间倒序
+     */
+    List<CreditOrderRecordEntity> queryUserCreditOrderList(String userId, Integer limit);
 }
 

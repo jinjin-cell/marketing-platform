@@ -34,4 +34,15 @@ public interface IBehaviorRebateRepository {
     /** 按用户和外部业务号查询返利订单，用于判断当天是否签到。 */
     List<BehaviorRebateOrderEntity> queryOrderByOutBusinessNo(String userId, String outBusinessNo);
 
+    /**
+     * 查询指定日期区间内已完成的行为返利日期，用于日历签到展示。
+     *
+     * @param userId       用户ID
+     * @param behaviorType 行为类型
+     * @param beginDate    起始日期 yyyy-MM-dd（含）
+     * @param endDate      结束日期 yyyy-MM-dd（含）
+     * @return 日期列表 yyyy-MM-dd，升序去重
+     */
+    List<String> queryBehaviorDates(String userId, String behaviorType, String beginDate, String endDate);
+
 }

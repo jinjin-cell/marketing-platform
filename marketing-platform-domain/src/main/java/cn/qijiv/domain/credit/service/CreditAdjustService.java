@@ -4,6 +4,7 @@ import cn.qijiv.domain.credit.event.CreditAdjustSuccessMessageEvent;
 import cn.qijiv.domain.credit.model.aggregate.TradeAggregate;
 import cn.qijiv.domain.credit.model.entity.CreditAccountEntity;
 import cn.qijiv.domain.credit.model.entity.CreditOrderEntity;
+import cn.qijiv.domain.credit.model.entity.CreditOrderRecordEntity;
 import cn.qijiv.domain.credit.model.entity.TaskEntity;
 import cn.qijiv.domain.credit.model.entity.TradeEntity;
 import cn.qijiv.domain.credit.repository.ICreditRepository;
@@ -15,6 +16,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 积分调额服务【正逆向，增减积分】
@@ -79,6 +82,21 @@ public class CreditAdjustService implements ICreditAdjustService {
     @Override
     public CreditAccountEntity queryUserCreditAccount(String userId) {
         return creditRepository.queryUserCreditAccount(userId);
+    }
+
+    /**
+     * 查询用户积分流水（积分明细）
+     *
+     * @param userId 用户ID
+     * @param limit  最大返回条数，为空默认 50，最大 200
+     * @return 积分流水列表，按交易时间倒序
+     */
+    @Override
+    public List<CreditOrderRecordEntity> queryUserCreditOrderList(String userId, Integer limit) {
+        if (StringUtils.isBlank(userId)) {
+            return new ArrayList<>();
+        }
+        return creditRepository.queryCreditOrderRecordList(userId, limit);
     }
 
 

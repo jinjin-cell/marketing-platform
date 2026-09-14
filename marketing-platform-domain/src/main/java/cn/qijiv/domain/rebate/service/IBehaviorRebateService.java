@@ -2,6 +2,7 @@ package cn.qijiv.domain.rebate.service;
 
 import cn.qijiv.domain.rebate.model.entity.BehaviorEntity;
 import cn.qijiv.domain.rebate.model.entity.BehaviorRebateOrderEntity;
+import cn.qijiv.domain.rebate.model.valobj.BehaviorTypeVO;
 
 import java.util.List;
 
@@ -29,4 +30,15 @@ public interface IBehaviorRebateService {
      * @return 返利订单列表
      */
     List<BehaviorRebateOrderEntity> queryOrderByOutBusinessNo(String userId, String outBusinessNo);
+
+    /**
+     * 查询指定日期区间内已完成的行为返利日期
+     *
+     * @param userId         用户ID
+     * @param behaviorTypeVO 行为类型
+     * @param beginDate      起始日期 yyyy-MM-dd（含）
+     * @param endDate        结束日期 yyyy-MM-dd（含）
+     * @return 日期列表 yyyy-MM-dd，升序去重
+     */
+    List<String> queryBehaviorDates(String userId, BehaviorTypeVO behaviorTypeVO, String beginDate, String endDate);
 }

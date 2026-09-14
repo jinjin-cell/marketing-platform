@@ -31,4 +31,14 @@
         LIMIT 1
     </select>
 
+    <!-- 积分流水：携带分片键 user_id，按交易时间倒序取前 N 条 -->
+    <!--suppress SqlResolve -->
+    <select id="queryUserCreditOrderList" resultMap="UserCreditOrderMap">
+        SELECT id, user_id, order_id, trade_name, trade_type, trade_amount, out_business_no, create_time, update_time
+        FROM user_credit_order
+        WHERE user_id = #{userId}
+        ORDER BY create_time DESC, id DESC
+        LIMIT #{limit}
+    </select>
+
 </mapper>

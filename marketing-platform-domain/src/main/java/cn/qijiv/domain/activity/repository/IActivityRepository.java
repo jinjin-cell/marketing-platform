@@ -195,5 +195,11 @@ public interface IActivityRepository {
 
     /** 根据活动ID查询商品列表。 */
     List<SkuProductEntity> querySkuProductEntityListByActivityId(Long activityId);
+
+    /** 查询全部活动配置（活动ID升序），用于活动列表与多活动切换。 */
+    List<ActivityEntity> queryActivityList();
+
+    /** 按用户ID查询活动订单列表（兑换/充值记录），按下单时间倒序。 */
+    List<ActivityOrderEntity> queryActivityOrderList(String userId);
 }
 

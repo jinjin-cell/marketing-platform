@@ -57,12 +57,12 @@
     </insert>
 
     <update id="updateActivityAccountSubtractionQuota" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountPO">
-        update raffle_activity_account
-        set total_count_surplus = total_count_surplus - 1,
-            day_count_surplus = day_count_surplus - 1,
-            month_count_surplus = month_count_surplus - 1,
-            update_time = now()
-        where user_id = #{userId} and activity_id = #{activityId} and total_count_surplus > 0 and day_count_surplus > 0 and month_count_surplus > 0
+        UPDATE raffle_activity_account
+        SET total_count_surplus = total_count_surplus - 1,
+            update_time = NOW()
+        WHERE user_id = #{userId}
+          AND activity_id = #{activityId}
+          AND total_count_surplus > 0
     </update>
 
     <update id="updateActivityAccountMonthSurplusImageQuota" parameterType="cn.qijiv.infrastructure.dao.po.RaffleActivityAccountPO">

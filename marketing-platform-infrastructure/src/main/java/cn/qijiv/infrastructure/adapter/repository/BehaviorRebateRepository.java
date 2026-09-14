@@ -158,4 +158,24 @@ public class BehaviorRebateRepository implements IBehaviorRebateRepository {
         }
     }
 
+    /**
+     * 查询指定日期区间内已完成的行为返利日期
+     *
+     * @param userId       用户ID
+     * @param behaviorType 行为类型
+     * @param beginDate    起始日期 yyyy-MM-dd（含）
+     * @param endDate      结束日期 yyyy-MM-dd（含）
+     * @return 日期列表 yyyy-MM-dd，升序去重
+     */
+    @Override
+    public List<String> queryBehaviorDates(String userId, String behaviorType, String beginDate, String endDate) {
+        try {
+            dbRouter.doRouter(userId);
+            List<String> dates = userBehaviorRebateOrderDao.queryBehaviorDates(userId, behaviorType, beginDate, endDate);
+            return null == dates ? new ArrayList<>() : dates;
+        } finally {
+            dbRouter.clear();
+        }
+    }
+
 }

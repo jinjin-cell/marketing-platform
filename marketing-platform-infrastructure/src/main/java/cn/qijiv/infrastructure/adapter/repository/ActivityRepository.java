@@ -120,7 +120,14 @@ public class ActivityRepository implements IActivityRepository {
         if (null != activityEntity) return activityEntity;
         // 从库中获取数据
         RaffleActivityPO raffleActivity = raffleActivityDao.queryRaffleActivityByActivityId(activityId);
-        activityEntity = ActivityEntity.builder()
+        activityEntity = toActivityEntity(raffleActivity);
+        redisService.setValue(cacheKey, activityEntity);
+        return activityEntity;
+    }
+
+    /** 活动配置持久化对象 → 领域实体 */
+    private ActivityEntity toActivityEntity(RaffleActivityPO raffleActivity) {
+        return ActivityEntity.builder()
                 .activityId(raffleActivity.getActivityId())
                 .activityName(raffleActivity.getActivityName())
                 .activityDesc(raffleActivity.getActivityDesc())
@@ -129,8 +136,75 @@ public class ActivityRepository implements IActivityRepository {
                 .strategyId(raffleActivity.getStrategyId())
                 .state(ActivityStateVO.valueOf(raffleActivity.getState()))
                 .build();
-        redisService.setValue(cacheKey, activityEntity);
-        return activityEntity;
+    }
+
+    /** 活动订单持久化对象 → 领域实体 */
+    private ActivityOrderEntity toActivityOrderEntity(RaffleActivityOrderPO order) {
+        OrderStateVO orderState;
+        if (OrderStateVO.wait_pay.getCode().equals(order.getState())) {
+            orderState = OrderStateVO.wait_pay;
+        } else if (OrderStateVO.expired.getCode().equals(order.getState())) {
+            orderState = OrderStateVO.expired;
+        } else {
+            orderState = OrderStateVO.completed;
+        }
+        return ActivityOrderEntity.builder()
+                .userId(order.getUserId())
+                .sku(order.getSku())
+                .activityId(order.getActivityId())
+                .activityName(order.getActivityName())
+                .strategyId(order.getStrategyId())
+                .orderId(order.getOrderId())
+                .orderTime(order.getOrderTime())
+                .totalCount(order.getTotalCount())
+                .dayCount(order.getDayCount())
+                .monthCount(order.getMonthCount())
+                .payAmount(order.getPayAmount())
+                .state(orderState)
+                .outBusinessNo(order.getOutBusinessNo())
+                .build();
+    }
+
+    /**
+     * 查询全部活动配置（活动ID升序）
+     *
+     * @return 活动列表
+     */
+    @Override
+    public List<ActivityEntity> queryActivityList() {
+        List<RaffleActivityPO> rows = raffleActivityDao.queryRaffleActivityList();
+        List<ActivityEntity> result = new ArrayList<>();
+        if (null == rows) {
+            return result;
+        }
+        for (RaffleActivityPO row : rows) {
+            result.add(toActivityEntity(row));
+        }
+        return result;
+    }
+
+    /**
+     * 按用户ID查询活动订单列表（兑换/充值记录）
+     *
+     * @param userId 用户ID
+     * @return 活动订单列表，按下单时间（ID）倒序
+     */
+    @Override
+    public List<ActivityOrderEntity> queryActivityOrderList(String userId) {
+        try {
+            dbRouter.doRouter(userId);
+            List<RaffleActivityOrderPO> rows = raffleActivityOrderDao.queryRaffleActivityOrderByUserId(userId);
+            List<ActivityOrderEntity> result = new ArrayList<>();
+            if (null == rows) {
+                return result;
+            }
+            for (RaffleActivityOrderPO row : rows) {
+                result.add(toActivityOrderEntity(row));
+            }
+            return result;
+        } finally {
+            dbRouter.clear();
+        }
     }
 
     /**
@@ -176,29 +250,7 @@ public class ActivityRepository implements IActivityRepository {
             if (null == order) {
                 return null;
             }
-            OrderStateVO orderState;
-            if (OrderStateVO.wait_pay.getCode().equals(order.getState())) {
-                orderState = OrderStateVO.wait_pay;
-            } else if (OrderStateVO.expired.getCode().equals(order.getState())) {
-                orderState = OrderStateVO.expired;
-            } else {
-                orderState = OrderStateVO.completed;
-            }
-            return ActivityOrderEntity.builder()
-                    .userId(order.getUserId())
-                    .sku(order.getSku())
-                    .activityId(order.getActivityId())
-                    .activityName(order.getActivityName())
-                    .strategyId(order.getStrategyId())
-                    .orderId(order.getOrderId())
-                    .orderTime(order.getOrderTime())
-                    .totalCount(order.getTotalCount())
-                    .dayCount(order.getDayCount())
-                    .monthCount(order.getMonthCount())
-                    .payAmount(order.getPayAmount())
-                    .state(orderState)
-                    .outBusinessNo(order.getOutBusinessNo())
-                    .build();
+            return toActivityOrderEntity(order);
         } finally {
             dbRouter.clear();
         }
@@ -320,8 +372,10 @@ public class ActivityRepository implements IActivityRepository {
      */
     @Override
     public void cacheActivitySkuStockCount(String cacheKey, Integer stockCount) {
-        if (redisService.isExists(cacheKey)) return;
-        redisService.setAtomicLong(cacheKey, stockCount);
+        if (stockCount == null || stockCount < 0) {
+            throw new IllegalArgumentException("活动 SKU 剩余库存不能为 null 或负数");
+        }
+        redisService.setAtomicLongIfAbsent(cacheKey, stockCount);
     }
 
     /**
@@ -334,6 +388,15 @@ public class ActivityRepository implements IActivityRepository {
      */
     @Override
     public boolean subtractionActivitySkuStock(Long sku, String cacheKey, Date endDateTime) {
+        // Redis 重启或 key 被清理时按数据库快照懒初始化；setIfAbsent 防止并发初始化覆盖已发生的扣减。
+        if (!redisService.isExists(cacheKey)) {
+            RaffleActivitySkuPO activitySku = raffleActivitySkuDao.queryRaffleActivitySkuBySku(sku);
+            if (activitySku == null || activitySku.getStockCountSurplus() == null) {
+                log.warn("活动 SKU 不存在，无法初始化库存 sku:{}", sku);
+                return false;
+            }
+            redisService.setAtomicLongIfAbsent(cacheKey, activitySku.getStockCountSurplus());
+        }
         long surplus = redisService.decr(cacheKey);
         if (surplus == 0) {
             // 库存消耗没了以后，发送MQ消息，更新数据库库存
@@ -464,12 +527,6 @@ public class ActivityRepository implements IActivityRepository {
                                 .monthCount(activityAccountMonthEntity.getMonthCount())
                                 .monthCountSurplus(activityAccountMonthEntity.getMonthCountSurplus() - 1)
                                 .build());
-                        // 新创建月账户，则更新总账表中月镜像额度
-                        raffleActivityAccountDao.updateActivityAccountMonthSurplusImageQuota(RaffleActivityAccountPO.builder()
-                                .userId(userId)
-                                .activityId(activityId)
-                                .monthCountSurplus(activityAccountEntity.getMonthCountSurplus())
-                                .build());
                     }
 
                     // 3. 创建或更新日账户，true - 存在则更新，false - 不存在则插入
@@ -492,12 +549,6 @@ public class ActivityRepository implements IActivityRepository {
                                 .day(activityAccountDayEntity.getDay())
                                 .dayCount(activityAccountDayEntity.getDayCount())
                                 .dayCountSurplus(activityAccountDayEntity.getDayCountSurplus() - 1)
-                                .build());
-                        // 新创建日账户，则更新总账表中日镜像额度
-                        raffleActivityAccountDao.updateActivityAccountDaySurplusImageQuota(RaffleActivityAccountPO.builder()
-                                .userId(userId)
-                                .activityId(activityId)
-                                .dayCountSurplus(activityAccountEntity.getDayCountSurplus())
                                 .build());
                     }
 

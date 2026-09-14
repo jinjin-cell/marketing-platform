@@ -4,6 +4,9 @@ import cn.qijiv.infrastructure.db.annotation.DBRouter;
 import cn.qijiv.infrastructure.db.annotation.DBRouterStrategy;
 import cn.qijiv.infrastructure.dao.po.UserCreditOrderPO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * 用户积分订单数据访问层
@@ -30,4 +33,15 @@ public interface IUserCreditOrderDao {
      */
     @DBRouter
     UserCreditOrderPO queryUserCreditOrderByOutBusinessNo(UserCreditOrderPO userCreditOrderReq);
+
+    /**
+     * 按用户ID查询积分流水（交易时间倒序）
+     *
+     * @param userId 用户ID
+     * @param limit  最大返回条数
+     * @return 积分订单列表
+     */
+    @DBRouter
+    List<UserCreditOrderPO> queryUserCreditOrderList(@Param("userId") String userId,
+                                                     @Param("limit") Integer limit);
 }

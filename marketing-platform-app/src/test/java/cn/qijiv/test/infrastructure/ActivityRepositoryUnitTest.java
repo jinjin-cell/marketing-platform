@@ -127,6 +127,34 @@ public class ActivityRepositoryUnitTest {
         verify(raffleActivitySkuDao).queryRaffleActivitySkuBySku(10001L);
     }
 
+    /** 活动 SKU 库存只能原子初始化，重复装配不能覆盖 Redis 中已经扣减的值。 */
+    @Test
+    public void cacheActivitySkuStockCount_usesSetIfAbsent() {
+        activityRepository.cacheActivitySkuStockCount("activity-stock", 40);
+
+        verify(redisService).setAtomicLongIfAbsent("activity-stock", 40);
+        verify(redisService, never()).setAtomicLong("activity-stock", 40);
+    }
+
+    /** Redis 库存缺失时从数据库快照懒初始化，然后再执行本次原子扣减。 */
+    @Test
+    public void subtractionActivitySkuStock_missingCache_initializesAtomically() {
+        RaffleActivitySkuPO skuPO = new RaffleActivitySkuPO();
+        skuPO.setSku(10001L);
+        skuPO.setStockCountSurplus(40);
+        when(redisService.isExists("activity-stock")).thenReturn(false);
+        when(raffleActivitySkuDao.queryRaffleActivitySkuBySku(10001L)).thenReturn(skuPO);
+        when(redisService.decr("activity-stock")).thenReturn(39L);
+        when(redisService.setNx(anyString(), anyLong(), any(TimeUnit.class))).thenReturn(true);
+
+        boolean result = activityRepository.subtractionActivitySkuStock(
+                10001L, "activity-stock", new Date(System.currentTimeMillis() + 60_000L));
+
+        assertTrue(result);
+        verify(redisService).setAtomicLongIfAbsent("activity-stock", 40);
+        verify(redisService).decr("activity-stock");
+    }
+
     /** 验证活动查询缓存命中时直接返回缓存，不再访问数据库。 */
     @Test
     public void queryRaffleActivity_cacheHit_returnsCachedEntityWithoutDatabaseQuery() {

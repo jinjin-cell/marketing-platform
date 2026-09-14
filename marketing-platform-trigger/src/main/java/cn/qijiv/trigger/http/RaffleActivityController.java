@@ -1,15 +1,19 @@
 package cn.qijiv.trigger.http;
 
 import cn.qijiv.domain.activity.model.entity.*;
+import cn.qijiv.domain.activity.model.valobj.ActivityStateVO;
+import cn.qijiv.domain.activity.model.valobj.OrderStateVO;
 import cn.qijiv.domain.activity.model.valobj.OrderTradeTypeVO;
 import cn.qijiv.domain.activity.service.IRaffleActivityAccountQuotaService;
 import cn.qijiv.domain.activity.service.IRaffleActivityPartakeService;
+import cn.qijiv.domain.activity.service.IRaffleActivityQueryService;
 import cn.qijiv.domain.activity.service.IRaffleActivitySkuProductService;
 import cn.qijiv.domain.activity.service.armory.IActivityArmory;
 import cn.qijiv.domain.award.model.entity.UserAwardRecordEntity;
 import cn.qijiv.domain.award.model.valobj.AwardStateVO;
 import cn.qijiv.domain.award.service.IAwardService;
 import cn.qijiv.domain.credit.model.entity.CreditAccountEntity;
+import cn.qijiv.domain.credit.model.entity.CreditOrderRecordEntity;
 import cn.qijiv.domain.credit.model.entity.TradeEntity;
 import cn.qijiv.domain.credit.model.valobj.TradeNameVO;
 import cn.qijiv.domain.credit.model.valobj.TradeTypeVO;
@@ -24,6 +28,7 @@ import cn.qijiv.domain.strategy.service.IRaffleStrategy;
 import cn.qijiv.domain.strategy.service.armory.IStrategyArmory;
 import cn.qijiv.trigger.api.IRaffleActivityService;
 import cn.qijiv.trigger.api.dto.*;
+import cn.qijiv.trigger.security.AuthenticatedUser;
 import cn.qijiv.types.annotations.RateLimiterAccessInterceptor;
 import cn.qijiv.types.annotations.SentinelGuard;
 import cn.qijiv.types.enums.ResponseCode;
@@ -42,6 +47,8 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -71,6 +78,8 @@ public class RaffleActivityController implements IRaffleActivityService {
     private IBehaviorRebateService behaviorRebateService;
     @Resource
     private ICreditAdjustService creditAdjustService;
+    @Resource
+    private IRaffleActivityQueryService raffleActivityQueryService;
 
     private static final DateTimeFormatter DATE_FORMAT_DAY = DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -80,13 +89,11 @@ public class RaffleActivityController implements IRaffleActivityService {
      * @param activityId 活动ID
      * @return 装配结果
      *
-     * <p>接口：{@code /api/v1/raffle/activity/armory}
-     * <br>示例：{@code curl --request GET --url 'http://localhost:8091/api/v1/raffle/activity/armory?activityId=100301'}
+     * <p>仅通过 Dubbo/内部服务调用，不暴露公网 HTTP 路由。
      */
 
-    @RequestMapping(value = "armory", method = RequestMethod.GET)
     @Override
-    public Response<Boolean> armory(@RequestParam Long activityId) {
+    public Response<Boolean> armory(Long activityId) {
         try {
             log.info("活动装配，数据预热开始，活动ID：{}", activityId);
             // 0. 参数校验
@@ -136,12 +143,14 @@ public class RaffleActivityController implements IRaffleActivityService {
      * <p>接口：{@code /api/v1/raffle/activity/draw}
      * <br>示例：{@code curl --request POST --url http://localhost:8091/api/v1/raffle/activity/draw}
      */
-    @RateLimiterAccessInterceptor(key = "userId", fallbackMethod = "drawRateLimiterError", permitsPerSecond = 1.0d, blacklistCount = 1)
+    @RateLimiterAccessInterceptor(key = "userId", fallbackMethod = "drawRateLimiterError", permitsPerSecond = 1.0d, blacklistCount = 10)
     @SentinelGuard("activityDraw")
     @RequestMapping(value = "draw", method = RequestMethod.POST)
     @Override
     public Response<ActivityDrawResponseDTO> draw(@RequestBody ActivityDrawRequestDTO request) {
         String userId = request == null ? null : request.getUserId();
+        userId = AuthenticatedUser.resolve(userId);
+        if (request != null) request.setUserId(userId);
         Long activityId = request == null ? null : request.getActivityId();
         try {
             // 1. 参数校验
@@ -208,6 +217,7 @@ public class RaffleActivityController implements IRaffleActivityService {
     }
 
     public Response<ActivityDrawResponseDTO> drawRateLimiterError(@RequestBody ActivityDrawRequestDTO request) {
+        if (request != null) request.setUserId(AuthenticatedUser.resolve(request.getUserId()));
         log.info("活动抽奖限流 userId:{} activityId:{}", request.getUserId(), request.getActivityId());
         return Response.<ActivityDrawResponseDTO>builder()
                 .code(ResponseCode.RATE_LIMITER.getCode())
@@ -231,6 +241,7 @@ public class RaffleActivityController implements IRaffleActivityService {
     @RequestMapping(value = "calendar_sign_rebate", method = RequestMethod.POST)
     @Override
     public Response<Boolean> calendarSignRebate(@RequestParam String userId) {
+        userId = AuthenticatedUser.resolve(userId);
         try {
             log.info("日历签到返利开始，用户ID：{}", userId);
             if (StringUtils.isBlank(userId)) {
@@ -271,6 +282,7 @@ public class RaffleActivityController implements IRaffleActivityService {
     @RequestMapping(value = "is_calendar_sign_rebate", method = RequestMethod.POST)
     @Override
     public Response<Boolean> isCalendarSignRebate(@RequestParam String userId) {
+        userId = AuthenticatedUser.resolve(userId);
         try {
             log.info("查询用户是否完成日历签到返利开始，用户ID：{}", userId);
             if (StringUtils.isBlank(userId)) {
@@ -295,6 +307,64 @@ public class RaffleActivityController implements IRaffleActivityService {
     }
 
     /**
+     * 查询指定日期区间内的日历签到记录，供前端渲染整月签到标记。
+     *
+     * <p>签到标记必须来自服务端：仅靠浏览器 localStorage 记录，换设备、换域名或清理缓存后历史会丢失。
+     * <br>接口：{@code /api/v1/raffle/activity/query_calendar_sign_rebate_list}
+     * <br>示例：{@code curl --request GET --url 'http://localhost:8091/api/v1/raffle/activity/query_calendar_sign_rebate_list?userId=xiaofuge&beginDate=2026-09-01&endDate=2026-09-30'}
+     */
+    @RequestMapping(value = "query_calendar_sign_rebate_list", method = RequestMethod.GET)
+    @Override
+    public Response<CalendarSignRebateResponseDTO> queryCalendarSignRebateList(@RequestParam String userId,
+                                                                               @RequestParam(required = false) String beginDate,
+                                                                               @RequestParam(required = false) String endDate) {
+        userId = AuthenticatedUser.resolve(userId);
+        try {
+            log.info("查询日历签到记录开始，用户ID：{}，区间：{} ~ {}", userId, beginDate, endDate);
+            // 1. 参数校验：区间默认为当月，且跨度不超过 62 天（日历一屏最多跨 3 个月）
+            if (StringUtils.isBlank(userId)) {
+                throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+            }
+            LocalDate begin = StringUtils.isBlank(beginDate)
+                    ? LocalDate.now().withDayOfMonth(1)
+                    : LocalDate.parse(beginDate, DATE_FORMAT_DAY);
+            LocalDate end = StringUtils.isBlank(endDate)
+                    ? begin.with(TemporalAdjusters.lastDayOfMonth())
+                    : LocalDate.parse(endDate, DATE_FORMAT_DAY);
+            if (end.isBefore(begin) || ChronoUnit.DAYS.between(begin, end) > 62) {
+                throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+            }
+            // 2. 查询区间内已完成的签到日期
+            List<String> signDates = behaviorRebateService.queryBehaviorDates(userId, BehaviorTypeVO.SIGN,
+                    begin.format(DATE_FORMAT_DAY), end.format(DATE_FORMAT_DAY));
+            log.info("查询日历签到记录完成，用户ID：{}，签到天数：{}", userId, signDates.size());
+            // 3. 一并返回服务端当天日期，前端据此校准“今天”，避免浏览器时区与服务端不一致导致错位
+            return Response.<CalendarSignRebateResponseDTO>builder()
+                    .code(ResponseCode.SUCCESS.getCode())
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    .data(CalendarSignRebateResponseDTO.builder()
+                            .serverDate(LocalDate.now().format(DATE_FORMAT_DAY))
+                            .beginDate(begin.format(DATE_FORMAT_DAY))
+                            .endDate(end.format(DATE_FORMAT_DAY))
+                            .signDates(signDates)
+                            .build())
+                    .build();
+        } catch (AppException e) {
+            log.warn("查询日历签到记录参数错误，用户ID：{}，原因：{}", userId, e.getInfo());
+            return Response.<CalendarSignRebateResponseDTO>builder()
+                    .code(e.getCode())
+                    .info(e.getInfo())
+                    .build();
+        } catch (Exception e) {
+            log.error("查询日历签到记录失败，用户ID：{}", userId, e);
+            return Response.<CalendarSignRebateResponseDTO>builder()
+                    .code(ResponseCode.UN_ERROR.getCode())
+                    .info(ResponseCode.UN_ERROR.getInfo())
+                    .build();
+        }
+    }
+
+    /**
      * 查询账户额度
      * <p>
      * curl --request POST \
@@ -309,6 +379,8 @@ public class RaffleActivityController implements IRaffleActivityService {
     @Override
     public Response<UserActivityAccountResponseDTO> queryUserActivityAccount(@RequestBody UserActivityAccountRequestDTO request) {
         String userId = request == null ? null : request.getUserId();
+        userId = AuthenticatedUser.resolve(userId);
+        if (request != null) request.setUserId(userId);
         Long activityId = request == null ? null : request.getActivityId();
         try {
             log.info("查询用户活动账户开始，用户ID：{}，活动ID：{}", userId, activityId);
@@ -348,7 +420,6 @@ public class RaffleActivityController implements IRaffleActivityService {
                     .build();
         }
     }
-
 
     /**
      * 查询sku商品集合
@@ -410,6 +481,7 @@ public class RaffleActivityController implements IRaffleActivityService {
     @RequestMapping(value = "query_user_credit", method = RequestMethod.GET)
     @Override
     public Response<BigDecimal> queryUserCreditAccount(@RequestParam String userId) {
+        userId = AuthenticatedUser.resolve(userId);
         try {
             log.info("查询用户积分值开始 userId:{}", userId);
             // 1. 参数校验
@@ -447,6 +519,7 @@ public class RaffleActivityController implements IRaffleActivityService {
     @RequestMapping(value = "credit_pay_exchange_sku", method = RequestMethod.POST)
     @Override
     public Response<Boolean> creditPayExchangeSku(@RequestBody SkuProductShopCartRequestDTO request) {
+        if (request != null) request.setUserId(AuthenticatedUser.resolve(request.getUserId()));
         try {
             log.info("积分兑换商品开始 userId:{} sku:{}", request == null ? null : request.getUserId(), request == null ? null : request.getSku());
             // 1. 参数校验
@@ -503,6 +576,7 @@ public class RaffleActivityController implements IRaffleActivityService {
     @RequestMapping(value = "query_user_award_record", method = RequestMethod.GET)
     @Override
     public Response<List<UserAwardRecordResponseDTO>> queryUserAwardRecordList(@RequestParam String userId, @RequestParam Long activityId) {
+        userId = AuthenticatedUser.resolve(userId);
         try {
             log.info("查询用户中奖记录开始 userId:{} activityId:{}", userId, activityId);
             // 1. 参数校验
@@ -541,7 +615,170 @@ public class RaffleActivityController implements IRaffleActivityService {
         }
     }
 
+    /**
+     * 查询用户积分流水（积分明细）
+     *
+     * <p>接口：{@code /api/v1/raffle/activity/query_user_credit_order_list}
+     * <br>示例：{@code curl --request GET --url 'http://localhost:8091/api/v1/raffle/activity/query_user_credit_order_list?userId=xiaofuge&limit=50'}
+     */
+    @RequestMapping(value = "query_user_credit_order_list", method = RequestMethod.GET)
+    @Override
+    public Response<List<UserCreditOrderResponseDTO>> queryUserCreditOrderList(@RequestParam String userId,
+                                                                               @RequestParam(required = false) Integer limit) {
+        userId = AuthenticatedUser.resolve(userId);
+        try {
+            log.info("查询用户积分明细开始 userId:{} limit:{}", userId, limit);
+            // 1. 参数校验
+            if (StringUtils.isBlank(userId)) {
+                throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+            }
+            // 2. 查询积分流水
+            List<CreditOrderRecordEntity> creditOrderRecords = creditAdjustService.queryUserCreditOrderList(userId, limit);
+            List<UserCreditOrderResponseDTO> responseDTOS = new ArrayList<>(creditOrderRecords.size());
+            for (CreditOrderRecordEntity record : creditOrderRecords) {
+                responseDTOS.add(UserCreditOrderResponseDTO.builder()
+                        .orderId(record.getOrderId())
+                        .tradeName(record.getTradeName())
+                        .tradeType(record.getTradeType())
+                        .tradeTypeDesc(tradeTypeDesc(record.getTradeType()))
+                        .tradeAmount(record.getTradeAmount())
+                        .outBusinessNo(record.getOutBusinessNo())
+                        .createTime(record.getCreateTime())
+                        .build());
+            }
+            log.info("查询用户积分明细完成 userId:{} 记录数:{}", userId, responseDTOS.size());
+            return Response.<List<UserCreditOrderResponseDTO>>builder()
+                    .code(ResponseCode.SUCCESS.getCode())
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    .data(responseDTOS)
+                    .build();
+        } catch (AppException e) {
+            log.warn("查询用户积分明细参数错误 userId:{}", userId);
+            return Response.<List<UserCreditOrderResponseDTO>>builder()
+                    .code(e.getCode())
+                    .info(e.getInfo())
+                    .build();
+        } catch (Exception e) {
+            log.error("查询用户积分明细失败 userId:{}", userId, e);
+            return Response.<List<UserCreditOrderResponseDTO>>builder()
+                    .code(ResponseCode.UN_ERROR.getCode())
+                    .info(ResponseCode.UN_ERROR.getInfo())
+                    .build();
+        }
+    }
 
+    /**
+     * 查询用户活动订单（兑换/充值记录）
+     *
+     * <p>接口：{@code /api/v1/raffle/activity/query_user_activity_order_list}
+     * <br>示例：{@code curl --request GET --url 'http://localhost:8091/api/v1/raffle/activity/query_user_activity_order_list?userId=xiaofuge'}
+     */
+    @RequestMapping(value = "query_user_activity_order_list", method = RequestMethod.GET)
+    @Override
+    public Response<List<UserActivityOrderResponseDTO>> queryUserActivityOrderList(@RequestParam String userId) {
+        userId = AuthenticatedUser.resolve(userId);
+        try {
+            log.info("查询用户兑换记录开始 userId:{}", userId);
+            // 1. 参数校验
+            if (StringUtils.isBlank(userId)) {
+                throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+            }
+            // 2. 查询活动订单
+            List<ActivityOrderEntity> activityOrders = raffleActivityQueryService.queryActivityOrderList(userId);
+            List<UserActivityOrderResponseDTO> responseDTOS = new ArrayList<>(activityOrders.size());
+            for (ActivityOrderEntity order : activityOrders) {
+                responseDTOS.add(UserActivityOrderResponseDTO.builder()
+                        .orderId(order.getOrderId())
+                        .sku(order.getSku())
+                        .activityId(order.getActivityId())
+                        .activityName(order.getActivityName())
+                        .totalCount(order.getTotalCount())
+                        .dayCount(order.getDayCount())
+                        .monthCount(order.getMonthCount())
+                        .payAmount(order.getPayAmount())
+                        .state(null == order.getState() ? null : order.getState().getCode())
+                        .stateDesc(orderStateDesc(order.getState()))
+                        .orderTime(order.getOrderTime())
+                        .build());
+            }
+            log.info("查询用户兑换记录完成 userId:{} 记录数:{}", userId, responseDTOS.size());
+            return Response.<List<UserActivityOrderResponseDTO>>builder()
+                    .code(ResponseCode.SUCCESS.getCode())
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    .data(responseDTOS)
+                    .build();
+        } catch (AppException e) {
+            log.warn("查询用户兑换记录参数错误 userId:{}", userId);
+            return Response.<List<UserActivityOrderResponseDTO>>builder()
+                    .code(e.getCode())
+                    .info(e.getInfo())
+                    .build();
+        } catch (Exception e) {
+            log.error("查询用户兑换记录失败 userId:{}", userId, e);
+            return Response.<List<UserActivityOrderResponseDTO>>builder()
+                    .code(ResponseCode.UN_ERROR.getCode())
+                    .info(ResponseCode.UN_ERROR.getInfo())
+                    .build();
+        }
+    }
 
+    /**
+     * 查询活动列表（多活动切换）
+     *
+     * <p>接口：{@code /api/v1/raffle/activity/query_activity_list}
+     * <br>示例：{@code curl --request GET --url 'http://localhost:8091/api/v1/raffle/activity/query_activity_list'}
+     */
+    @RequestMapping(value = "query_activity_list", method = RequestMethod.GET)
+    @Override
+    public Response<List<ActivityInfoResponseDTO>> queryActivityList() {
+        try {
+            log.info("查询活动列表开始");
+            List<ActivityEntity> activityEntities = raffleActivityQueryService.queryActivityList();
+            List<ActivityInfoResponseDTO> responseDTOS = new ArrayList<>(activityEntities.size());
+            for (ActivityEntity activity : activityEntities) {
+                responseDTOS.add(ActivityInfoResponseDTO.builder()
+                        .activityId(activity.getActivityId())
+                        .activityName(activity.getActivityName())
+                        .activityDesc(activity.getActivityDesc())
+                        .state(null == activity.getState() ? null : activity.getState().getCode())
+                        .stateDesc(activityStateDesc(activity.getState()))
+                        .beginDateTime(activity.getBeginDateTime())
+                        .endDateTime(activity.getEndDateTime())
+                        .build());
+            }
+            log.info("查询活动列表完成 活动数:{}", responseDTOS.size());
+            return Response.<List<ActivityInfoResponseDTO>>builder()
+                    .code(ResponseCode.SUCCESS.getCode())
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    .data(responseDTOS)
+                    .build();
+        } catch (Exception e) {
+            log.error("查询活动列表失败", e);
+            return Response.<List<ActivityInfoResponseDTO>>builder()
+                    .code(ResponseCode.UN_ERROR.getCode())
+                    .info(ResponseCode.UN_ERROR.getInfo())
+                    .build();
+        }
+    }
+
+    /** 积分交易类型编码 → 中文说明 */
+    private static String tradeTypeDesc(String tradeType) {
+        for (TradeTypeVO tradeTypeVO : TradeTypeVO.values()) {
+            if (tradeTypeVO.getCode().equals(tradeType)) {
+                return tradeTypeVO.getInfo();
+            }
+        }
+        return tradeType;
+    }
+
+    /** 活动订单状态 → 中文说明 */
+    private static String orderStateDesc(OrderStateVO state) {
+        return null == state ? null : state.getDesc();
+    }
+
+    /** 活动状态 → 中文说明 */
+    private static String activityStateDesc(ActivityStateVO state) {
+        return null == state ? null : state.getDesc();
+    }
 
 }

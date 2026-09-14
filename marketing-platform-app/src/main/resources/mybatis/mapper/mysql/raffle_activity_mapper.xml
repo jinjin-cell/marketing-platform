@@ -31,4 +31,12 @@
         select activity_id from raffle_activity where strategy_id = #{strategyId}
     </select>
 
+    <!--suppress SqlResolve -->
+    <select id="queryRaffleActivityList" resultMap="RaffleActivityMap">
+        SELECT id, activity_id, activity_name, activity_desc, begin_date_time, end_date_time,
+               strategy_id, state, create_time, update_time
+        FROM raffle_activity
+        ORDER BY activity_id ASC
+    </select>
+
 </mapper>
