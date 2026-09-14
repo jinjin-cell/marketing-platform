@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.qijiv.infrastructure.dao.IUserAccountDao">
+
+    <resultMap id="UserAccountMap" type="cn.qijiv.infrastructure.dao.po.UserAccountPO">
+        <id column="id" property="id"/>
+        <result column="account_name" property="accountName"/>
+        <result column="user_id" property="userId"/>
+        <result column="password_hash" property="passwordHash"/>
+        <result column="password_salt" property="passwordSalt"/>
+        <result column="account_status" property="accountStatus"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="queryByAccountName" resultMap="UserAccountMap">
+        SELECT id, account_name, user_id, password_hash, password_salt,
+               account_status, create_time, update_time
+        FROM user_account
+        WHERE account_name = #{accountName}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="cn.qijiv.infrastructure.dao.po.UserAccountPO">
+        INSERT INTO user_account
+            (account_name, user_id, password_hash, password_salt, account_status)
+        VALUES
+            (#{accountName}, #{userId}, #{passwordHash}, #{passwordSalt}, #{accountStatus})
+    </insert>
+
+</mapper>

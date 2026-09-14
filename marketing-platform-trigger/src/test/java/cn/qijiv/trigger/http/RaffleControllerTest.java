@@ -12,10 +12,12 @@ import cn.qijiv.domain.strategy.service.IRaffleAward;
 import cn.qijiv.domain.strategy.service.IRaffleRule;
 import cn.qijiv.domain.strategy.service.IRaffleStrategy;
 import cn.qijiv.domain.strategy.service.armory.IStrategyArmory;
+import cn.qijiv.trigger.security.AuthenticatedUser;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import cn.qijiv.types.model.Response;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -57,6 +59,11 @@ class RaffleControllerTest {
         controller = new RaffleStrategyController(raffleAward, raffleRule, raffleStrategy, strategyArmory, raffleActivityAccountQuotaService);
     }
 
+    @AfterEach
+    void clearAuthenticatedUser() {
+        AuthenticatedUser.clear();
+    }
+
     /** 验证策略装配接口返回成功与装配结果。 */
     @Test
     void strategyArmoryReturnsAssemblyResult() {
@@ -83,7 +90,7 @@ class RaffleControllerTest {
                 .thenReturn(Collections.singletonList(award));
         when(raffleRule.queryAwardRuleLockCount(any()))
                 .thenReturn(Collections.emptyMap());
-        when(raffleActivityAccountQuotaService.queryRaffleActivityAccountDayPartakeCount(100301L, "qijiv"))
+        when(raffleActivityAccountQuotaService.queryRaffleActivityAccountPartakeCount(100301L, "qijiv"))
                 .thenReturn(0);
         RaffleAwardListRequestDTO request = new RaffleAwardListRequestDTO();
         request.setActivityId(100301L);
@@ -102,6 +109,26 @@ class RaffleControllerTest {
         assertEquals(Integer.valueOf(3), result.getSort());
         assertEquals(Boolean.TRUE, result.getIsAwardUnlock());
         assertEquals(Integer.valueOf(0), result.getWaitUnlockCount());
+    }
+
+    @Test
+    void queryRaffleAwardListUsesAuthenticatedIdentityInsteadOfRequestBody() {
+        when(raffleAward.queryRaffleStrategyAwardListByActivityId(100301L))
+                .thenReturn(Collections.emptyList());
+        when(raffleRule.queryAwardRuleLockCount(any())).thenReturn(Collections.emptyMap());
+        when(raffleActivityAccountQuotaService.queryRaffleActivityAccountPartakeCount(100301L, "u_token"))
+                .thenReturn(1);
+        RaffleAwardListRequestDTO request = new RaffleAwardListRequestDTO();
+        request.setActivityId(100301L);
+        request.setUserId("forged-user");
+        AuthenticatedUser.set("u_token");
+
+        Response<List<RaffleAwardListResponseDTO>> response = controller.queryRaffleAwardList(request);
+
+        assertEquals(ResponseCode.SUCCESS.getCode(), response.getCode());
+        assertEquals("u_token", request.getUserId());
+        verify(raffleActivityAccountQuotaService)
+                .queryRaffleActivityAccountPartakeCount(100301L, "u_token");
     }
 
     /** 验证随机抽奖接口正确映射奖项与排序，并携带默认用户与策略 ID。 */

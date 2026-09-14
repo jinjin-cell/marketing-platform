@@ -2,6 +2,7 @@ package cn.qijiv.aop;
 
 import cn.qijiv.types.annotations.DCCValue;
 import cn.qijiv.types.annotations.RateLimiterAccessInterceptor;
+import cn.qijiv.trigger.security.AuthenticatedUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
@@ -194,6 +195,9 @@ public class RateLimiterAOP {
      * 使用全局共享限流桶兜底（key 为 all 时不会进入黑名单），避免空值引发 NPE。
      */
     public String getAttrValue(String attr, Object[] args) {
+        if ("userId".equals(attr) && StringUtils.isNotBlank(AuthenticatedUser.current())) {
+            return AuthenticatedUser.current();
+        }
         if (args == null || args.length == 0) {
             return "all";
         }
