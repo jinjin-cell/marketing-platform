@@ -2,12 +2,17 @@ import request from './request'
 
 const FORM_HEADERS = { 'Content-Type': 'application/x-www-form-urlencoded' }
 
-// ---------- 活动模块 /raffle/activity ----------
+// ---------- 认证模块 /auth ----------
 
-/** 活动装配（进入主页时调用，数据预热到 Redis） */
-export function armory(activityId) {
-  return request.get('/raffle/activity/armory', { params: { activityId } })
+export function loginAccount(accountName, password) {
+  return request.post('/auth/login', { accountName, password })
 }
+
+export function registerAccount(accountName, password) {
+  return request.post('/auth/register', { accountName, password })
+}
+
+// ---------- 活动模块 /raffle/activity ----------
 
 /** 活动抽奖（大转盘核心接口） */
 export function draw(userId, activityId) {
@@ -25,6 +30,16 @@ export function calendarSignRebate(userId) {
 export function isCalendarSignRebate(userId) {
   return request.post('/raffle/activity/is_calendar_sign_rebate', new URLSearchParams({ userId }), {
     headers: FORM_HEADERS
+  })
+}
+
+/**
+ * 查询指定日期区间内的签到记录（日历展示用）
+ * 返回 { serverDate, beginDate, endDate, signDates[] }，签到标记以服务端数据为准
+ */
+export function queryCalendarSignRebateList(userId, beginDate, endDate) {
+  return request.get('/raffle/activity/query_calendar_sign_rebate_list', {
+    params: { userId, beginDate, endDate }
   })
 }
 
@@ -51,6 +66,21 @@ export function creditPayExchangeSku(userId, sku) {
 /** 查询用户中奖记录列表 */
 export function queryUserAwardRecordList(userId, activityId) {
   return request.get('/raffle/activity/query_user_award_record', { params: { userId, activityId } })
+}
+
+/** 查询用户积分流水（积分明细） */
+export function queryUserCreditOrderList(userId, limit) {
+  return request.get('/raffle/activity/query_user_credit_order_list', { params: { userId, limit } })
+}
+
+/** 查询用户活动订单（兑换/充值记录） */
+export function queryUserActivityOrderList(userId) {
+  return request.get('/raffle/activity/query_user_activity_order_list', { params: { userId } })
+}
+
+/** 查询活动列表（多活动切换） */
+export function queryActivityList() {
+  return request.get('/raffle/activity/query_activity_list')
 }
 
 // ---------- 策略模块 /raffle/strategy ----------

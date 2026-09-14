@@ -5,7 +5,9 @@ const routes = [
   { path: '/', name: 'Home', component: () => import('../views/Home.vue'), meta: { title: '幸运大转盘' } },
   { path: '/sign', name: 'Sign', component: () => import('../views/Sign.vue'), meta: { title: '每日签到' } },
   { path: '/exchange', name: 'Exchange', component: () => import('../views/Exchange.vue'), meta: { title: '积分兑换' } },
-  { path: '/my', name: 'My', component: () => import('../views/My.vue'), meta: { title: '我的' } }
+  { path: '/my', name: 'My', component: () => import('../views/My.vue'), meta: { title: '我的' } },
+  { path: '/credit', name: 'CreditDetail', component: () => import('../views/CreditDetail.vue'), meta: { title: '积分明细' } },
+  { path: '/orders', name: 'Orders', component: () => import('../views/Orders.vue'), meta: { title: '我的订单' } }
 ]
 
 const router = createRouter({
@@ -15,11 +17,11 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   document.title = to.meta.title ? `${to.meta.title} - 大营销抽奖平台` : '大营销抽奖平台'
-  const userId = localStorage.getItem('userId')
-  if (!userId && to.path !== '/login') {
+  const accessToken = localStorage.getItem('accessToken')
+  if (!accessToken && to.path !== '/login') {
     return '/login'
   }
-  if (userId && to.path === '/login') {
+  if (accessToken && to.path === '/login') {
     return '/'
   }
   return true

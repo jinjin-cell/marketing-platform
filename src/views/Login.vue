@@ -1,59 +1,105 @@
 <template>
   <div class="login-page">
-    <!-- 节日装饰：纯色圆点与灯笼（非渐变） -->
-    <span class="deco deco-circle-tl" />
-    <span class="deco deco-circle-br" />
     <span class="deco deco-lantern-l">🏮</span>
     <span class="deco deco-lantern-r">🏮</span>
 
     <div class="login-box">
       <div class="login-logo">抽</div>
       <h1 class="login-title">大营销抽奖平台</h1>
-      <p class="login-sub">输入用户 ID 即可参与活动</p>
+      <el-segmented v-model="mode" :options="modeOptions" class="mode-switch" />
       <el-input
-        v-model="userId"
+        v-model="accountName"
         size="large"
-        placeholder="请输入用户 ID"
+        placeholder="账号"
         maxlength="32"
         class="login-input"
-        @keyup.enter="onLogin"
+        :prefix-icon="User"
+        autocomplete="username"
+      />
+      <el-input
+        v-model="password"
+        size="large"
+        type="password"
+        show-password
+        placeholder="密码"
+        maxlength="72"
+        class="login-input"
+        :prefix-icon="Lock"
+        :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
+        @keyup.enter="onSubmit"
+      />
+      <el-input
+        v-if="mode === 'register'"
+        v-model="confirmPassword"
+        size="large"
+        type="password"
+        show-password
+        placeholder="确认密码"
+        maxlength="72"
+        class="login-input"
+        :prefix-icon="Lock"
+        autocomplete="new-password"
+        @keyup.enter="onSubmit"
       />
       <el-button
         type="primary"
         size="large"
         class="login-btn"
-        :disabled="!userId.trim()"
-        @click="onLogin"
+        :loading="submitting"
+        :disabled="!canSubmit"
+        @click="onSubmit"
       >
-        进入活动
-      </el-button>
-      <el-button text size="small" class="random-btn" @click="onRandom">
-        没有账号？随机生成一个
+        {{ mode === 'login' ? '登录' : '注册并登录' }}
       </el-button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Lock, User } from '@element-plus/icons-vue'
 import { useUserStore } from '../store/user'
+import { loginAccount, registerAccount } from '../api/raffle'
 
 const router = useRouter()
 const userStore = useUserStore()
-const userId = ref('')
+const mode = ref('login')
+const modeOptions = [
+  { label: '登录', value: 'login' },
+  { label: '注册', value: 'register' }
+]
+const accountName = ref('')
+const password = ref('')
+const confirmPassword = ref('')
+const submitting = ref(false)
 
-function onLogin() {
-  const id = userId.value.trim()
-  if (!id) return
-  userStore.login(id)
-  ElMessage.success(`欢迎，${id}`)
-  router.push('/')
-}
+const canSubmit = computed(() => {
+  if (!accountName.value.trim() || password.value.length < 6) return false
+  return mode.value === 'login' || password.value === confirmPassword.value
+})
 
-function onRandom() {
-  userId.value = `user_${Math.random().toString(36).slice(2, 8)}`
+async function onSubmit() {
+  if (!canSubmit.value || submitting.value) return
+  if (mode.value === 'register' && password.value !== confirmPassword.value) {
+    ElMessage.error('两次输入的密码不一致')
+    return
+  }
+  submitting.value = true
+  try {
+    const account = accountName.value.trim()
+    const session = mode.value === 'login'
+      ? await loginAccount(account, password.value)
+      : await registerAccount(account, password.value)
+    userStore.login(session)
+    ElMessage.success(mode.value === 'login' ? '登录成功' : '注册成功')
+    await router.push('/')
+  } catch (e) {
+    // 业务错误由请求拦截器统一展示。
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
@@ -72,26 +118,6 @@ function onRandom() {
 .deco {
   position: absolute;
   pointer-events: none;
-}
-
-.deco-circle-tl {
-  top: -80px;
-  left: -80px;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  background: var(--brand-cream);
-  border: 2px dashed var(--brand-gold);
-}
-
-.deco-circle-br {
-  bottom: -100px;
-  right: -100px;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: var(--brand-cream);
-  border: 2px dashed var(--brand-gold);
 }
 
 .deco-lantern-l {
@@ -122,7 +148,7 @@ function onRandom() {
   max-width: 360px;
   background: var(--brand-cream);
   border: 1px solid var(--card-border);
-  border-radius: 16px;
+  border-radius: 8px;
   padding: 36px 28px;
   text-align: center;
   box-shadow: 0 12px 32px rgba(91, 58, 41, 0.15);
@@ -154,10 +180,9 @@ function onRandom() {
   letter-spacing: 2px;
 }
 
-.login-sub {
-  margin: 8px 0 24px;
-  font-size: 13px;
-  color: #999;
+.mode-switch {
+  width: 100%;
+  margin: 20px 0 16px;
 }
 
 .login-input {
@@ -170,8 +195,4 @@ function onRandom() {
   letter-spacing: 4px;
 }
 
-.random-btn {
-  margin-top: 12px;
-  color: var(--brand-gold-deep);
-}
 </style>
