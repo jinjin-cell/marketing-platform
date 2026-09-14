@@ -14,7 +14,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import org.apache.commons.lang3.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.ExchangeTypes;
+import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -39,7 +42,14 @@ public class RebateMessageCustomer {
     private ICreditAdjustService creditAdjustService;
 
 
-    @RabbitListener(queuesToDeclare = @Queue(value = "${spring.rabbitmq.topic.send_rebate}"))
+    /**
+     * 声明并绑定队列：生产者把返利消息投递到 direct 交换机 {@code send.rebate}（routingKey=send.rebate），
+     * 队列必须显式绑定到该交换机，否则签到返利消息不会被消费，积分/抽奖次数不会到账。
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = "${spring.rabbitmq.topic.send_rebate}", durable = "true"),
+            exchange = @Exchange(value = "${spring.rabbitmq.topic.send_rebate}", type = ExchangeTypes.DIRECT, durable = "true"),
+            key = "${spring.rabbitmq.topic.send_rebate}"))
     public void listener(String message) {
         try {
             log.info("监听用户行为返利消息 topic: {} message: {}", topic, message);

@@ -11,6 +11,7 @@ import cn.qijiv.domain.strategy.service.IRaffleStrategy;
 import cn.qijiv.domain.strategy.service.armory.IStrategyArmory;
 import cn.qijiv.trigger.api.IRaffleStrategyService;
 import cn.qijiv.trigger.api.dto.*;
+import cn.qijiv.trigger.security.AuthenticatedUser;
 import cn.qijiv.types.enums.ResponseCode;
 import cn.qijiv.types.exception.AppException;
 import cn.qijiv.types.model.Response;
@@ -62,8 +63,7 @@ public class RaffleStrategyController implements IRaffleStrategyService {
 
     /** 将策略概率表和奖品库存装配到Redis。 */
     @Override
-    @RequestMapping(value = "strategy_armory", method = RequestMethod.GET)
-    public Response<Boolean> strategyArmory(@RequestParam Long strategyId) {
+    public Response<Boolean> strategyArmory(Long strategyId) {
         try {
             validateStrategyId(strategyId);
             log.info("抽奖策略装配开始，策略ID：{}", strategyId);
@@ -85,6 +85,7 @@ public class RaffleStrategyController implements IRaffleStrategyService {
     @RequestMapping(value = "query_raffle_award_list", method = RequestMethod.POST)
     public Response<List<RaffleAwardListResponseDTO>> queryRaffleAwardList(
             @RequestBody RaffleAwardListRequestDTO request) {
+        if (request != null) request.setUserId(AuthenticatedUser.resolve(request.getUserId()));
         try {
             log.info("查询抽奖奖品列表配置开始，用户ID：{}，活动ID：{}", request.getUserId(), request.getActivityId());
             // 1. 参数校验
@@ -100,8 +101,8 @@ public class RaffleStrategyController implements IRaffleStrategyService {
                     .collect(Collectors.toList());
             // 4. 查询规则配置 - 获取奖品的解锁限制，抽奖N次后解锁
             Map<String, Integer> ruleLockCountMap = raffleRule.queryAwardRuleLockCount(treeIds);
-            // 5. 查询抽奖次数 - 用户已经参与的抽奖次数
-            Integer dayPartakeCount = raffleActivityAccountQuotaService.queryRaffleActivityAccountDayPartakeCount(request.getActivityId(), request.getUserId());
+            // 5. 解锁进度按活动累计抽奖次数计算，与权重规则口径一致，避免每天重新锁定。
+            Integer partakeCount = raffleActivityAccountQuotaService.queryRaffleActivityAccountPartakeCount(request.getActivityId(), request.getUserId());
             // 6. 遍历填充数据
             List<RaffleAwardListResponseDTO> raffleAwardListResponseDTOS = new ArrayList<>(strategyAwardEntities.size());
             for (StrategyAwardEntity strategyAward : strategyAwardEntities) {
@@ -112,8 +113,8 @@ public class RaffleStrategyController implements IRaffleStrategyService {
                         .awardSubTitle(strategyAward.getAwardSubTitle())
                         .sort(strategyAward.getSort())
                         .awardRuleLockCount(awardRuleLockCount)
-                        .isAwardUnlock(null == awardRuleLockCount || dayPartakeCount >= awardRuleLockCount)
-                        .waitUnlockCount(null == awardRuleLockCount || awardRuleLockCount <= dayPartakeCount ? 0 : awardRuleLockCount - dayPartakeCount)
+                        .isAwardUnlock(null == awardRuleLockCount || partakeCount >= awardRuleLockCount)
+                        .waitUnlockCount(null == awardRuleLockCount || awardRuleLockCount <= partakeCount ? 0 : awardRuleLockCount - partakeCount)
                         .build());
             }
             Response<List<RaffleAwardListResponseDTO>> response = Response.<List<RaffleAwardListResponseDTO>>builder()
@@ -138,7 +139,6 @@ public class RaffleStrategyController implements IRaffleStrategyService {
 
     /** 执行一次随机抽奖。 */
     @Override
-    @RequestMapping(value = "random_raffle", method = RequestMethod.POST)
     public Response<RaffleStrategyResponseDTO> randomRaffle(@RequestBody RaffleStrategyRequestDTO requestDTO) {
         Long strategyId = requestDTO == null ? null : requestDTO.getStrategyId();
 
@@ -186,6 +186,8 @@ public class RaffleStrategyController implements IRaffleStrategyService {
     @Override
     public Response<List<RaffleStrategyRuleWeightResponseDTO>> queryRaffleStrategyRuleWeight(@RequestBody RaffleStrategyRuleWeightRequestDTO request) {
         String userId = request == null ? null : request.getUserId();
+        userId = AuthenticatedUser.resolve(userId);
+        if (request != null) request.setUserId(userId);
         Long activityId = request == null ? null : request.getActivityId();
         try {
             log.info("查询抽奖策略权重规则配置开始，用户ID：{}，活动ID：{}", userId, activityId);
